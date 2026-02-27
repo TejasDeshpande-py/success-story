@@ -25,3 +25,6 @@ class StoryUpdate(BaseModel):
     selected_body: Optional[str] = None
     extra: Optional[str] = None
     status: Optional[str] = None
+
+class SelectBodyRequest(BaseModel):
+    choice: str  
