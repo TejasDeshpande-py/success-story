@@ -14,6 +14,7 @@ from security import create_access_token, hash_password
 
 app = FastAPI()
 
+#main page
 
 @app.get("/", response_model=List[StoryPublicResponse])
 def root(
@@ -50,6 +51,9 @@ def register(
     if payload.role_id not in [0, 1]:
         raise HTTPException(status_code=400, detail="Invalid role. Use 0 for Employee or 1 for HR")
 
+    if payload.type not in ["individual", "group"]:
+        raise HTTPException(status_code=400, detail="Invalid type. Use 'individual' or 'group'")
+
     existing = db.query(Employee).filter(Employee.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -58,8 +62,10 @@ def register(
         name=payload.name,
         email=payload.email,
         password_hash=hash_password(payload.password),
+        picture=payload.picture,
         role_id=payload.role_id,
-        team_id=1,
+        type=payload.type,
+        team_id=payload.team_id,
     )
 
     db.add(new_user)
@@ -69,8 +75,11 @@ def register(
     return {
         "message": "User registered successfully",
         "employee_id": new_user.employee_id,
+        "name": new_user.name,
         "email": new_user.email,
-        "role_id": new_user.role_id
+        "role_id": new_user.role_id,
+        "type": new_user.type,
+        "team_id": new_user.team_id,
     }
 
 
@@ -94,7 +103,6 @@ def login(
         "token_type": "bearer"
     }
 
-#write story
 
 @app.post("/stories", response_model=StoryResponse, status_code=201)
 def write_story(
@@ -120,7 +128,6 @@ def write_story(
     return story
 
 
-# hr
 
 @app.get("/hr/stories/pending", response_model=List[StoryResponse])
 def get_pending_stories(
