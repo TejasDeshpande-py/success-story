@@ -1,46 +1,78 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-
+from typing import List
 from database import get_db
 from model import Employee, SuccessStory
-from schemas import LoginRequest, TokenResponse, StoryCreate, StoryUpdate, SelectBodyRequest
+from schemas import (
+    TokenResponse, StoryCreate, StoryResponse,
+    StoryPublicResponse, PublishResponse, RejectResponse,
+    SelectBodyRequest, RegisterRequest, RegisterResponse
+)
 from auth import authenticate_user, get_current_user, require_hr
-from security import create_access_token
+from security import create_access_token, hash_password
 
 app = FastAPI()
 
-#  home page
 
-@app.get("/")
-def root():
-    return {"message": "Success Stories Platform"}
-
-@app.get("/test-db")
-def test_db(db: Session = Depends(get_db)):
-    try:
-        count = db.query(Employee).count()
-        return {"message": "Database connected", "employees_count": count}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/stories")
-def get_published_stories(db: Session = Depends(get_db)):
+@app.get("/", response_model=List[StoryPublicResponse])
+def root(
+    page: int = 1,
+    db: Session = Depends(get_db)
+):
+    limit = 10
+    offset = (page - 1) * limit
     return db.query(SuccessStory).filter(
         SuccessStory.status == "Posted"
-    ).all()
+    ).offset(offset).limit(limit).all()
 
-@app.get("/stories/{story_id}")
+
+@app.get("/stories/{story_id}", response_model=StoryPublicResponse)
 def get_story(story_id: int, db: Session = Depends(get_db)):
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id,
         SuccessStory.status == "Posted"
     ).first()
+
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
+
     return story
 
+
 # auth
+
+@app.post("/register", response_model=RegisterResponse, status_code=201)
+def register(
+    payload: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+    if payload.role_id not in [0, 1]:
+        raise HTTPException(status_code=400, detail="Invalid role. Use 0 for Employee or 1 for HR")
+
+    existing = db.query(Employee).filter(Employee.email == payload.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_user = Employee(
+        name=payload.name,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        role_id=payload.role_id,
+        team_id=1,
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User registered successfully",
+        "employee_id": new_user.employee_id,
+        "email": new_user.email,
+        "role_id": new_user.role_id
+    }
+
 
 @app.post("/login", response_model=TokenResponse)
 def login(
@@ -48,20 +80,23 @@ def login(
     db: Session = Depends(get_db)
 ):
     user = authenticate_user(form_data.username, form_data.password, db)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-    access_token = create_access_token({
-        "sub": user.email,
-        "role_id": user.role_id
-    })
-    return {"access_token": access_token, "token_type": "bearer"}
 
-# non hr
+    access_token = create_access_token({"sub": user.email})
 
-@app.post("/stories", status_code=201)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+#write story
+
+@app.post("/stories", response_model=StoryResponse, status_code=201)
 def write_story(
     payload: StoryCreate,
     db: Session = Depends(get_db),
@@ -77,23 +112,43 @@ def write_story(
         extra=payload.extra,
         created_by=current_user.employee_id,
     )
+
     db.add(story)
     db.commit()
     db.refresh(story)
+
     return story
 
-# hr 
 
-@app.get("/hr/stories/pending")
+# hr
+
+@app.get("/hr/stories/pending", response_model=List[StoryResponse])
 def get_pending_stories(
+    page: int = 1,
     db: Session = Depends(get_db),
     hr_user: Employee = Depends(require_hr),
 ):
+    limit = 10
+    offset = (page - 1) * limit
     return db.query(SuccessStory).filter(
         SuccessStory.status == "Pending"
-    ).all()
+    ).offset(offset).limit(limit).all()
 
-@app.patch("/hr/stories/{story_id}/select-body")
+
+@app.get("/hr/stories/rejected", response_model=List[StoryResponse])
+def get_rejected_stories(
+    page: int = 1,
+    db: Session = Depends(get_db),
+    hr_user: Employee = Depends(require_hr),
+):
+    limit = 10
+    offset = (page - 1) * limit
+    return db.query(SuccessStory).filter(
+        SuccessStory.status == "Rejected"
+    ).offset(offset).limit(limit).all()
+
+
+@app.patch("/hr/stories/{story_id}/select-body", response_model=StoryResponse)
 def select_body(
     story_id: int,
     payload: SelectBodyRequest,
@@ -103,10 +158,12 @@ def select_body(
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
     ).first()
+
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
+
     if story.status != "Pending":
-        raise HTTPException(status_code=400, detail="Story is not in Pending state")
+        raise HTTPException(status_code=400, detail="Only pending stories can be edited")
 
     if payload.choice == "original":
         story.selected_body = story.body
@@ -115,17 +172,13 @@ def select_body(
     else:
         raise HTTPException(status_code=400, detail="Choice must be 'original' or 'ai'")
 
-    story.status = "Approved"
     db.commit()
     db.refresh(story)
-    return {
-        "message": "Body selected",
-        "story_id": story.story_id,
-        "status": story.status,
-        "selected_body": story.selected_body
-    }
 
-@app.patch("/hr/stories/{story_id}/publish")
+    return story
+
+
+@app.patch("/hr/stories/{story_id}/publish", response_model=PublishResponse)
 def publish_story(
     story_id: int,
     db: Session = Depends(get_db),
@@ -134,16 +187,47 @@ def publish_story(
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
     ).first()
+
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
-    if story.status == "Posted":
-        raise HTTPException(status_code=400, detail="Story already published")
-    if story.status != "Approved":
-        raise HTTPException(status_code=400, detail="Story must be Approved before publishing")
+
+    if story.status != "Pending":
+        raise HTTPException(status_code=400, detail="Only pending stories can be published")
+
+    if not story.selected_body:
+        raise HTTPException(status_code=400, detail="A body must be selected before publishing")
+
     story.status = "Posted"
     db.commit()
     db.refresh(story)
+
     return {
         "message": "Story published successfully",
+        "story_id": story.story_id
+    }
+
+
+@app.patch("/hr/stories/{story_id}/reject", response_model=RejectResponse)
+def reject_story(
+    story_id: int,
+    db: Session = Depends(get_db),
+    hr_user: Employee = Depends(require_hr),
+):
+    story = db.query(SuccessStory).filter(
+        SuccessStory.story_id == story_id
+    ).first()
+
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    if story.status != "Pending":
+        raise HTTPException(status_code=400, detail="Only pending stories can be rejected")
+
+    story.status = "Rejected"
+    db.commit()
+    db.refresh(story)
+
+    return {
+        "message": "Story rejected successfully",
         "story_id": story.story_id
     }
