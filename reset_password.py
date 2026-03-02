@@ -1,4 +1,3 @@
-# reset_passwords.py
 from database import SessionLocal
 from model import Employee
 from security import hash_password
