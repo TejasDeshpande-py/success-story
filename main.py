@@ -115,7 +115,6 @@ def write_story(
         designation=payload.designation,
         body=payload.body,
         ai_body=payload.ai_body,
-        selected_body=payload.selected_body,
         status="Pending",
         extra=payload.extra,
         created_by=current_user.employee_id,

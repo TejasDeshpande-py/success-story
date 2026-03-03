@@ -62,7 +62,6 @@ class StoryCreate(BaseModel):
     designation: Optional[str] = None
     body: str
     ai_body: str
-    selected_body: Optional[str] = None
     extra: Optional[str] = None
 
 class StoryPublicResponse(BaseModel):
