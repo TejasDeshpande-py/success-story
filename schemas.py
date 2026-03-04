@@ -14,9 +14,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     picture: str
-    role_id: int        # 0 = Employee, 1 = HR
     type: str           # "individual" or "group"
-    team_id: int
 
     @field_validator("picture")
     def picture_must_be_jpg(cls, v):
@@ -30,22 +28,10 @@ class RegisterRequest(BaseModel):
             raise ValueError("Email must be a @company.com address")
         return v
 
-    @field_validator("role_id")
-    def role_id_must_be_valid(cls, v):
-        if v not in [0, 1]:
-            raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
-        return v
-
     @field_validator("type")
     def type_must_be_valid(cls, v):
         if v not in ["individual", "group"]:
             raise ValueError("Invalid type. Use 'individual' or 'group'")
-        return v
-
-    @field_validator("team_id")
-    def team_id_must_be_positive(cls, v):
-        if v < 1:
-            raise ValueError("team_id must be a positive number")
         return v
 
 class RegisterResponse(BaseModel):
@@ -53,9 +39,29 @@ class RegisterResponse(BaseModel):
     employee_id: int
     name: str
     email: str
-    role_id: int
     type: str
-    team_id: int
+    status: str
+
+class ApproveUserRequest(BaseModel):
+    role_id: int        # 0 = Employee, 1 = HR
+
+    @field_validator("role_id")
+    def role_id_must_be_valid(cls, v):
+        if v not in [0, 1]:
+            raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
+        return v
+
+class UserResponse(BaseModel):
+    employee_id: int
+    name: str
+    email: str
+    type: str
+    role_id: Optional[int]
+    team_id: Optional[int]
+    status: str
+
+    class Config:
+        from_attributes = True
 
 class StoryCreate(BaseModel):
     title: str
@@ -64,11 +70,21 @@ class StoryCreate(BaseModel):
     ai_body: str
     extra: Optional[str] = None
 
+class EmployeeStoryUpdate(BaseModel):
+    body: str
+
+class HRStoryUpdate(BaseModel):
+    body: Optional[str] = None
+    title: Optional[str] = None
+    designation: Optional[str] = None
+    ai_body: Optional[str] = None
+    extra: Optional[str] = None
+
 class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
-    designation: str
-    selected_body: str
+    designation: Optional[str]
+    selected_body: bool
     status: str
     extra: Optional[str]
     created_by: int
@@ -82,7 +98,7 @@ class StoryResponse(BaseModel):
     designation: Optional[str]
     body: str
     ai_body: str
-    selected_body: Optional[str]
+    selected_body: Optional[bool]
     status: str
     extra: Optional[str]
     created_by: int

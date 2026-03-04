@@ -10,16 +10,26 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def authenticate_user(email: str, password: str, db: Session):
     user = db.query(Employee).filter(Employee.email == email).first()
+
     if not user:
-        return None
+        raise HTTPException(status_code=401, detail="Email not found")
+
     if not verify_password(password, user.password_hash):
-        return None
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+    if user.status == "Pending":
+        raise HTTPException(status_code=403, detail="Account pending approval")
+
+    if user.status == "Rejected":
+        raise HTTPException(status_code=403, detail="Account has been rejected")
+
     return user
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
         payload = decode_token(token)
         email: str = payload.get("sub")
+        role_id: int = payload.get("role_id")
         if email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
     except JWTError:
@@ -29,9 +39,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
 
+    if user.status != "Active":
+        raise HTTPException(status_code=403, detail="Account pending approval")
+
     return user
 
-def require_hr(current_user: Employee = Depends(get_current_user)):
-    if current_user.role_id != 1:
-        raise HTTPException(status_code=403, detail="HR access required")
+def require_hr_or_admin(current_user: Employee = Depends(get_current_user)):
+    if current_user.role_id not in [1, 2]:
+        raise HTTPException(status_code=403, detail="HR or Admin access required")
     return current_user

@@ -7,25 +7,40 @@ from model import Employee, SuccessStory
 from schemas import (
     TokenResponse, StoryCreate, StoryResponse,
     StoryPublicResponse, PublishResponse, RejectResponse,
-    SelectBodyRequest, RegisterRequest, RegisterResponse
+    SelectBodyRequest, RegisterRequest, RegisterResponse,
+    EmployeeStoryUpdate, HRStoryUpdate,
+    ApproveUserRequest, UserResponse
 )
-from auth import authenticate_user, get_current_user, require_hr
+from auth import authenticate_user, get_current_user, require_hr_or_admin
 from security import create_access_token, hash_password
 
 app = FastAPI()
 
-#main page
 
-@app.get("/", response_model=List[StoryPublicResponse])
-def root(
-    page: int = 1,
-    db: Session = Depends(get_db)
-):
+# ─── Public Routes ────────────────────────────────────────────────────────────
+@app.get("/")
+def greet():
+    return {"message" : "Hello"}
+@app.get("/stories", response_model=List[StoryPublicResponse])
+def get_stories(page: int = 1, db: Session = Depends(get_db)):
     limit = 10
     offset = (page - 1) * limit
-    return db.query(SuccessStory).filter(
+    stories = db.query(SuccessStory).filter(
         SuccessStory.status == "Posted"
     ).offset(offset).limit(limit).all()
+
+    return [
+        {
+            "story_id": story.story_id,
+            "title": story.title,
+            "designation": story.designation,
+            "selected_body": story.selected_body,
+            "extra": story.extra,
+            "name": story.creator.name,
+            "picture": story.creator.picture
+        }
+        for story in stories
+    ]
 
 
 @app.get("/stories/{story_id}", response_model=StoryPublicResponse)
@@ -34,26 +49,24 @@ def get_story(story_id: int, db: Session = Depends(get_db)):
         SuccessStory.story_id == story_id,
         SuccessStory.status == "Posted"
     ).first()
-
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    return story
+    return {
+        "story_id": story.story_id,
+        "title": story.title,
+        "designation": story.designation,
+        "selected_body": story.selected_body,
+        "extra": story.extra,
+        "name": story.creator.name,
+        "picture": story.creator.picture
+    }
 
 
-# auth
+# ─── Auth Routes ──────────────────────────────────────────────────────────────
 
 @app.post("/register", response_model=RegisterResponse, status_code=201)
-def register(
-    payload: RegisterRequest,
-    db: Session = Depends(get_db)
-):
-    if payload.role_id not in [0, 1]:
-        raise HTTPException(status_code=400, detail="Invalid role. Use 0 for Employee or 1 for HR")
-
-    if payload.type not in ["individual", "group"]:
-        raise HTTPException(status_code=400, detail="Invalid type. Use 'individual' or 'group'")
-
+def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     existing = db.query(Employee).filter(Employee.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -63,23 +76,22 @@ def register(
         email=payload.email,
         password_hash=hash_password(payload.password),
         picture=payload.picture,
-        role_id=payload.role_id,
         type=payload.type,
-        team_id=payload.team_id,
+        role_id=None,
+        team_id=None,
+        status="Pending",
     )
-
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
     return {
-        "message": "User registered successfully",
+        "message": "Registration successful. Awaiting approval.",
         "employee_id": new_user.employee_id,
         "name": new_user.name,
         "email": new_user.email,
-        "role_id": new_user.role_id,
         "type": new_user.type,
-        "team_id": new_user.team_id,
+        "status": new_user.status,
     }
 
 
@@ -90,22 +102,19 @@ def login(
 ):
     user = authenticate_user(form_data.username, form_data.password, db)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+    access_token = create_access_token({
+        "sub": user.email,
+        "user_id": user.employee_id,
+        "role_id": user.role_id
+    })
 
-    access_token = create_access_token({"sub": user.email})
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/stories", response_model=StoryResponse, status_code=201)
-def write_story(
+# ─── Employee Routes (role_id: 0) ─────────────────────────────────────────────
+
+@app.post("/stories/create", response_model=StoryResponse, status_code=201)
+def create_story(
     payload: StoryCreate,
     db: Session = Depends(get_db),
     current_user: Employee = Depends(get_current_user),
@@ -115,51 +124,248 @@ def write_story(
         designation=payload.designation,
         body=payload.body,
         ai_body=payload.ai_body,
+        selected_body=None,
         status="Pending",
         extra=payload.extra,
         created_by=current_user.employee_id,
     )
-
     db.add(story)
     db.commit()
     db.refresh(story)
 
-    return story
+    return {
+        "story_id": story.story_id,
+        "title": story.title,
+        "designation": story.designation,
+        "body": story.body,
+        "ai_body": story.ai_body,
+        "selected_body": story.selected_body,
+        "status": story.status,
+        "extra": story.extra,
+        "created_by": story.created_by,
+        "name": current_user.name,
+        "picture": current_user.picture
+    }
 
 
+@app.patch("/stories/{story_id}", response_model=StoryResponse)
+def edit_story(
+    story_id: int,
+    payload: EmployeeStoryUpdate,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(get_current_user),
+):
+    story = db.query(SuccessStory).filter(
+        SuccessStory.story_id == story_id
+    ).first()
 
-@app.get("/hr/stories/pending", response_model=List[StoryResponse])
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    if story.created_by != current_user.employee_id:
+        raise HTTPException(status_code=403, detail="Not allowed to edit this story")
+
+    if story.status not in ["Pending", "Rejected"]:
+        raise HTTPException(status_code=400, detail="You can only edit Pending or Rejected stories")
+
+    story.body = payload.body
+    db.commit()
+    db.refresh(story)
+
+    return {
+        "story_id": story.story_id,
+        "title": story.title,
+        "designation": story.designation,
+        "body": story.body,
+        "ai_body": story.ai_body,
+        "selected_body": story.selected_body,
+        "status": story.status,
+        "extra": story.extra,
+        "created_by": story.created_by,
+        "name": current_user.name,
+        "picture": current_user.picture
+    }
+
+
+# ─── HR + Admin Routes (role_id: 1 & 2) ──────────────────────────────────────
+
+@app.get("/users", response_model=List[UserResponse])
+def get_all_users(
+    page: int = 1,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    limit = 10
+    offset = (page - 1) * limit
+    return db.query(Employee).filter(
+        Employee.status == "Active"
+    ).offset(offset).limit(limit).all()
+
+
+@app.get("/users/pending", response_model=List[UserResponse])
+def get_pending_users(
+    page: int = 1,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    limit = 10
+    offset = (page - 1) * limit
+    return db.query(Employee).filter(
+        Employee.status == "Pending"
+    ).offset(offset).limit(limit).all()
+
+
+@app.patch("/users/{employee_id}/approve", response_model=UserResponse)
+def approve_user(
+    employee_id: int,
+    payload: ApproveUserRequest,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    user = db.query(Employee).filter(
+        Employee.employee_id == employee_id
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.status != "Pending":
+        raise HTTPException(status_code=400, detail="User is not pending approval")
+
+    if payload.role_id == 2:
+        raise HTTPException(status_code=403, detail="Cannot assign Super Admin role")
+
+    user.role_id = payload.role_id
+    user.status = "Active"
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.patch("/users/{employee_id}/reject", response_model=UserResponse)
+def reject_user(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    user = db.query(Employee).filter(
+        Employee.employee_id == employee_id
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.status != "Pending":
+        raise HTTPException(status_code=400, detail="User is not pending approval")
+
+    user.status = "Rejected"
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.get("/stories/pending", response_model=List[StoryResponse])
 def get_pending_stories(
     page: int = 1,
     db: Session = Depends(get_db),
-    hr_user: Employee = Depends(require_hr),
+    current_user: Employee = Depends(require_hr_or_admin),
 ):
     limit = 10
     offset = (page - 1) * limit
-    return db.query(SuccessStory).filter(
+    stories = db.query(SuccessStory).filter(
         SuccessStory.status == "Pending"
     ).offset(offset).limit(limit).all()
 
+    return [
+        {
+            "story_id": story.story_id,
+            "title": story.title,
+            "designation": story.designation,
+            "body": story.body,
+            "ai_body": story.ai_body,
+            "selected_body": story.selected_body,
+            "status": story.status,
+            "extra": story.extra,
+            "created_by": story.created_by,
+            "name": story.creator.name,
+            "picture": story.creator.picture
+        }
+        for story in stories
+    ]
 
-@app.get("/hr/stories/rejected", response_model=List[StoryResponse])
+
+@app.get("/stories/rejected", response_model=List[StoryResponse])
 def get_rejected_stories(
     page: int = 1,
     db: Session = Depends(get_db),
-    hr_user: Employee = Depends(require_hr),
+    current_user: Employee = Depends(require_hr_or_admin),
 ):
     limit = 10
     offset = (page - 1) * limit
-    return db.query(SuccessStory).filter(
+    stories = db.query(SuccessStory).filter(
         SuccessStory.status == "Rejected"
     ).offset(offset).limit(limit).all()
 
+    return [
+        {
+            "story_id": story.story_id,
+            "title": story.title,
+            "designation": story.designation,
+            "body": story.body,
+            "ai_body": story.ai_body,
+            "selected_body": story.selected_body,
+            "status": story.status,
+            "extra": story.extra,
+            "created_by": story.created_by,
+            "name": story.creator.name,
+            "picture": story.creator.picture
+        }
+        for story in stories
+    ]
 
-@app.patch("/hr/stories/{story_id}/select-body", response_model=StoryResponse)
+
+@app.patch("/stories/{story_id}/edit", response_model=StoryResponse)
+def hr_edit_story(
+    story_id: int,
+    payload: HRStoryUpdate,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    story = db.query(SuccessStory).filter(
+        SuccessStory.story_id == story_id
+    ).first()
+
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(story, field, value)
+
+    db.commit()
+    db.refresh(story)
+
+    return {
+        "story_id": story.story_id,
+        "title": story.title,
+        "designation": story.designation,
+        "body": story.body,
+        "ai_body": story.ai_body,
+        "selected_body": story.selected_body,
+        "status": story.status,
+        "extra": story.extra,
+        "created_by": story.created_by,
+        "name": story.creator.name,
+        "picture": story.creator.picture
+    }
+
+
+@app.patch("/stories/{story_id}/select-body", response_model=StoryResponse)
 def select_body(
     story_id: int,
     payload: SelectBodyRequest,
     db: Session = Depends(get_db),
-    hr_user: Employee = Depends(require_hr),
+    current_user: Employee = Depends(require_hr_or_admin),
 ):
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
@@ -169,26 +375,38 @@ def select_body(
         raise HTTPException(status_code=404, detail="Story not found")
 
     if story.status != "Pending":
-        raise HTTPException(status_code=400, detail="Only pending stories can be edited")
+        raise HTTPException(status_code=400, detail="Only pending stories can have body selected")
 
     if payload.choice == "original":
-        story.selected_body = story.body
+        story.selected_body = False
     elif payload.choice == "ai":
-        story.selected_body = story.ai_body
+        story.selected_body = True
     else:
         raise HTTPException(status_code=400, detail="Choice must be 'original' or 'ai'")
 
     db.commit()
     db.refresh(story)
 
-    return story
+    return {
+        "story_id": story.story_id,
+        "title": story.title,
+        "designation": story.designation,
+        "body": story.body,
+        "ai_body": story.ai_body,
+        "selected_body": story.selected_body,
+        "status": story.status,
+        "extra": story.extra,
+        "created_by": story.created_by,
+        "name": story.creator.name,
+        "picture": story.creator.picture
+    }
 
 
-@app.patch("/hr/stories/{story_id}/publish", response_model=PublishResponse)
+@app.patch("/stories/{story_id}/publish", response_model=PublishResponse)
 def publish_story(
     story_id: int,
     db: Session = Depends(get_db),
-    hr_user: Employee = Depends(require_hr),
+    current_user: Employee = Depends(require_hr_or_admin),
 ):
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
@@ -200,24 +418,20 @@ def publish_story(
     if story.status != "Pending":
         raise HTTPException(status_code=400, detail="Only pending stories can be published")
 
-    if not story.selected_body:
+    if story.selected_body is None:
         raise HTTPException(status_code=400, detail="A body must be selected before publishing")
 
     story.status = "Posted"
     db.commit()
     db.refresh(story)
-
-    return {
-        "message": "Story published successfully",
-        "story_id": story.story_id
-    }
+    return {"message": "Story published successfully", "story_id": story.story_id}
 
 
-@app.patch("/hr/stories/{story_id}/reject", response_model=RejectResponse)
+@app.patch("/stories/{story_id}/reject", response_model=RejectResponse)
 def reject_story(
     story_id: int,
     db: Session = Depends(get_db),
-    hr_user: Employee = Depends(require_hr),
+    current_user: Employee = Depends(require_hr_or_admin),
 ):
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
@@ -232,8 +446,4 @@ def reject_story(
     story.status = "Rejected"
     db.commit()
     db.refresh(story)
-
-    return {
-        "message": "Story rejected successfully",
-        "story_id": story.story_id
-    }
+    return {"message": "Story rejected successfully", "story_id": story.story_id}
