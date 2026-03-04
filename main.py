@@ -17,10 +17,6 @@ from security import create_access_token, hash_password
 app = FastAPI()
 
 
-@app.get("/")
-def greet():
-    return {"message" : "Hello"}
-
 
 @app.get("/stories", response_model=List[StoryPublicResponse])
 def get_stories(page: int = 1, db: Session = Depends(get_db)):
@@ -64,7 +60,7 @@ def get_story(story_id: int, db: Session = Depends(get_db)):
     }
 
 
-# auth
+#auth
 
 @app.post("/register", response_model=RegisterResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
@@ -110,7 +106,6 @@ def login(
     })
 
     return {"access_token": access_token, "token_type": "bearer"}
-
 
 
 

@@ -29,7 +29,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = decode_token(token)
         email: str = payload.get("sub")
-        role_id: int = payload.get("role_id")
         if email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
     except JWTError:
