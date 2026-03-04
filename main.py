@@ -17,10 +17,11 @@ from security import create_access_token, hash_password
 app = FastAPI()
 
 
-# ─── Public Routes ────────────────────────────────────────────────────────────
 @app.get("/")
 def greet():
     return {"message" : "Hello"}
+
+
 @app.get("/stories", response_model=List[StoryPublicResponse])
 def get_stories(page: int = 1, db: Session = Depends(get_db)):
     limit = 10
@@ -63,7 +64,7 @@ def get_story(story_id: int, db: Session = Depends(get_db)):
     }
 
 
-# ─── Auth Routes ──────────────────────────────────────────────────────────────
+# auth
 
 @app.post("/register", response_model=RegisterResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
@@ -111,7 +112,7 @@ def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-# ─── Employee Routes (role_id: 0) ─────────────────────────────────────────────
+
 
 @app.post("/stories/create", response_model=StoryResponse, status_code=201)
 def create_story(
@@ -187,7 +188,6 @@ def edit_story(
     }
 
 
-# ─── HR + Admin Routes (role_id: 1 & 2) ──────────────────────────────────────
 
 @app.get("/users", response_model=List[UserResponse])
 def get_all_users(
