@@ -59,6 +59,7 @@ class RegisterResponse(BaseModel):
 
 class ApproveUserRequest(BaseModel):
     role_id: int
+    team_id: int
 
     @field_validator("role_id")
     def role_id_must_be_valid(cls, v):
@@ -66,6 +67,11 @@ class ApproveUserRequest(BaseModel):
             raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
         return v
 
+    @field_validator("team_id")
+    def team_id_must_be_valid(cls, v):
+        if v <= 0:
+            raise ValueError("team_id must be a positive number")
+        return v
 class UserResponse(BaseModel):
     employee_id: int
     name: str
@@ -133,3 +139,9 @@ class RejectResponse(BaseModel):
 
 class SelectBodyRequest(BaseModel):
     choice: str
+
+    @field_validator("choice")
+    def choice_must_be_valid(cls, v):
+        if v not in ["original", "ai"]:
+            raise ValueError("Choice must be 'original' or 'ai'")
+        return v
