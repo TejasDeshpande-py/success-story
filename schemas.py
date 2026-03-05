@@ -16,6 +16,22 @@ class RegisterRequest(BaseModel):
     picture: str
     type: str
 
+    @field_validator("name")
+    def name_must_not_be_empty(cls, v):
+        if len(v.strip()) < 2:
+            raise ValueError("Name must be at least 2 characters")
+        return v.strip()
+
+    @field_validator("password")
+    def password_must_be_strong(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one number")
+        return v
+
     @field_validator("picture")
     def picture_must_be_jpg(cls, v):
         if not v.endswith(".jpg"):
@@ -33,7 +49,6 @@ class RegisterRequest(BaseModel):
         if v not in ["individual", "group"]:
             raise ValueError("Invalid type. Use 'individual' or 'group'")
         return v
-
 class RegisterResponse(BaseModel):
     message: str
     employee_id: int
