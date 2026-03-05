@@ -271,31 +271,25 @@ def get_pending_users(
     ).offset(offset).limit(limit).all()
 
 
-@app.patch("/users/{employee_id}/approve", response_model=UserResponse)
-def approve_user(
-    employee_id: int,
-    payload: ApproveUserRequest,
-    db: Session = Depends(get_db),
-    current_user: Employee = Depends(require_hr_or_admin),
-):
-    user = db.query(Employee).filter(
-        Employee.employee_id == employee_id
-    ).first()
-
+@app.patch("/users/{id}/approve")
+def approve_user(id: int, request: ApproveUserRequest, db: Session = Depends(get_db), current_user=Depends(require_hr_or_admin)):
+    user = db.query(Employee).filter(Employee.employee_id == id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     if user.status != "Pending":
-        raise HTTPException(status_code=400, detail="User is not pending approval")
+        raise HTTPException(status_code=400, detail="User is not pending")
 
-    if payload.role_id == 2:
-        raise HTTPException(status_code=403, detail="Cannot assign Super Admin role")
-
-    user.role_id = payload.role_id
+    user.role_id = request.role_id
     user.status = "Active"
+    user.team_id = request.team_id if user.type == "group" else None  # ← HERE
+
     db.commit()
-    db.refresh(user)
-    return user
+    return {
+        "message": "User approved",
+        "employee_id": user.employee_id,
+        "role_id": user.role_id,
+        "team_id": user.team_id
+    }
 
 
 @app.patch("/users/{employee_id}/reject", response_model=UserResponse)
