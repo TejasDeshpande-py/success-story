@@ -10,10 +10,10 @@ class Employee(Base):
     email         = Column(String(160), unique=True, index=True, nullable=False)
     picture       = Column(String(500), nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role_id       = Column(Integer, nullable=True, default=None)  # assigned after approval
+    role_id       = Column(Integer, nullable=True, default=None)
     type          = Column(Enum('individual', 'group'), default='individual')
-    team_id       = Column(Integer, nullable=True, default=None)  # assigned after approval
-    status        = Column(String(20), nullable=False, default="Pending")  # Pending, Active, Rejected
+    team_id       = Column(Integer, nullable=True, default=None)
+    status        = Column(String(20), nullable=False, default="Pending")
 
     stories = relationship("SuccessStory", back_populates="creator")
 
@@ -23,12 +23,12 @@ class SuccessStory(Base):
 
     story_id      = Column(Integer, primary_key=True, index=True)
     title         = Column(String(200), nullable=False)
-    designation   = Column(String(120))
+    designation   = Column(String(120), nullable=False)
     body          = Column(Text, nullable=False)
     ai_body       = Column(Text, nullable=False)
-    selected_body = Column(Boolean, nullable=True, default=None)
+    selected_body = Column(Boolean, nullable=True, default=None)  # ← fixed
     status        = Column(String(20), nullable=False, default="Pending")
-    extra         = Column(String(500))
+    extra         = Column(String(500), nullable=True)
     created_by    = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
 
     creator = relationship("Employee", back_populates="stories")

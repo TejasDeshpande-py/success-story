@@ -14,7 +14,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     picture: str
-    type: str           # "individual" or "group"
+    type: str
 
     @field_validator("picture")
     def picture_must_be_jpg(cls, v):
@@ -43,7 +43,7 @@ class RegisterResponse(BaseModel):
     status: str
 
 class ApproveUserRequest(BaseModel):
-    role_id: int        # 0 = Employee, 1 = HR
+    role_id: int
 
     @field_validator("role_id")
     def role_id_must_be_valid(cls, v):
@@ -65,7 +65,7 @@ class UserResponse(BaseModel):
 
 class StoryCreate(BaseModel):
     title: str
-    designation: Optional[str] = None
+    designation: str
     body: str
     ai_body: str
     extra: Optional[str] = None
@@ -83,11 +83,11 @@ class HRStoryUpdate(BaseModel):
 class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
-    designation: Optional[str]
-    selected_body: bool
-    status: str
+    designation: str
+    selected_body: bool        # always True/False for published stories
     extra: Optional[str]
-    created_by: int
+    name: str
+    picture: str
 
     class Config:
         from_attributes = True
@@ -95,12 +95,14 @@ class StoryPublicResponse(BaseModel):
 class StoryResponse(BaseModel):
     story_id: int
     title: str
-    designation: Optional[str]
+    designation: str
     body: str
     ai_body: str
-    selected_body: Optional[bool]
+    selected_body: Optional[bool]   # can be None for pending stories
     status: str
     extra: Optional[str]
+    name: str
+    picture: str
     created_by: int
 
     class Config:

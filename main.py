@@ -40,6 +40,67 @@ def get_stories(page: int = 1, db: Session = Depends(get_db)):
     ]
 
 
+
+@app.get("/stories/pending", response_model=List[StoryResponse])
+def get_pending_stories(
+    page: int = 1,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    limit = 10
+    offset = (page - 1) * limit
+    stories = db.query(SuccessStory).filter(
+        SuccessStory.status == "Pending"
+    ).offset(offset).limit(limit).all()
+
+    return [
+        {
+            "story_id": story.story_id,
+            "title": story.title,
+            "designation": story.designation,
+            "body": story.body,
+            "ai_body": story.ai_body,
+            "selected_body": story.selected_body,
+            "status": story.status,
+            "extra": story.extra,
+            "created_by": story.created_by,
+            "name": story.creator.name,
+            "picture": story.creator.picture
+        }
+        for story in stories
+    ]
+
+
+@app.get("/stories/rejected", response_model=List[StoryResponse])
+def get_rejected_stories(
+    page: int = 1,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(require_hr_or_admin),
+):
+    limit = 10
+    offset = (page - 1) * limit
+    stories = db.query(SuccessStory).filter(
+        SuccessStory.status == "Rejected"
+    ).offset(offset).limit(limit).all()
+
+    return [
+        {
+            "story_id": story.story_id,
+            "title": story.title,
+            "designation": story.designation,
+            "body": story.body,
+            "ai_body": story.ai_body,
+            "selected_body": story.selected_body,
+            "status": story.status,
+            "extra": story.extra,
+            "created_by": story.created_by,
+            "name": story.creator.name,
+            "picture": story.creator.picture
+        }
+        for story in stories
+    ]
+
+
 @app.get("/stories/{story_id}", response_model=StoryPublicResponse)
 def get_story(story_id: int, db: Session = Depends(get_db)):
     story = db.query(SuccessStory).filter(
@@ -106,7 +167,6 @@ def login(
     })
 
     return {"access_token": access_token, "token_type": "bearer"}
-
 
 
 @app.post("/stories/create", response_model=StoryResponse, status_code=201)
@@ -183,6 +243,7 @@ def edit_story(
     }
 
 
+# HR AND ADMIN ONLY
 
 @app.get("/users", response_model=List[UserResponse])
 def get_all_users(
@@ -257,66 +318,6 @@ def reject_user(
     db.commit()
     db.refresh(user)
     return user
-
-
-@app.get("/stories/pending", response_model=List[StoryResponse])
-def get_pending_stories(
-    page: int = 1,
-    db: Session = Depends(get_db),
-    current_user: Employee = Depends(require_hr_or_admin),
-):
-    limit = 10
-    offset = (page - 1) * limit
-    stories = db.query(SuccessStory).filter(
-        SuccessStory.status == "Pending"
-    ).offset(offset).limit(limit).all()
-
-    return [
-        {
-            "story_id": story.story_id,
-            "title": story.title,
-            "designation": story.designation,
-            "body": story.body,
-            "ai_body": story.ai_body,
-            "selected_body": story.selected_body,
-            "status": story.status,
-            "extra": story.extra,
-            "created_by": story.created_by,
-            "name": story.creator.name,
-            "picture": story.creator.picture
-        }
-        for story in stories
-    ]
-
-
-@app.get("/stories/rejected", response_model=List[StoryResponse])
-def get_rejected_stories(
-    page: int = 1,
-    db: Session = Depends(get_db),
-    current_user: Employee = Depends(require_hr_or_admin),
-):
-    limit = 10
-    offset = (page - 1) * limit
-    stories = db.query(SuccessStory).filter(
-        SuccessStory.status == "Rejected"
-    ).offset(offset).limit(limit).all()
-
-    return [
-        {
-            "story_id": story.story_id,
-            "title": story.title,
-            "designation": story.designation,
-            "body": story.body,
-            "ai_body": story.ai_body,
-            "selected_body": story.selected_body,
-            "status": story.status,
-            "extra": story.extra,
-            "created_by": story.created_by,
-            "name": story.creator.name,
-            "picture": story.creator.picture
-        }
-        for story in stories
-    ]
 
 
 @app.patch("/stories/{story_id}/edit", response_model=StoryResponse)
