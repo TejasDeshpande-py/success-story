@@ -16,7 +16,9 @@ from security import create_access_token, hash_password
 
 app = FastAPI()
 
-
+@app.get("/")
+def greet():
+    return {"message":"Hello"}
 
 @app.get("/stories", response_model=List[StoryPublicResponse])
 def get_stories(page: int = 1, db: Session = Depends(get_db)):
