@@ -31,15 +31,13 @@ def get_stories(page: int = 1, db: Session = Depends(get_db)):
             "story_id": story.story_id,
             "title": story.title,
             "designation": story.designation,
-            "selected_body": story.selected_body,
+            "selected_body": story.ai_body if story.selected_body else story.body,  # bool mapped to text
             "extra": story.extra,
             "name": story.creator.name,
             "picture": story.creator.picture
         }
         for story in stories
     ]
-
-
 
 @app.get("/stories/pending", response_model=List[StoryResponse])
 def get_pending_stories(

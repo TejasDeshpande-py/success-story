@@ -105,8 +105,8 @@ class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
     designation: str
-    selected_body: bool        # always True/False for published stories
-    extra: Optional[str]
+    selected_body: str  # ← change bool to str
+    extra: Optional[str] = None
     name: str
     picture: str
 
