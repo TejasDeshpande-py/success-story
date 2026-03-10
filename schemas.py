@@ -1,13 +1,17 @@
-from typing import Optional
+from typing import Optional, Literal
+from datetime import datetime
 from pydantic import BaseModel, field_validator
+
 
 class LoginRequest(BaseModel):
     email: str
     password: str
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
 
 class RegisterRequest(BaseModel):
     name: str
@@ -16,32 +20,16 @@ class RegisterRequest(BaseModel):
     picture: str
     type: str
 
-    @field_validator("name")
-    def name_must_not_be_empty(cls, v):
-        if len(v.strip()) < 2:
-            raise ValueError("Name must be at least 2 characters")
-        return v.strip()
-
-    @field_validator("password")
-    def password_must_be_strong(cls, v):
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters")
-        if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one number")
-        return v
-
     @field_validator("picture")
-    def picture_must_be_jpg(cls, v):
-        if not v.endswith(".jpg"):
-            raise ValueError("Picture must be a .jpg URL")
+    def picture_must_be_valid_image(cls, v):
+        if not any(v.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".webp"]):
+            raise ValueError("Picture must be a valid image URL (.jpg, .jpeg, .png, .webp)")
         return v
 
     @field_validator("email")
     def email_must_be_company(cls, v):
-        if not v.endswith("@company.com"):
-            raise ValueError("Email must be a @company.com address")
+        if not v.endswith("@tricon.com"):
+            raise ValueError("Email must be a @tricon.com address")
         return v
 
     @field_validator("type")
@@ -49,6 +37,8 @@ class RegisterRequest(BaseModel):
         if v not in ["individual", "group"]:
             raise ValueError("Invalid type. Use 'individual' or 'group'")
         return v
+
+
 class RegisterResponse(BaseModel):
     message: str
     employee_id: int
@@ -57,9 +47,11 @@ class RegisterResponse(BaseModel):
     type: str
     status: str
 
+
 class ApproveUserRequest(BaseModel):
     role_id: int
-    team_id: int
+    tricon_id: str
+    team_id: Optional[int] = None
 
     @field_validator("role_id")
     def role_id_must_be_valid(cls, v):
@@ -67,22 +59,41 @@ class ApproveUserRequest(BaseModel):
             raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
         return v
 
-    @field_validator("team_id")
-    def team_id_must_be_valid(cls, v):
-        if v <= 0:
-            raise ValueError("team_id must be a positive number")
+    @field_validator("tricon_id")
+    def tricon_id_must_be_valid(cls, v):
+        if not v.startswith("TRI"):
+            raise ValueError("tricon_id must start with TRI e.g. TRI001")
         return v
+
+
 class UserResponse(BaseModel):
     employee_id: int
+    tricon_id: Optional[str]
     name: str
     email: str
     type: str
     role_id: Optional[int]
     team_id: Optional[int]
     status: str
+    created_at: Optional[datetime]
 
     class Config:
         from_attributes = True
+
+
+class TeamCreate(BaseModel):
+    team_name: str
+
+
+class TeamResponse(BaseModel):
+    team_id: int
+    team_name: str
+    created_at: Optional[datetime]
+    created_by: Optional[int]
+
+    class Config:
+        from_attributes = True
+
 
 class StoryCreate(BaseModel):
     title: str
@@ -90,9 +101,13 @@ class StoryCreate(BaseModel):
     body: str
     ai_body: str
     extra: Optional[str] = None
+    story_for: int
+    is_team_story: bool = False
+
 
 class EmployeeStoryUpdate(BaseModel):
     body: str
+
 
 class HRStoryUpdate(BaseModel):
     body: Optional[str] = None
@@ -101,17 +116,22 @@ class HRStoryUpdate(BaseModel):
     ai_body: Optional[str] = None
     extra: Optional[str] = None
 
+
 class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
     designation: str
-    selected_body: str  # ← change bool to str
-    extra: Optional[str] = None
+    content: str        
+    extra: Optional[str]
+    is_team_story: bool
+    team_id: Optional[int]
     name: str
     picture: str
+    created_at: Optional[datetime]
 
     class Config:
         from_attributes = True
+
 
 class StoryResponse(BaseModel):
     story_id: int
@@ -119,29 +139,32 @@ class StoryResponse(BaseModel):
     designation: str
     body: str
     ai_body: str
-    selected_body: Optional[bool]   # can be None for pending stories
+    selected_body: Optional[bool]
     status: str
     extra: Optional[str]
+    is_team_story: bool
+    team_id: Optional[int]
+    story_for: int
+    created_by: int
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+    updated_by: Optional[int]
     name: str
     picture: str
-    created_by: int
 
     class Config:
         from_attributes = True
+
+
+class SelectBodyRequest(BaseModel):
+    choice: Literal["original", "ai"]
+
 
 class PublishResponse(BaseModel):
     message: str
     story_id: int
 
+
 class RejectResponse(BaseModel):
     message: str
     story_id: int
-
-class SelectBodyRequest(BaseModel):
-    choice: str
-
-    @field_validator("choice")
-    def choice_must_be_valid(cls, v):
-        if v not in ["original", "ai"]:
-            raise ValueError("Choice must be 'original' or 'ai'")
-        return v
