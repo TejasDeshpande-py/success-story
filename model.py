@@ -14,7 +14,6 @@ class Employee(Base):
     picture       = Column(String(500), nullable=False)
     password_hash = Column(String(255), nullable=False)
     role_id       = Column(Integer, nullable=True, default=None)
-    type          = Column(Enum('individual', 'group'), default='individual')
     team_id       = Column(Integer, ForeignKey("teams.team_id"), nullable=True, default=None)
     status        = Column(Enum("Pending", "Active", "Rejected"), nullable=False, default="Pending")
     created_at    = Column(DateTime, server_default=func.now())
@@ -22,9 +21,8 @@ class Employee(Base):
     updated_at    = Column(DateTime, onupdate=func.now(), nullable=True)
     updated_by    = Column(Integer, ForeignKey("employees.employee_id"), nullable=True)
 
-    stories       = relationship("SuccessStory", back_populates="creator", foreign_keys="SuccessStory.created_by")
-    team          = relationship("Team", back_populates="employees", foreign_keys="[Employee.team_id]")
-
+    stories = relationship("SuccessStory", back_populates="creator", foreign_keys="[SuccessStory.created_by]")
+    team    = relationship("Team", back_populates="employees", foreign_keys="[Employee.team_id]")
 
 class Team(Base):
     __tablename__ = "teams"

@@ -18,7 +18,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     picture: str
-    type: str
+    tricon_id: str
 
     @field_validator("picture")
     def picture_must_be_valid_image(cls, v):
@@ -32,10 +32,10 @@ class RegisterRequest(BaseModel):
             raise ValueError("Email must be a @tricon.com address")
         return v
 
-    @field_validator("type")
-    def type_must_be_valid(cls, v):
-        if v not in ["individual", "group"]:
-            raise ValueError("Invalid type. Use 'individual' or 'group'")
+    @field_validator("tricon_id")
+    def tricon_id_must_be_valid(cls, v):
+        if not v.startswith("TRI"):
+            raise ValueError("tricon_id must start with TRI e.g. TRI001")
         return v
 
 
@@ -44,13 +44,11 @@ class RegisterResponse(BaseModel):
     employee_id: int
     name: str
     email: str
-    type: str
     status: str
 
 
 class ApproveUserRequest(BaseModel):
     role_id: int
-    tricon_id: str
     team_id: Optional[int] = None
 
     @field_validator("role_id")
@@ -59,19 +57,12 @@ class ApproveUserRequest(BaseModel):
             raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
         return v
 
-    @field_validator("tricon_id")
-    def tricon_id_must_be_valid(cls, v):
-        if not v.startswith("TRI"):
-            raise ValueError("tricon_id must start with TRI e.g. TRI001")
-        return v
-
 
 class UserResponse(BaseModel):
     employee_id: int
     tricon_id: Optional[str]
     name: str
     email: str
-    type: str
     role_id: Optional[int]
     team_id: Optional[int]
     status: str

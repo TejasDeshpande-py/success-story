@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — TriconStories</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fdf4ee;--bg2:#ffffff;--bg3:#f5e6da;--border:#e2cfc2;
+  --brown:#7c4a2d;--brown2:#5c3520;--brownlt:#a0674a;
+  --rose:#e8c4b0;--rosebg:#f7e4d8;
+  --text:#2c1a10;--sub:#6b4535;--muted:#b09080;
+  --red:#b83225;--green:#3d7035;--yellow:#9a6c18;
+  --sidebar:220px;
+  --shadow-sm:0 1px 4px rgba(90,45,15,.07);
+  --shadow:0 4px 18px rgba(90,45,15,.10);
+  --shadow-lg:0 10px 40px rgba(90,45,15,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;}
+.sidebar::-webkit-scrollbar{width:0;}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border);}
+.logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:800;color:var(--brown2);text-decoration:none;display:block;margin-bottom:16px;}
+.logo span{color:var(--brownlt);font-style:italic;}
+.sb-avatar{width:42px;height:42px;border-radius:50%;background:var(--rosebg);border:2px solid var(--rose);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--brown);margin-bottom:8px;overflow:hidden;flex-shrink:0;}
+.sb-avatar img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.sb-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;line-height:1.3;word-break:break-word;}
+.rbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase;}
+.re{background:rgba(61,112,53,.1);color:var(--green);border:1px solid rgba(61,112,53,.25);}
+.rh{background:rgba(124,74,45,.1);color:var(--brown);border:1px solid rgba(124,74,45,.25);}
+.ra{background:rgba(154,108,24,.1);color:var(--yellow);border:1px solid rgba(154,108,24,.25);}
+nav.sb-nav{flex:1;padding:12px 0;}
+.nav-sec{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:12px 20px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .18s;border-left:2.5px solid transparent;}
+.nav-item:hover{background:var(--rosebg);color:var(--brown);}
+.nav-item.active{background:rgba(124,74,45,.08);color:var(--brown);border-left-color:var(--brown);font-weight:600;}
+.nav-item .ic{font-size:15px;flex-shrink:0;}
+.sb-foot{padding:14px 20px;border-top:1px solid var(--border);}
+.logout-btn{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);background:rgba(184,50,37,.04);}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(253,244,238,.96);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);}
+.page-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text);}
+.topbar-right{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+
+/* SECTIONS */
+.sec{display:none;padding:28px 32px 60px;animation:fadeIn .25s ease;}
+.sec.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sec-head{margin-bottom:22px;}
+.sec-head h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.sec-head p{font-size:13px;color:var(--muted);font-weight:300;}
+
+/* STAT CARDS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;}
+.stat-1::before{background:var(--brown);}
+.stat-2::before{background:var(--green);}
+.stat-3::before{background:var(--yellow);}
+.stat-4::before{background:var(--brownlt);}
+.stat-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.stat-l{font-size:12px;color:var(--muted);font-weight:400;}
+
+/* CARD */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;box-shadow:var(--shadow-sm);}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg);}
+.panel-title{font-size:13px;font-weight:600;color:var(--text);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:10px 16px;text-align:left;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{font-size:13px;color:var(--sub);padding:11px 16px;border-bottom:1px solid rgba(226,207,194,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(247,228,216,.35);}
+.tname{font-weight:600;color:var(--text);}
+.tdact{display:flex;gap:6px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+.fl{display:flex;flex-direction:column;gap:6px;}
+.fl label{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;}
+.fl input,.fl textarea,.fl select{width:100%;border:1.5px solid var(--border);border-radius:8px;background:white;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;outline:none;transition:border-color .18s,box-shadow .18s;}
+.fl input:focus,.fl textarea:focus,.fl select:focus{border-color:var(--brown);box-shadow:0 0 0 3px rgba(124,74,45,.09);}
+.fl input::placeholder,.fl textarea::placeholder{color:var(--muted);}
+.fl textarea{resize:vertical;min-height:100px;line-height:1.6;}
+.fl-full{grid-column:1/-1;}
+.cc{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:none;padding:8px 16px;}
+.btn-sm{font-size:12px;padding:6px 12px;border-radius:6px;}
+.bp{background:var(--brown);color:white;}
+.bp:hover:not(:disabled){background:var(--brown2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(92,53,32,.25);}
+.bp:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.bgs{background:rgba(61,112,53,.1);border:1px solid rgba(61,112,53,.25);color:var(--green);}
+.bgs:hover{background:rgba(61,112,53,.18);}
+.bgr{background:rgba(184,50,37,.08);border:1px solid rgba(184,50,37,.2);color:var(--red);}
+.bgr:hover{background:rgba(184,50,37,.14);}
+.bgo{background:rgba(154,108,24,.08);border:1px solid rgba(154,108,24,.22);color:var(--yellow);}
+.bgo:hover{background:rgba(154,108,24,.14);}
+.btn-full{width:100%;height:46px;border-radius:8px;background:var(--brown);color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;}
+.btn-full:hover:not(:disabled){background:var(--brown2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(92,53,32,.26);}
+.btn-full:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--sub);}
+.btn-outline:hover{border-color:var(--brown);color:var(--brown);}
+
+/* STATUS BADGES */
+.st-b{display:inline-block;font-size:10px;font-weight:600;padding:2px 9px;border-radius:100px;letter-spacing:.05em;text-transform:uppercase;}
+.sp{background:rgba(154,108,24,.1);color:var(--yellow);border:1px solid rgba(154,108,24,.25);}
+.sa{background:rgba(61,112,53,.1);color:var(--green);border:1px solid rgba(61,112,53,.25);}
+.sr{background:rgba(184,50,37,.08);color:var(--red);border:1px solid rgba(184,50,37,.2);}
+.spo{background:rgba(124,74,45,.1);color:var(--brown);border:1px solid rgba(124,74,45,.25);}
+
+/* ALERTS */
+.al{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none;line-height:1.5;}
+.al.on{display:block;}
+.ae{background:rgba(184,50,37,.06);border:1px solid rgba(184,50,37,.2);color:var(--red);}
+.as{background:rgba(61,112,53,.06);border:1px solid rgba(61,112,53,.2);color:var(--green);}
+.aw{background:rgba(154,108,24,.06);border:1px solid rgba(154,108,24,.2);color:var(--yellow);}
+
+/* PAGINATE */
+.pag{display:flex;align-items:center;gap:5px;padding:12px 16px;border-top:1px solid var(--border);}
+.pb{min-width:32px;height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--sub);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.pb:hover:not(:disabled){border-color:var(--brown);color:var(--brown);}
+.pb.on{background:var(--brown);border-color:var(--brown);color:white;}
+.pb:disabled{opacity:.3;cursor:not-allowed;}
+
+/* EMPTY */
+.empty{text-align:center;padding:44px 24px;color:var(--muted);font-size:13px;}
+.empty .ei{font-size:28px;margin-bottom:8px;}
+
+/* MODAL */
+.ov{position:fixed;inset:0;z-index:200;background:rgba(44,26,16,.46);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}
+.ov.open{display:flex;}
+.mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;animation:modIn .24s ease;box-shadow:var(--shadow-lg);}
+.mod-lg{max-width:700px;}
+.mod::-webkit-scrollbar{width:4px;}
+.mod::-webkit-scrollbar-thumb{background:var(--rose);border-radius:4px;}
+.mod-top{height:3px;background:linear-gradient(90deg,var(--brown2),var(--brownlt));border-radius:14px 14px 0 0;}
+@keyframes modIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
+.mhdr h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--text);}
+.xb{width:28px;height:28px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s;}
+.xb:hover{color:var(--red);border-color:rgba(184,50,37,.25);}
+.mbody{padding:20px 22px;}
+.mfoot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+/* BODY SELECT */
+.body-choice{border:1.5px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .18s;margin-bottom:10px;}
+.body-choice:hover{border-color:var(--brownlt);}
+.body-choice.picked{border-color:var(--brown);background:rgba(124,74,45,.04);}
+.bc-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.bc-text{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300;max-height:100px;overflow-y:auto;}
+.bc-text::-webkit-scrollbar{width:3px;}
+.bc-text::-webkit-scrollbar-thumb{background:var(--rose);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--brown2);color:white;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .28s cubic-bezier(.4,0,.2,1);pointer-events:none;max-width:320px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* TRICONID BADGE */
+.tid-chip{font-size:11px;font-weight:600;background:rgba(124,74,45,.08);color:var(--brownlt);border:1px solid rgba(124,74,45,.2);border-radius:100px;padding:2px 9px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-top">
+    <a class="logo" href="feed.html">Tricon<span>Stories</span></a>
+    <div class="sb-avatar" id="sav">—</div>
+    <div class="sb-name" id="sname">Loading...</div>
+    <span class="rbadge re" id="sbadge">Employee</span>
+  </div>
+  <nav class="sb-nav" id="navarea"></nav>
+  <div class="sb-foot">
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right" id="topbar-sub"></div>
+  </div>
+
+  <!-- EMPLOYEE SECTIONS -->
+  <div class="sec" id="sec-write">
+    <div class="sec-head"><h2>Write a Story</h2><p>Share your achievement or team milestone with Tricon.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Story Details</span></div>
+      <div style="padding:20px 22px">
+        <div class="al ae" id="w-err"></div>
+        <div class="al as" id="w-ok"></div>
+        <div class="form-grid">
+          <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
+          <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
+          <div class="fl fl-full"><label>Your Story</label><textarea id="w-body" rows="5" placeholder="Write about your achievement, contribution, or milestone..." oninput="cc('w-body','w-bc',5000)"></textarea><div class="cc" id="w-bc">0 / 5000</div></div>
+          <div class="fl fl-full"><label>AI-Enhanced Version</label><textarea id="w-ai" rows="5" placeholder="Paste the AI-polished version of your story here..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
+          <div class="fl fl-full"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><input type="text" id="w-extra" placeholder="e.g. Recognised by the project manager" oninput="cc('w-extra','w-xc',500)"/><div class="cc" id="w-xc">0 / 500</div></div>
+        </div>
+        <div style="margin-top:4px"><button class="btn-full bp" id="w-btn" onclick="submitStory()">Submit Story</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-mystories">
+    <div class="sec-head"><h2>My Stories</h2><p>Stories you have submitted.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Submitted Stories</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="ms-tbody"></tbody></table></div>
+      <div class="pag" id="ms-pag"></div>
+    </div>
+  </div>
+
+  <!-- HR SECTIONS -->
+  <div class="sec" id="sec-overview">
+    <div class="sec-head"><h2>Overview</h2><p>Platform summary at a glance.</p></div>
+    <div class="stats">
+      <div class="stat stat-1"><div class="stat-n" id="ov-pu">—</div><div class="stat-l">Pending Users</div></div>
+      <div class="stat stat-2"><div class="stat-n" id="ov-au">—</div><div class="stat-l">Active Users</div></div>
+      <div class="stat stat-3"><div class="stat-n" id="ov-ps">—</div><div class="stat-l">Pending Stories</div></div>
+      <div class="stat stat-4"><div class="stat-n" id="ov-po">—</div><div class="stat-l">Published Stories</div></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-pendingusers">
+    <div class="sec-head"><h2>Pending Users</h2><p>Approve or reject new registrations.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Awaiting Approval</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Tricon ID</th><th>Actions</th></tr></thead><tbody id="pu-tbody"></tbody></table></div>
+      <div class="pag" id="pu-pag"></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-activeusers">
+    <div class="sec-head"><h2>Active Users</h2><p>All approved members.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Active Members</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Tricon ID</th><th>Role</th><th>Team</th><th>Status</th></tr></thead><tbody id="au-tbody"></tbody></table></div>
+      <div class="pag" id="au-pag"></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-pendingstories">
+    <div class="sec-head"><h2>Pending Stories</h2><p>Review and publish or reject employee submissions.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Stories Awaiting Review</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="ps-tbody"></tbody></table></div>
+      <div class="pag" id="ps-pag"></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-rejectedstories">
+    <div class="sec-head"><h2>Rejected Stories</h2><p>Previously rejected story submissions.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Rejected</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="rs-tbody"></tbody></table></div>
+      <div class="pag" id="rs-pag"></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-teams">
+    <div class="sec-head"><h2>Teams</h2><p>Manage Tricon teams.</p></div>
+    <div class="panel" style="max-width:400px;margin-bottom:20px;">
+      <div class="panel-head"><span class="panel-title">Create New Team</span></div>
+      <div style="padding:16px 20px;display:flex;gap:10px;">
+        <input type="text" id="team-name" placeholder="Team name" style="flex:1;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:0 12px;outline:none;transition:border-color .18s;" onfocus="this.style.borderColor='var(--brown)'" onblur="this.style.borderColor='var(--border)'" />
+        <button class="btn bp" onclick="createTeam()">Create</button>
+      </div>
+      <div class="al ae" id="team-err" style="margin:0 20px 14px;display:none;"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">All Teams</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team ID</th><th>Team Name</th><th>Created</th></tr></thead><tbody id="tm-tbody"></tbody></table></div>
+    </div>
+  </div>
+</div><!-- /main -->
+
+<!-- MODAL: APPROVE USER -->
+<div class="ov" id="ov-approve">
+  <div class="mod">
+    <div class="mod-top"></div>
+    <div class="mhdr"><h3>Approve User</h3><button class="xb" onclick="closeOv('ov-approve')">✕</button></div>
+    <div class="mbody">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--sub);line-height:1.6;" id="app-info"></div>
+      <input type="hidden" id="app-id" />
+      <div class="al ae" id="app-err"></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="fl"><label>Assign Role</label>
+          <select id="app-role"><option value="0">Employee</option><option value="1">HR</option></select>
+        </div>
+        <div class="fl"><label>Team ID <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label>
+          <input type="number" id="app-team" placeholder="e.g. 1" />
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeOv('ov-approve')">Cancel</button>
+      <button class="btn bp" onclick="confirmApprove()">Approve User</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT MY STORY -->
+<div class="ov" id="ov-edit">
+  <div class="mod mod-lg">
+    <div class="mod-top"></div>
+    <div class="mhdr"><h3>Edit My Story</h3><button class="xb" onclick="closeOv('ov-edit')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="edit-id" />
+      <div class="al ae" id="edit-err"></div>
+      <div class="form-grid">
+        <div class="fl fl-full"><label>Story Body</label><textarea id="edit-body" rows="7"></textarea></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeOv('ov-edit')">Cancel</button>
+      <button class="btn bp" onclick="saveEditStory()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REVIEW STORY (HR) -->
+<div class="ov" id="ov-review">
+  <div class="mod mod-lg">
+    <div class="mod-top"></div>
+    <div class="mhdr"><h3>Review Story</h3><button class="xb" onclick="closeOv('ov-review')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="rev-id" />
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Author</div>
+        <div style="font-size:13px;color:var(--text)" id="rev-author"></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Select body to publish</div>
+      <div class="body-choice" id="bc-orig" onclick="pickBody('original')">
+        <div class="bc-label">Original</div>
+        <div class="bc-text" id="rev-orig"></div>
+      </div>
+      <div class="body-choice" id="bc-ai" onclick="pickBody('ai')">
+        <div class="bc-label">AI Enhanced</div>
+        <div class="bc-text" id="rev-ai"></div>
+      </div>
+      <div class="al ae" id="rev-err" style="margin-top:12px;"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn bgr" onclick="rejectStory()">Reject</button>
+      <button class="btn btn-outline" onclick="closeOv('ov-review')">Cancel</button>
+      <button class="btn bp" onclick="publishStory()">Publish Selected →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HR EDIT STORY -->
+<div class="ov" id="ov-hredit">
+  <div class="mod mod-lg">
+    <div class="mod-top"></div>
+    <div class="mhdr"><h3>Edit Story</h3><button class="xb" onclick="closeOv('ov-hredit')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="hre-id" />
+      <div class="al ae" id="hre-err"></div>
+      <div class="form-grid">
+        <div class="fl fl-full"><label>Title</label><input type="text" id="hre-title" /></div>
+        <div class="fl"><label>Designation</label><input type="text" id="hre-desig" /></div>
+        <div class="fl"><label>Extra Info</label><input type="text" id="hre-extra" /></div>
+        <div class="fl fl-full"><label>Body</label><textarea id="hre-body" rows="5"></textarea></div>
+        <div class="fl fl-full"><label>AI Body</label><textarea id="hre-ai" rows="5"></textarea></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeOv('ov-hredit')">Cancel</button>
+      <button class="btn bp" onclick="saveHREdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API="http://127.0.0.1:8000";
+let token=localStorage.getItem('token');
+let user=null;
+let selBody=null;
+
+const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
+const esc=s=>(s||'').replace(/'/g,"\\'");
+const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  if(!token){window.location.href='login.html';return;}
+  try{await fetchUser();buildNav();
+    if(user.role_id===0)showSec('write');
+    else{loadOverviewStats();showSec('overview');}
+  }catch{window.location.href='login.html';}
+});
+
+async function fetchUser(){
+  const payload=JSON.parse(atob(token.split('.')[1]));
+  user={email:payload.sub,role_id:payload.role_id??0,user_id:payload.user_id,name:payload.sub};
+  try{
+    const r=await fetch(`${API}/users/me`,{headers:{Authorization:`Bearer ${token}`}});
+    if(r.ok){const me=await r.json();Object.assign(user,me);}
+  }catch{}
+  const av=document.getElementById('sav');
+  if(user.picture){av.innerHTML=`<img src="${user.picture}" onerror="this.parentElement.textContent='${ini(user.name)}'">`;}
+  else av.textContent=ini(user.name);
+  document.getElementById('sname').textContent=user.name||user.email;
+  const b=document.getElementById('sbadge');
+  if(user.role_id===2){b.textContent='Admin';b.className='rbadge ra';}
+  else if(user.role_id===1){b.textContent='HR';b.className='rbadge rh';}
+  else{b.textContent='Employee';b.className='rbadge re';}
+}
+
+function buildNav(){
+  const nav=document.getElementById('navarea');const role=user?.role_id??0;
+  const items=role>=1?[
+    {sec:'overview',ic:'📊',label:'Overview'},
+    {sec:'pendingusers',ic:'👤',label:'Pending Users'},
+    {sec:'activeusers',ic:'👥',label:'Active Users'},
+    {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
+    {sec:'rejectedstories',ic:'❌',label:'Rejected Stories'},
+    {sec:'teams',ic:'🏢',label:'Teams'},
+  ]:[
+    {sec:'write',ic:'✍️',label:'Write Story'},
+    {sec:'mystories',ic:'📄',label:'My Stories'},
+  ];
+  nav.innerHTML=items.map(i=>`<div class="nav-item" id="ni-${i.sec}" onclick="showSec('${i.sec}')"><span class="ic">${i.ic}</span>${i.label}</div>`).join('');
+}
+
+function showSec(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById(`sec-${id}`);
+  const ni=document.getElementById(`ni-${id}`);
+  if(sec)sec.classList.add('active');
+  if(ni)ni.classList.add('active');
+  const titles={write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
+  document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
+  if(id==='mystories')loadMyStories(1);
+  if(id==='pendingusers')loadPendingUsers(1);
+  if(id==='activeusers')loadActiveUsers(1);
+  if(id==='pendingstories')loadPendingStories(1);
+  if(id==='rejectedstories')loadRejectedStories(1);
+  if(id==='teams')loadTeams();
+}
+
+function hdr(){return{Authorization:`Bearer ${token}`,'Content-Type':'application/json'};}
+function logout(){localStorage.removeItem('token');window.location.href='login.html';}
+
+// ALERTS
+function showAl(id,m){const e=document.getElementById(id);if(!e)return;e.textContent=m;e.classList.add('on');}
+function hideAl(id){const e=document.getElementById(id);if(e)e.classList.remove('on');}
+
+// TOAST
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+// CHAR COUNT
+function cc(inp,lbl,max){const v=document.getElementById(inp).value.length;document.getElementById(lbl).textContent=`${v} / ${max}`;}
+
+// BADGES
+function roleBadge(r){if(r===1)return '<span class="rbadge rh">HR</span>';if(r===2)return '<span class="rbadge ra">Admin</span>';return '<span class="rbadge re">Employee</span>';}
+function stBadge(s){const m={Pending:'sp',Active:'sa',Rejected:'sr',Posted:'sa'};return `<span class="st-b ${m[s]||'sp'}">${s}</span>`;}
+function empty(msg){return `<tr><td colspan="10"><div class="empty"><div class="ei">📭</div>${msg}</div></td></tr>`;}
+
+// MODAL
+function openOv(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeOv(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.ov.open').forEach(o=>{o.classList.remove('open');document.body.style.overflow='';});});
+document.querySelectorAll('.ov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov){ov.classList.remove('open');document.body.style.overflow='';}}));
+
+// PAGINATION BUILDER
+function buildPag(containerId,current,hasMore,loadFn){
+  const c=document.getElementById(containerId);if(!c)return;
+  let h='';
+  if(current>1)h+=`<button class="pb" onclick="${loadFn}(${current-1})">← Prev</button>`;
+  for(let i=Math.max(1,current-2);i<=current+(hasMore?1:0);i++)h+=`<button class="pb ${i===current?'on':''}" onclick="${loadFn}(${i})">${i}</button>`;
+  if(hasMore)h+=`<button class="pb" onclick="${loadFn}(${current+1})">Next →</button>`;
+  c.innerHTML=h;
+}
+
+// ==================== EMPLOYEE ====================
+
+async function submitStory(){
+  hideAl('w-err');hideAl('w-ok');
+  const title=document.getElementById('w-title').value.trim();
+  const designation=document.getElementById('w-desig').value.trim();
+  const body=document.getElementById('w-body').value.trim();
+  const ai_body=document.getElementById('w-ai').value.trim();
+  const extra=document.getElementById('w-extra').value.trim()||null;
+  if(!title||!designation||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
+  if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
+  if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
+  const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
+  try{
+    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
+    showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
+    ['w-title','w-desig','w-body','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');
+    ['w-tc','w-bc','w-ac','w-xc'].forEach(id=>document.getElementById(id).textContent='0 / '+({'w-tc':200,'w-bc':5000,'w-ac':5000,'w-xc':500}[id.replace('c','c')]||'—'));
+  }catch(e){showAl('w-err',e.message);}
+  finally{btn.textContent='Submit Story';btn.disabled=false;}
+}
+
+let msPg=1;
+async function loadMyStories(p=1){
+  msPg=p;const tb=document.getElementById('ms-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/stories?page=${p}`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
+    tb.innerHTML=d.filter(s=>s.created_by===user.user_id||s.story_for===user.user_id).map((s,i)=>`
+      <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td><td>${stBadge(s.status)}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><div class="tdact">${s.status==='Pending'?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
+    buildPag('ms-pag',p,d.length===20,'loadMyStories');
+  }catch{tb.innerHTML=empty('Failed to load stories.');}
+}
+
+function openEditStory(id,body){
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-body').value=body;
+  hideAl('edit-err');openOv('ov-edit');
+}
+async function saveEditStory(){
+  hideAl('edit-err');
+  const id=document.getElementById('edit-id').value;
+  const body=document.getElementById('edit-body').value.trim();
+  if(!body)return showAl('edit-err','Body cannot be empty.');
+  try{
+    const r=await fetch(`${API}/stories/${id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({body})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    closeOv('ov-edit');toast('Story updated!');loadMyStories(msPg);
+  }catch(e){showAl('edit-err',e.message);}
+}
+
+// ==================== HR ====================
+
+async function loadOverviewStats(){
+  try{
+    const [pu,au,ps,pub]=await Promise.all([
+      fetch(`${API}/users/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
+      fetch(`${API}/users?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
+      fetch(`${API}/stories/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
+      fetch(`${API}/stories?page=1`).then(r=>r.json()).catch(()=>[]),
+    ]);
+    document.getElementById('ov-pu').textContent=pu.length||0;
+    document.getElementById('ov-au').textContent=au.length||0;
+    document.getElementById('ov-ps').textContent=ps.length||0;
+    document.getElementById('ov-po').textContent=pub.length||0;
+  }catch{}
+}
+
+let puPg=1;
+async function loadPendingUsers(p=1){
+  puPg=p;const tb=document.getElementById('pu-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/users/pending?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No pending users.');document.getElementById('pu-pag').innerHTML='';return;}
+    tb.innerHTML=d.map((u,i)=>`
+      <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${u.name}</div></td><td style="font-size:12px">${u.email}</td>
+      <td><span class="tid-chip">${u.tricon_id||'—'}</span></td>
+      <td><div class="tdact">
+        <button class="btn btn-sm bgs" onclick="openApprove(${u.employee_id},'${esc(u.name)}','${u.email}','${u.tricon_id||''}')">Approve</button>
+        <button class="btn btn-sm bgr" onclick="quickReject(${u.employee_id})">Reject</button>
+      </div></td></tr>`).join('');
+    buildPag('pu-pag',p,d.length===20,'loadPendingUsers');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
+
+function openApprove(id,name,email,tricon_id){
+  document.getElementById('app-id').value=id;
+  document.getElementById('app-info').innerHTML=`<strong style="color:var(--text)">${name}</strong><br><span style="font-size:12px">${email}</span><br><span style="font-size:12px;margin-top:2px;display:block">Tricon ID: <span class="tid-chip">${tricon_id||'—'}</span></span>`;
+  document.getElementById('app-team').value='';hideAl('app-err');openOv('ov-approve');
+}
+async function confirmApprove(){
+  hideAl('app-err');
+  const id=document.getElementById('app-id').value;
+  const role_id=parseInt(document.getElementById('app-role').value);
+  const team_id=parseInt(document.getElementById('app-team').value)||null;
+  try{
+    const r=await fetch(`${API}/users/${id}/approve`,{method:'PATCH',headers:hdr(),body:JSON.stringify({role_id,team_id:team_id||0})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Approval failed');
+    closeOv('ov-approve');toast('User approved!');loadPendingUsers(puPg);loadOverviewStats();
+  }catch(e){showAl('app-err',e.message);}
+}
+async function quickReject(id){
+  if(!confirm('Reject this user?'))return;
+  try{
+    const r=await fetch(`${API}/users/${id}/reject`,{method:'PATCH',headers:hdr()});
+    if(!r.ok)throw 0;toast('User rejected.');loadPendingUsers(puPg);
+  }catch{toast('Failed to reject user.');}
+}
+
+let auPg=1;
+async function loadActiveUsers(p=1){
+  auPg=p;const tb=document.getElementById('au-tbody');tb.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/users?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No active users.');document.getElementById('au-pag').innerHTML='';return;}
+    tb.innerHTML=d.map((u,i)=>`
+      <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${u.name}</div></td><td style="font-size:12px">${u.email}</td>
+      <td><span class="tid-chip">${u.tricon_id||'—'}</span></td>
+      <td>${roleBadge(u.role_id)}</td><td style="font-size:12px">${u.team_id||'—'}</td><td>${stBadge(u.status)}</td></tr>`).join('');
+    buildPag('au-pag',p,d.length===20,'loadActiveUsers');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
+
+let psPg=1;
+async function loadPendingStories(p=1){
+  psPg=p;const tb=document.getElementById('ps-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/stories/pending?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No pending stories.');document.getElementById('ps-pag').innerHTML='';return;}
+    tb.innerHTML=d.map((s,i)=>`
+      <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td>
+      <td style="font-size:12px">${s.name}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><div class="tdact">
+        <button class="btn btn-sm bp" onclick="openReview(${s.story_id})">Review</button>
+        <button class="btn btn-sm bgo" onclick="openHREdit(${s.story_id})">Edit</button>
+      </div></td></tr>`).join('');
+    buildPag('ps-pag',p,d.length===20,'loadPendingStories');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
+
+async function openReview(id){
+  try{
+    const r=await fetch(`${API}/stories/${id}`,{headers:hdr()});
+    if(!r.ok)throw 0;const s=await r.json();
+    document.getElementById('rev-id').value=id;
+    document.getElementById('rev-author').textContent=`${s.name} — ${s.designation}`;
+    document.getElementById('rev-orig').textContent=s.body;
+    document.getElementById('rev-ai').textContent=s.ai_body;
+    selBody=null;
+    document.getElementById('bc-orig').className='body-choice';
+    document.getElementById('bc-ai').className='body-choice';
+    hideAl('rev-err');openOv('ov-review');
+  }catch{}
+}
+function pickBody(choice){
+  selBody=choice;
+  document.getElementById('bc-orig').className='body-choice'+(choice==='original'?' picked':'');
+  document.getElementById('bc-ai').className='body-choice'+(choice==='ai'?' picked':'');
+}
+async function publishStory(){
+  if(!selBody)return showAl('rev-err','Please select a body version to publish.');
+  hideAl('rev-err');
+  const id=document.getElementById('rev-id').value;
+  try{
+    await fetch(`${API}/stories/${id}/select-body`,{method:'PATCH',headers:hdr(),body:JSON.stringify({choice:selBody})});
+    const r=await fetch(`${API}/stories/${id}/publish`,{method:'PATCH',headers:hdr()});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Publish failed');
+    closeOv('ov-review');toast('Story published!');loadPendingStories(psPg);loadOverviewStats();
+  }catch(e){showAl('rev-err',e.message);}
+}
+async function rejectStory(){
+  const id=document.getElementById('rev-id').value;
+  try{
+    const r=await fetch(`${API}/stories/${id}/reject`,{method:'PATCH',headers:hdr()});
+    if(!r.ok)throw 0;closeOv('ov-review');toast('Story rejected.');loadPendingStories(psPg);
+  }catch{showAl('rev-err','Failed to reject story.');}
+}
+
+let rsPg=1;
+async function loadRejectedStories(p=1){
+  rsPg=p;const tb=document.getElementById('rs-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/stories/rejected?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No rejected stories.');document.getElementById('rs-pag').innerHTML='';return;}
+    tb.innerHTML=d.map((s,i)=>`
+      <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td>
+      <td style="font-size:12px">${s.name}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><div class="tdact">
+        <button class="btn btn-sm bgo" onclick="openHREdit(${s.story_id})">Edit & Review</button>
+      </div></td></tr>`).join('');
+    buildPag('rs-pag',p,d.length===20,'loadRejectedStories');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
+
+async function openHREdit(id){
+  try{
+    const r=await fetch(`${API}/stories/${id}`,{headers:hdr()});
+    if(!r.ok)throw 0;const s=await r.json();
+    document.getElementById('hre-id').value=id;
+    document.getElementById('hre-title').value=s.title;
+    document.getElementById('hre-desig').value=s.designation;
+    document.getElementById('hre-body').value=s.body;
+    document.getElementById('hre-ai').value=s.ai_body;
+    document.getElementById('hre-extra').value=s.extra||'';
+    hideAl('hre-err');openOv('ov-hredit');
+  }catch{}
+}
+async function saveHREdit(){
+  hideAl('hre-err');
+  const id=document.getElementById('hre-id').value;
+  const payload={
+    title:document.getElementById('hre-title').value.trim(),
+    designation:document.getElementById('hre-desig').value.trim(),
+    body:document.getElementById('hre-body').value.trim(),
+    ai_body:document.getElementById('hre-ai').value.trim(),
+    extra:document.getElementById('hre-extra').value.trim()||null
+  };
+  try{
+    const r=await fetch(`${API}/stories/${id}/edit`,{method:'PATCH',headers:hdr(),body:JSON.stringify(payload)});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    closeOv('ov-hredit');toast('Story updated!');
+    loadPendingStories(psPg);loadRejectedStories(rsPg);
+  }catch(e){showAl('hre-err',e.message);}
+}
+
+async function loadTeams(){
+  const tb=document.getElementById('tm-tbody');tb.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/teams/?page=1`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.length){tb.innerHTML=empty('No teams created yet.');return;}
+    tb.innerHTML=d.map((t,i)=>`<tr><td>${i+1}</td><td><span class="tid-chip">#${t.team_id}</span></td><td><div class="tname">${t.team_name}</div></td><td style="font-size:12px;color:var(--muted)">${fmtDate(t.created_at)}</td></tr>`).join('');
+  }catch{tb.innerHTML=empty('Failed to load teams.');}
+}
+async function createTeam(){
+  const name=document.getElementById('team-name').value.trim();
+  if(!name)return;
+  hideAl('team-err');
+  try{
+    const r=await fetch(`${API}/teams/`,{method:'POST',headers:hdr(),body:JSON.stringify({team_name:name})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Failed to create team');
+    document.getElementById('team-name').value='';toast(`Team "${name}" created!`);loadTeams();
+  }catch(e){showAl('team-err',e.message);}
+}
+</script>
+</body>
+</html>

@@ -1,12 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
+import os
 
-DATABASE_URL = "mysql+pymysql://root:God!5Great@localhost/success_stories_rbac"
+load_dotenv()
 
-engine = create_engine(DATABASE_URL, echo=True)
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:God!5Great@localhost/success_stories_rbac")
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) # attach to engine which is my db
-
+engine = create_engine(DATABASE_URL, echo=False)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():

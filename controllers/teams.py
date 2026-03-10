@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from model import Employee, Team
 from schemas import TeamCreate
@@ -8,8 +9,14 @@ def create_team(payload: TeamCreate, db: Session, current_user: Employee):
         team_name=payload.team_name,
         created_by=current_user.employee_id,
     )
-    db.add(team)
-    db.commit()
+
+    try:
+        db.add(team)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create team")
+
     db.refresh(team)
     return team
 

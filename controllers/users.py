@@ -33,15 +33,6 @@ def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, cur
     if payload.role_id == 2:
         raise HTTPException(status_code=403, detail="Cannot assign Super Admin role")
 
-    existing_tricon = db.query(Employee.employee_id).filter(
-        Employee.tricon_id == payload.tricon_id
-    ).scalar()
-    if existing_tricon:
-        raise HTTPException(status_code=400, detail="tricon_id already assigned")
-
-    if user.type == "group" and payload.team_id is None:
-        raise HTTPException(status_code=400, detail="team_id required for group employees")
-
     if payload.team_id is not None:
         team_exists = db.query(Team.team_id).filter(
             Team.team_id == payload.team_id
@@ -50,8 +41,7 @@ def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, cur
             raise HTTPException(status_code=404, detail="Team not found")
 
     user.role_id = payload.role_id
-    user.tricon_id = payload.tricon_id
-    user.team_id = payload.team_id 
+    user.team_id = payload.team_id
     user.status = "Active"
     user.updated_by = current_user.employee_id
     user.updated_at = datetime.now(timezone.utc)
@@ -64,6 +54,8 @@ def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, cur
 
     db.refresh(user)
     return user
+
+    
 
 
 def reject_user(employee_id: int, db: Session, current_user: Employee):

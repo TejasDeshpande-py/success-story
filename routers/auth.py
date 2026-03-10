@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas import RegisterRequest, RegisterResponse, TokenResponse
+from schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
 import controllers.auth as auth_controller
+import shutil, uuid, os
 
 router = APIRouter(tags=["Auth"])
 
@@ -14,5 +15,19 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    return auth_controller.login_user(form_data.username, form_data.password, db)
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    return auth_controller.login_user(payload.email, payload.password, db)
+
+
+@router.post("/upload-picture")
+def upload_picture(file: UploadFile = File(...)):
+    allowed = [".jpg", ".jpeg", ".png", ".webp"]
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, webp allowed")
+    filename = f"{uuid.uuid4()}{ext}"
+    path = f"static/uploads/{filename}"
+    with open(path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    return {"url": f"http://127.0.0.1:8000/static/uploads/{filename}"}

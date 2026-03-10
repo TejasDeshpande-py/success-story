@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TriconStories</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf4ee;
+    --bg2:#ffffff;
+    --bg3:#f5e6da;
+    --border:#e2cfc2;
+    --brown:#7c4a2d;
+    --brown2:#5c3520;
+    --brownlt:#a0674a;
+    --rose:#e8c4b0;
+    --rosebg:#f7e4d8;
+    --text:#2c1a10;
+    --sub:#6b4535;
+    --muted:#b09080;
+    --green:#3d7035;
+    --red:#b83225;
+    --yellow:#9a6c18;
+    --shadow-sm:0 1px 4px rgba(90,45,15,.07);
+    --shadow:0 4px 18px rgba(90,45,15,.10);
+    --shadow-lg:0 10px 44px rgba(90,45,15,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:64px;background:rgba(253,244,238,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);}
+  .logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--brown2);text-decoration:none;letter-spacing:-.01em;}
+  .logo span{color:var(--brownlt);font-style:italic;}
+  .nav-right{display:flex;gap:10px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none;padding:8px 20px;border:none;}
+  .btn-o{background:transparent;border:1.5px solid var(--brown);color:var(--brown);}
+  .btn-o:hover{background:rgba(124,74,45,.06);}
+  .btn-p{background:var(--brown);color:white;}
+  .btn-p:hover{background:var(--brown2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(92,53,32,.28);}
+
+  .hero{text-align:center;padding:60px 24px 44px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--rosebg);border:1px solid var(--rose);border-radius:100px;padding:5px 16px;font-size:11px;font-weight:600;color:var(--brown);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px;}
+  .pulse{width:6px;height:6px;background:var(--brownlt);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,52px);font-weight:800;line-height:1.12;letter-spacing:-.02em;margin-bottom:14px;color:var(--text);}
+  h1 em{font-style:italic;color:var(--brown);}
+  .hero-sub{color:var(--sub);font-size:15px;font-weight:300;max-width:380px;margin:0 auto;line-height:1.75;}
+
+  .section-sep{display:flex;align-items:center;gap:14px;max-width:1160px;margin:0 auto 28px;padding:0 24px;}
+  .section-sep hr{flex:1;border:none;border-top:1px solid var(--border);}
+  .section-sep span{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;}
+
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px 80px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;animation:fadeup .38s ease both;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);}
+  .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:var(--rose);}
+  @keyframes fadeup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  .cpic{height:196px;position:relative;overflow:hidden;background:linear-gradient(145deg,var(--rosebg),var(--bg3));display:flex;align-items:center;justify-content:center;}
+  .cpic img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .4s ease;}
+  .card:hover .cpic img{transform:scale(1.04);}
+  .cpic-fb{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--rosebg),var(--rose));border:2.5px solid rgba(124,74,45,.18);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--brown);}
+
+  .cc{padding:16px 18px 18px;flex:1;display:flex;flex-direction:column;}
+  .ct{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;line-height:1.35;margin-bottom:12px;color:var(--text);}
+  .cmeta{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+  .sm-av{width:28px;height:28px;border-radius:50%;overflow:hidden;border:1.5px solid var(--rose);flex-shrink:0;}
+  .sm-av img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .sm-av-fb{width:28px;height:28px;border-radius:50%;background:var(--rosebg);border:1.5px solid var(--rose);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:9px;font-weight:700;color:var(--brown);flex-shrink:0;}
+  .cname{font-size:12px;font-weight:600;color:var(--text);}
+  .crole{font-size:11px;color:var(--muted);margin-top:1px;}
+  .cpreview{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;margin-bottom:14px;}
+  .cread{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--brown);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:gap .2s;margin-top:auto;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif;}
+  .cread:hover{gap:9px;}
+
+  .pag{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:44px;flex-wrap:wrap;}
+  .pb{min-width:36px;height:36px;padding:0 12px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--sub);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;}
+  .pb:hover:not(:disabled){border-color:var(--brown);color:var(--brown);}
+  .pb.on{background:var(--brown);border-color:var(--brown);color:white;}
+  .pb:disabled{opacity:.3;cursor:not-allowed;}
+
+  .ov{position:fixed;inset:0;z-index:200;background:rgba(44,26,16,.46);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .ov.open{display:flex;}
+  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
+  .mod::-webkit-scrollbar{width:4px;}
+  .mod::-webkit-scrollbar-thumb{background:var(--rose);border-radius:4px;}
+  .mod-top{height:3px;background:linear-gradient(90deg,var(--brown2),var(--brownlt));border-radius:14px 14px 0 0;}
+  @keyframes modIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .mhdr{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 26px 0;gap:16px;}
+  .mttl{font-family:'Playfair Display',serif;font-size:clamp(16px,2.5vw,21px);font-weight:700;line-height:1.28;color:var(--text);}
+  .xb{width:28px;height:28px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s;flex-shrink:0;}
+  .xb:hover{color:var(--red);border-color:rgba(184,50,37,.25);}
+  .mmeta{display:flex;align-items:center;gap:12px;padding:14px 26px 0;}
+  .mav{width:46px;height:46px;border-radius:50%;overflow:hidden;border:2px solid var(--rose);flex-shrink:0;}
+  .mav img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .mav-fb{width:46px;height:46px;border-radius:50%;background:var(--rosebg);border:2px solid var(--rose);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--brown);flex-shrink:0;}
+  .mdiv{margin:16px 26px;height:1px;background:var(--border);}
+  .mbody{padding:0 26px 4px;font-size:14px;font-weight:300;color:var(--sub);line-height:1.9;white-space:pre-wrap;}
+  .mextra{margin:14px 26px 26px;padding:11px 14px;background:rgba(61,112,53,.07);border:1px solid rgba(61,112,53,.2);border-radius:8px;font-size:13px;color:var(--green);display:none;align-items:center;gap:8px;}
+  .msg{text-align:center;padding:60px 24px;color:var(--muted);font-size:14px;grid-column:1/-1;}
+  .msg .i{font-size:30px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="feed.html">Tricon<span>Stories</span></a>
+  <div class="nav-right">
+    <a class="btn btn-o" href="register.html">Register</a>
+    <a class="btn btn-p" href="login.html">Login</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow"><span class="pulse"></span>Live Stories</div>
+  <h1>Our <em>Success</em><br>Stories</h1>
+  <p class="hero-sub">Celebrating the achievements and milestones of the Tricon Infotech team.</p>
+</div>
+
+<div class="section-sep"><hr/><span>Latest Stories</span><hr/></div>
+
+<div class="wrap">
+  <div class="grid" id="grid"><div class="msg"><div class="i">⏳</div>Loading stories...</div></div>
+  <div class="pag" id="pag"></div>
+</div>
+
+<div class="ov" id="ov" onclick="bgX(event)">
+  <div class="mod">
+    <div class="mod-top"></div>
+    <div class="mhdr"><div class="mttl" id="m-title"></div><button class="xb" onclick="closeM()">✕</button></div>
+    <div class="mmeta" id="m-meta"></div>
+    <div class="mdiv"></div>
+    <div class="mbody" id="m-body"></div>
+    <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
+  </div>
+</div>
+
+<script>
+const API="http://127.0.0.1:8000";
+const PER=9;let pg=1,tot=1;
+const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
+const validPic=u=>u&&!u.includes('male.jpg')&&(u.startsWith('http')||u.startsWith('/'));
+function cardPicHTML(pic,inits){
+  if(validPic(pic))return `<img src="${pic}" alt="${inits}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="cpic-fb" style="display:none">${inits}</div>`;
+  return `<div class="cpic-fb">${inits}</div>`;
+}
+function smAvHTML(pic,inits){
+  if(validPic(pic))return `<div class="sm-av"><img src="${pic}" onerror="this.parentElement.outerHTML='<div class=sm-av-fb>${inits}</div>'"></div>`;
+  return `<div class="sm-av-fb">${inits}</div>`;
+}
+async function load(p){
+  const g=document.getElementById('grid');
+  g.innerHTML='<div class="msg"><div class="i">⏳</div>Loading...</div>';
+  try{
+    const r=await fetch(`${API}/stories?page=${p}`);if(!r.ok)throw 0;
+    const d=await r.json();
+    if(!d.length){g.innerHTML='<div class="msg"><div class="i">📭</div>No stories published yet.</div>';document.getElementById('pag').innerHTML='';return;}
+    tot=d.length<PER?p:p+1;
+    g.innerHTML=d.map((s,i)=>{const inits=ini(s.name);return `
+      <div class="card" style="animation-delay:${i*.06}s" onclick="openM(${s.story_id})">
+        <div class="cpic">${cardPicHTML(s.picture,inits)}</div>
+        <div class="cc">
+          <div class="ct">${s.title}</div>
+          <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${s.name}</div><div class="crole">${s.designation}</div></div></div>
+          <div class="cpreview">${s.content}</div>
+          <button class="cread">Read Story →</button>
+        </div>
+      </div>`;}).join('');
+    buildPag();
+  }catch{g.innerHTML='<div class="msg"><div class="i">⚠️</div>Could not load stories. Is your backend running?</div>';}
+}
+function buildPag(){
+  if(tot<=1){document.getElementById('pag').innerHTML='';return;}
+  let h=`<button class="pb" onclick="go(${pg-1})" ${pg===1?'disabled':''}>← Prev</button>`;
+  for(let i=1;i<=tot;i++)h+=`<button class="pb ${i===pg?'on':''}" onclick="go(${i})">${i}</button>`;
+  h+=`<button class="pb" onclick="go(${pg+1})" ${pg===tot?'disabled':''}>Next →</button>`;
+  document.getElementById('pag').innerHTML=h;
+}
+function go(p){if(p<1||p>tot)return;pg=p;load(p);window.scrollTo({top:0,behavior:'smooth'});}
+async function openM(id){
+  try{
+    const r=await fetch(`${API}/stories/${id}`);if(!r.ok)throw 0;
+    const s=await r.json();const inits=ini(s.name);
+    document.getElementById('m-title').textContent=s.title;
+    document.getElementById('m-meta').innerHTML=validPic(s.picture)
+      ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div><div style="font-size:14px;font-weight:600;color:var(--text)">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`
+      :`<div class="mav-fb">${inits}</div><div><div style="font-size:14px;font-weight:600;color:var(--text)">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`;
+    document.getElementById('m-body').textContent=s.content;
+    const ex=document.getElementById('m-extra');
+    if(s.extra){document.getElementById('m-xt').textContent=s.extra;ex.style.display='flex';}else ex.style.display='none';
+    document.getElementById('ov').classList.add('open');document.body.style.overflow='hidden';
+  }catch{}
+}
+function closeM(){document.getElementById('ov').classList.remove('open');document.body.style.overflow='';}
+function bgX(e){if(e.target===document.getElementById('ov'))closeM();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+load(1);
+</script>
+</body>
+</html>

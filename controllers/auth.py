@@ -13,17 +13,22 @@ def register_user(payload: RegisterRequest, db: Session):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    existing_tricon = db.query(Employee.employee_id).filter(
+        Employee.tricon_id == payload.tricon_id
+    ).scalar()
+    if existing_tricon:
+        raise HTTPException(status_code=400, detail="tricon_id already taken")
+
     new_user = Employee(
-        name=payload.name,
-        email=payload.email,
-        password_hash=hash_password(payload.password),
-        picture=payload.picture,
-        type=payload.type,
-        role_id=None,
-        team_id=None,
-        tricon_id=None,
-        status="Pending",
-    )
+    name=payload.name,
+    email=payload.email,
+    password_hash=hash_password(payload.password),
+    picture=payload.picture,
+    tricon_id=payload.tricon_id,
+    role_id=None,
+    team_id=None,
+    status="Pending",
+)
     db.add(new_user)
 
     try:
@@ -39,9 +44,9 @@ def register_user(payload: RegisterRequest, db: Session):
         "employee_id": new_user.employee_id,
         "name": new_user.name,
         "email": new_user.email,
-        "type": new_user.type,
         "status": new_user.status,
     }
+       
 
 
 def login_user(username: str, password: str, db: Session):
