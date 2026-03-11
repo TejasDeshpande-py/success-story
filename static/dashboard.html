@@ -204,7 +204,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
         <div class="al ae" id="w-err"></div>
         <div class="al as" id="w-ok"></div>
         <div class="form-grid">
-          <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
+          <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
           <div class="fl fl-full"><label>Your Story</label><textarea id="w-body" rows="5" placeholder="Write about your achievement, contribution, or milestone..." oninput="cc('w-body','w-bc',5000)"></textarea><div class="cc" id="w-bc">0 / 5000</div></div>
           <div class="fl fl-full"><label>AI-Enhanced Version</label><textarea id="w-ai" rows="5" placeholder="Paste the AI-polished version of your story here..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
@@ -503,12 +503,12 @@ async function submitStory(){
   const ai_body=document.getElementById('w-ai').value.trim();
   const extra=document.getElementById('w-extra').value.trim()||null;
   if(!title||!designation||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
-  if(title.length<200)return showAl('w-err','Title must have less than 200 characters')
+  if(title.length>200)return showAl('w-err','Title must have less than 200 characters')
   if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
-  if(body.length<5000)return showAl('w-err','Story body should be less than 5000 characters ')
+  if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters ')
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
-  if(ai_body.length<5000)return showAl('w-err','AI body should be less than 5000 characters ')
-  if(extra.length<500)return showAl('w-err','Extra content must be less than 5  00 characters ')
+  if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters ')
+  if(extra&&extra.length>500)return showAl('w-err','Extra content must be less than 500 characters.');
   const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
   try{
     const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra,story_for:user.user_id,is_team_story:false})});
