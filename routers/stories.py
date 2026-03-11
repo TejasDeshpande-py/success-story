@@ -14,11 +14,17 @@ from utils import paginate
 
 router = APIRouter(prefix="/stories", tags=["Stories"])
 
+@router.get("/mine", response_model=List[StoryResponse])
+def get_my_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return stories_controller.get_my_stories(page, db, paginate, current_user)
 
 @router.get("/pending", response_model=List[StoryResponse])
 def get_pending_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_stories_by_status("Pending", page, db, paginate)
 
+@router.get("/detail/{story_id}", response_model=StoryResponse)
+def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return stories_controller.get_story_detail(story_id, db)
 
 @router.get("/rejected", response_model=List[StoryResponse])
 def get_rejected_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
@@ -29,6 +35,9 @@ def get_rejected_stories(page: int = 1, db: Session = Depends(get_db), current_u
 def create_story(payload: StoryCreate, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
     return stories_controller.create_story(payload, db, current_user)
 
+@router.get("/detail/{story_id}", response_model=StoryResponse)
+def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return stories_controller.get_story_detail(story_id, db)
 
 @router.get("/", response_model=List[StoryPublicResponse])
 def get_stories(page: int = 1, db: Session = Depends(get_db)):

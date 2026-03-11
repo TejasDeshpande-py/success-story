@@ -5,6 +5,19 @@ from model import Employee, SuccessStory
 from schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest
 from utils import story_to_dict, story_to_public_dict
 
+def get_my_stories(page: int, db: Session, paginate, current_user):
+    limit, offset = paginate(page)
+    return db.query(SuccessStory).filter(
+        SuccessStory.created_by == current_user.employee_id
+    ).offset(offset).limit(limit).all()
+
+def get_story_detail(story_id: int, db: Session):
+    story = db.query(SuccessStory).options(
+        joinedload(SuccessStory.creator)
+    ).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+    return story_to_dict(story)
 
 def get_published_stories(page: int, db: Session, paginate):
     limit, offset = paginate(page)
@@ -15,6 +28,13 @@ def get_published_stories(page: int, db: Session, paginate):
     ).offset(offset).limit(limit).all()
     return [story_to_public_dict(s) for s in stories]
 
+def get_story_detail(story_id: int, db: Session):
+    story = db.query(SuccessStory).options(
+        joinedload(SuccessStory.creator)
+    ).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+    return story_to_dict(story)
 
 def get_published_story(story_id: int, db: Session):
     story = db.query(SuccessStory).options(

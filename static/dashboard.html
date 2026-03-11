@@ -424,17 +424,21 @@ async function fetchUser(){
 
 function buildNav(){
   const nav=document.getElementById('navarea');const role=user?.role_id??0;
-  const items=role>=1?[
+  const hrItems=[
     {sec:'overview',ic:'📊',label:'Overview'},
     {sec:'pendingusers',ic:'👤',label:'Pending Users'},
     {sec:'activeusers',ic:'👥',label:'Active Users'},
     {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
     {sec:'rejectedstories',ic:'❌',label:'Rejected Stories'},
     {sec:'teams',ic:'🏢',label:'Teams'},
-  ]:[
     {sec:'write',ic:'✍️',label:'Write Story'},
     {sec:'mystories',ic:'📄',label:'My Stories'},
   ];
+  const empItems=[
+    {sec:'write',ic:'✍️',label:'Write Story'},
+    {sec:'mystories',ic:'📄',label:'My Stories'},
+  ];
+  const items=role>=1?hrItems:empItems;
   nav.innerHTML=items.map(i=>`<div class="nav-item" id="ni-${i.sec}" onclick="showSec('${i.sec}')"><span class="ic">${i.ic}</span>${i.label}</div>`).join('');
 }
 
@@ -503,7 +507,7 @@ async function submitStory(){
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
   const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
   try{
-    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra})});
+    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra,story_for:user.user_id,is_team_story:false})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
     ['w-title','w-desig','w-body','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');
@@ -516,10 +520,10 @@ let msPg=1;
 async function loadMyStories(p=1){
   msPg=p;const tb=document.getElementById('ms-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
   try{
-    const r=await fetch(`${API}/stories?page=${p}`,{headers:{Authorization:`Bearer ${token}`}});
+    const r=await fetch(`${API}/stories/mine?page=${p}`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r.ok)throw 0;const d=await r.json();
     if(!d.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
-    tb.innerHTML=d.filter(s=>s.created_by===user.user_id||s.story_for===user.user_id).map((s,i)=>`
+    tb.innerHTML=d.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td><td>${stBadge(s.status)}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
       <td><div class="tdact">${s.status==='Pending'?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
     buildPag('ms-pag',p,d.length===20,'loadMyStories');
@@ -637,7 +641,7 @@ async function loadPendingStories(p=1){
 
 async function openReview(id){
   try{
-    const r=await fetch(`${API}/stories/${id}`,{headers:hdr()});
+    const r=await fetch(`${API}/stories/detail/${id}`,{headers:hdr()});
     if(!r.ok)throw 0;const s=await r.json();
     document.getElementById('rev-id').value=id;
     document.getElementById('rev-author').textContent=`${s.name} — ${s.designation}`;
@@ -692,7 +696,7 @@ async function loadRejectedStories(p=1){
 
 async function openHREdit(id){
   try{
-    const r=await fetch(`${API}/stories/${id}`,{headers:hdr()});
+    const r=await fetch(`${API}/stories/detail/${id}`,{headers:hdr()});
     if(!r.ok)throw 0;const s=await r.json();
     document.getElementById('hre-id').value=id;
     document.getElementById('hre-title').value=s.title;
