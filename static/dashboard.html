@@ -503,8 +503,12 @@ async function submitStory(){
   const ai_body=document.getElementById('w-ai').value.trim();
   const extra=document.getElementById('w-extra').value.trim()||null;
   if(!title||!designation||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
+  if(title.length<200)return showAl('w-err','Title must have less than 200 characters')
   if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
+  if(body.length<5000)return showAl('w-err','Story body should be less than 5000 characters ')
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
+  if(ai_body.length<5000)return showAl('w-err','AI body should be less than 5000 characters ')
+  if(extra.length<500)return showAl('w-err','Extra content must be less than 5  00 characters ')
   const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
   try{
     const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra,story_for:user.user_id,is_team_story:false})});

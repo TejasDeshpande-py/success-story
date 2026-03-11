@@ -86,8 +86,7 @@
 
         <button class="btn-full" id="lbtn" onclick="doLogin()">Sign In</button>
 
-        <div class="sep"><hr/><span>or</span><hr/></div>
-        <button class="btn-ghost" onclick="prefill()">Sign in as Admin</button>
+
       </div>
     </div>
     <div class="footer">Don't have an account? <a href="register.html">Register</a> &nbsp;·&nbsp; <a href="feed.html">← Back to stories</a></div>
@@ -98,7 +97,7 @@
 const API="http://127.0.0.1:8000";
 function tog(){const i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';}
 function kd(e){if(e.key==='Enter')doLogin();}
-function prefill(){document.getElementById('em').value='admin@tricon.com';document.getElementById('pw').value='admin123';}
+
 function showErr(m){const e=document.getElementById('err');e.textContent=m;e.classList.add('on');}
 function hideErr(){document.getElementById('err').classList.remove('on');}
 
