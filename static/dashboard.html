@@ -407,7 +407,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   try{await fetchUser();buildNav();
     if(user.role_id===0)showSec('write');
     else{loadOverviewStats();showSec('overview');}
-  }catch{window.location.href='login.html';}
+  }catch(e){console.error('init error:',e);window.location.href='login.html';}
 });
 
 async function fetchUser(){
@@ -416,7 +416,7 @@ async function fetchUser(){
   try{
     const r=await fetch(`${API}/users/me`,{headers:{Authorization:`Bearer ${token}`}});
     if(r.ok){const me=await r.json();Object.assign(user,me);}
-  }catch{}
+  }catch(e){console.error('fetchUser error:',e);}
   const av=document.getElementById('sav');
   if(user.picture){av.innerHTML=`<img src="${user.picture}" onerror="this.parentElement.textContent='${ini(user.name)}'">`;}
   else av.textContent=ini(user.name);
@@ -543,6 +543,7 @@ async function submitStory(){
   if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters.');
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
   if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters.');
+  if(designation.length>100)return showAl('w-err','Designation must be under 100 characters.');
   if(extra&&extra.length>500)return showAl('w-err','Extra content must be less than 500 characters.');
   const storyType=document.querySelector('input[name="story-type"]:checked').value;
   const is_team_story=storyType==='team';
@@ -638,7 +639,7 @@ async function confirmApprove(){
   const role_id=parseInt(document.getElementById('app-role').value);
   const team_id=parseInt(document.getElementById('app-team').value)||null;
   try{
-    const r=await fetch(`${API}/users/${id}/approve`,{method:'PATCH',headers:hdr(),body:JSON.stringify({role_id,team_id:team_id||0})});
+    const r=await fetch(`${API}/users/${id}/approve`,{method:'PATCH',headers:hdr(),body:JSON.stringify({role_id,team_id:team_id||null})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Approval failed');
     closeOv('ov-approve');toast('User approved!');loadPendingUsers(puPg);loadOverviewStats();
   }catch(e){showAl('app-err',e.message);}
@@ -755,11 +756,18 @@ async function openHREdit(id){
 async function saveHREdit(){
   hideAl('hre-err');
   const id=document.getElementById('hre-id').value;
+  const title=document.getElementById('hre-title').value.trim();
+  const desig=document.getElementById('hre-desig').value.trim();
+  const body=document.getElementById('hre-body').value.trim();
+  const ai=document.getElementById('hre-ai').value.trim();
+  if(!title)return showAl('hre-err','Title cannot be empty.');
+  if(!desig)return showAl('hre-err','Designation cannot be empty.');
+  if(!body)return showAl('hre-err','Body cannot be empty.');
+  if(!ai)return showAl('hre-err','AI body cannot be empty.');
+  if(title.length>200)return showAl('hre-err','Title must be under 200 characters.');
+  if(desig.length>100)return showAl('hre-err','Designation must be under 100 characters.');
   const payload={
-    title:document.getElementById('hre-title').value.trim(),
-    designation:document.getElementById('hre-desig').value.trim(),
-    body:document.getElementById('hre-body').value.trim(),
-    ai_body:document.getElementById('hre-ai').value.trim(),
+    title,designation:desig,body,ai_body:ai,
     extra:document.getElementById('hre-extra').value.trim()||null
   };
   try{

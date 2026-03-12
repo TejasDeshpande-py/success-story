@@ -1,6 +1,6 @@
 from typing import Optional, Literal
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 
 
 class LoginRequest(BaseModel):
@@ -89,7 +89,7 @@ class TeamResponse(BaseModel):
 
 class StoryCreate(BaseModel):
     title: str
-    designation: str
+    designation: str = Field(..., max_length=100)
     body: str
     ai_body: str
     extra: Optional[str] = None

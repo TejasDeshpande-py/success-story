@@ -205,7 +205,7 @@ async function doReg(){
     const d=await r.json();
     if(!r.ok){const msg=Array.isArray(d.detail)?d.detail[0].msg.replace('Value error, ',''):d.detail||'Registration failed';throw new Error(msg);}
     showOk('✅ Account created! Pending HR approval. Redirecting to login...');
-    setTimeout(()=>window.location.href='login.html',2500);
+    setTimeout(()=>window.location.href='login.html',5500);
   }catch(e){showErr(e.message);btn.textContent='Create Account';btn.disabled=false;}
 }
 </script>

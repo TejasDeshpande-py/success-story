@@ -54,6 +54,21 @@ def get_stories_by_status(status: str, page: int, db: Session, paginate):
 
 
 def create_story(payload: StoryCreate, db: Session, current_user: Employee):
+    # strip whitespace
+    payload.title = payload.title.strip()
+    payload.body = payload.body.strip()
+    payload.ai_body = payload.ai_body.strip()
+    if payload.designation:
+        payload.designation = payload.designation.strip()
+
+    # whitespace-only content check
+    if not payload.title:
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    if not payload.body.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="Story body cannot be whitespace only")
+    if not payload.ai_body.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="AI body cannot be whitespace only")
+
     # resolve story_for
     if payload.is_team_story:
         story_for_id = current_user.employee_id
@@ -61,13 +76,17 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
         emp = db.query(Employee).filter(Employee.tricon_id == payload.story_for_tricon).first()
         if not emp:
             raise HTTPException(status_code=404, detail="No employee found with that Tricon ID")
+        if emp.status != "Active":
+            raise HTTPException(status_code=400, detail="Cannot write a story for an inactive employee")
+        if emp.employee_id == current_user.employee_id:
+            raise HTTPException(status_code=400, detail="Use 'My Story' to write a story about yourself")
         story_for_id = emp.employee_id
     elif payload.story_for:
-        exists = db.query(Employee.employee_id).filter(
-            Employee.employee_id == payload.story_for
-        ).scalar()
-        if not exists:
+        emp = db.query(Employee).filter(Employee.employee_id == payload.story_for).first()
+        if not emp:
             raise HTTPException(status_code=404, detail="Employee not found for story_for")
+        if emp.status != "Active":
+            raise HTTPException(status_code=400, detail="Cannot write a story for an inactive employee")
         story_for_id = payload.story_for
     else:
         story_for_id = current_user.employee_id
@@ -75,11 +94,25 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     team_id = None
     if payload.is_team_story:
         if payload.team_id:
+            from model import Team
+            team = db.query(Team).filter(Team.team_id == payload.team_id).first()
+            if not team:
+                raise HTTPException(status_code=404, detail="Selected team does not exist")
             team_id = payload.team_id
         elif current_user.team_id:
             team_id = current_user.team_id
         else:
             raise HTTPException(status_code=400, detail="Please select a team")
+
+    # duplicate pending check — same title for same person
+    duplicate = db.query(SuccessStory.story_id).filter(
+        SuccessStory.created_by == current_user.employee_id,
+        SuccessStory.story_for == story_for_id,
+        SuccessStory.title == payload.title,
+        SuccessStory.status == "Pending"
+    ).scalar()
+    if duplicate:
+        raise HTTPException(status_code=400, detail="A pending story with this title for this person already exists.")
 
     story = SuccessStory(
         title=payload.title,
@@ -149,6 +182,14 @@ def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_us
         raise HTTPException(status_code=404, detail="Story not found")
 
     update_data = payload.model_dump(exclude_unset=True)
+    if "title" in update_data and not update_data["title"].strip():
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    if "body" in update_data and not update_data["body"].strip():
+        raise HTTPException(status_code=400, detail="Body cannot be empty")
+    if "ai_body" in update_data and not update_data["ai_body"].strip():
+        raise HTTPException(status_code=400, detail="AI body cannot be empty")
+    if "designation" in update_data and not update_data["designation"].strip():
+        raise HTTPException(status_code=400, detail="Designation cannot be empty")
     for field, value in update_data.items():
         setattr(story, field, value)
 
@@ -176,6 +217,8 @@ def select_body(story_id: int, payload: SelectBodyRequest, db: Session, current_
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
+    if story.status == "Posted":
+        raise HTTPException(status_code=400, detail="Cannot change body of an already published story")
     if story.status != "Pending":
         raise HTTPException(status_code=400, detail="Only pending stories can have body selected")
 
