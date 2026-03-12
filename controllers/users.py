@@ -12,11 +12,19 @@ def get_active_users(page: int, db: Session, paginate):
     ).offset(offset).limit(limit).all()
 
 
+
+
 def get_pending_users(page: int, db: Session, paginate):
     limit, offset = paginate(page)
     return db.query(Employee).filter(
         Employee.status == "Pending"
     ).offset(offset).limit(limit).all()
+
+
+def get_all_active_users(db: Session):
+    return db.query(Employee).filter(
+        Employee.status == "Active"
+    ).all()
 
 
 def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, current_user: Employee):

@@ -29,6 +29,7 @@ class Team(Base):
 
     team_id    = Column(Integer, primary_key=True, index=True)
     team_name  = Column(String(120), nullable=False)
+    team_picture = Column(String(500), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     created_by = Column(Integer, ForeignKey("employees.employee_id"), nullable=True)
     updated_at = Column(DateTime, onupdate=func.now(), nullable=True)

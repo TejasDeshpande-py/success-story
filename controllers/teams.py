@@ -7,6 +7,7 @@ from schemas import TeamCreate
 def create_team(payload: TeamCreate, db: Session, current_user: Employee):
     team = Team(
         team_name=payload.team_name,
+        team_picture=payload.team_picture,
         created_by=current_user.employee_id,
     )
 
@@ -24,3 +25,6 @@ def create_team(payload: TeamCreate, db: Session, current_user: Employee):
 def get_all_teams(page: int, db: Session, paginate):
     limit, offset = paginate(page)
     return db.query(Team).offset(offset).limit(limit).all()
+
+def get_all_teams_list(db: Session):
+    return db.query(Team).all()

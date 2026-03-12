@@ -74,11 +74,12 @@ class UserResponse(BaseModel):
 
 class TeamCreate(BaseModel):
     team_name: str
-
+    team_picture: str
 
 class TeamResponse(BaseModel):
     team_id: int
     team_name: str
+    team_picture: Optional[str]
     created_at: Optional[datetime]
     created_by: Optional[int]
 
@@ -92,8 +93,10 @@ class StoryCreate(BaseModel):
     body: str
     ai_body: str
     extra: Optional[str] = None
-    story_for: int
+    story_for: Optional[int] = None
+    story_for_tricon: Optional[str] = None
     is_team_story: bool = False
+    team_id: Optional[int] = None
 
 
 class EmployeeStoryUpdate(BaseModel):

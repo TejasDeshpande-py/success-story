@@ -4,9 +4,9 @@ from typing import List
 from database import get_db
 from model import Employee
 from schemas import UserResponse, ApproveUserRequest
-from auth import require_hr_or_admin
 from utils import paginate
 import controllers.users as users_controller
+from auth import require_hr_or_admin, get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -20,6 +20,9 @@ def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Em
 def get_pending_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.get_pending_users(page, db, paginate)
 
+@router.get("/all", response_model=List[UserResponse])
+def get_all_users_list(db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return users_controller.get_all_active_users(db)
 
 @router.patch("/{employee_id}/approve", response_model=UserResponse)
 def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):

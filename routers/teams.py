@@ -4,7 +4,7 @@ from typing import List
 from database import get_db
 from model import Employee
 from schemas import TeamCreate, TeamResponse
-from auth import require_hr_or_admin
+from auth import require_hr_or_admin, get_current_user
 from utils import paginate
 import controllers.teams as teams_controller
 
@@ -27,3 +27,7 @@ def get_teams(
     current_user: Employee = Depends(require_hr_or_admin)
 ):
     return teams_controller.get_all_teams(page, db, paginate)
+
+@router.get("/all", response_model=List[TeamResponse])
+def get_all_teams_list(db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return teams_controller.get_all_teams_list(db)

@@ -11,18 +11,11 @@ def get_my_stories(page: int, db: Session, paginate, current_user):
         SuccessStory.created_by == current_user.employee_id
     ).offset(offset).limit(limit).all()
 
-def get_story_detail(story_id: int, db: Session):
-    story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
-    ).filter(SuccessStory.story_id == story_id).first()
-    if not story:
-        raise HTTPException(status_code=404, detail="Story not found")
-    return story_to_dict(story)
 
 def get_published_stories(page: int, db: Session, paginate):
     limit, offset = paginate(page)
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.status == "Posted"
     ).offset(offset).limit(limit).all()
@@ -30,7 +23,7 @@ def get_published_stories(page: int, db: Session, paginate):
 
 def get_story_detail(story_id: int, db: Session):
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
@@ -38,7 +31,7 @@ def get_story_detail(story_id: int, db: Session):
 
 def get_published_story(story_id: int, db: Session):
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.story_id == story_id,
         SuccessStory.status == "Posted"
@@ -53,7 +46,7 @@ def get_published_story(story_id: int, db: Session):
 def get_stories_by_status(status: str, page: int, db: Session, paginate):
     limit, offset = paginate(page)
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.status == status
     ).offset(offset).limit(limit).all()
@@ -61,17 +54,32 @@ def get_stories_by_status(status: str, page: int, db: Session, paginate):
 
 
 def create_story(payload: StoryCreate, db: Session, current_user: Employee):
-    exists = db.query(Employee.employee_id).filter(
-        Employee.employee_id == payload.story_for
-    ).scalar()
-    if not exists:
-        raise HTTPException(status_code=404, detail="Employee not found for story_for")
+    # resolve story_for
+    if payload.is_team_story:
+        story_for_id = current_user.employee_id
+    elif payload.story_for_tricon:
+        emp = db.query(Employee).filter(Employee.tricon_id == payload.story_for_tricon).first()
+        if not emp:
+            raise HTTPException(status_code=404, detail="No employee found with that Tricon ID")
+        story_for_id = emp.employee_id
+    elif payload.story_for:
+        exists = db.query(Employee.employee_id).filter(
+            Employee.employee_id == payload.story_for
+        ).scalar()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Employee not found for story_for")
+        story_for_id = payload.story_for
+    else:
+        story_for_id = current_user.employee_id
 
     team_id = None
     if payload.is_team_story:
-        if current_user.team_id is None:
-            raise HTTPException(status_code=400, detail="You are not assigned to a team")
-        team_id = current_user.team_id
+        if payload.team_id:
+            team_id = payload.team_id
+        elif current_user.team_id:
+            team_id = current_user.team_id
+        else:
+            raise HTTPException(status_code=400, detail="Please select a team")
 
     story = SuccessStory(
         title=payload.title,
@@ -83,7 +91,7 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
         extra=payload.extra,
         is_team_story=payload.is_team_story,
         team_id=team_id,
-        story_for=payload.story_for,
+        story_for=story_for_id,
         created_by=current_user.employee_id,
     )
 
@@ -95,7 +103,7 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
         raise HTTPException(status_code=500, detail="Failed to create story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story.story_id).first()
 
     return story_to_dict(story)
@@ -105,7 +113,7 @@ def edit_story(story_id: int, payload: EmployeeStoryUpdate, db: Session, current
     story = db.query(SuccessStory).filter(
         SuccessStory.story_id == story_id
     ).first()
-
+    
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
@@ -126,7 +134,7 @@ def edit_story(story_id: int, payload: EmployeeStoryUpdate, db: Session, current
         raise HTTPException(status_code=500, detail="Failed to update story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)
@@ -154,7 +162,7 @@ def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_us
         raise HTTPException(status_code=500, detail="Failed to update story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)
@@ -183,7 +191,7 @@ def select_body(story_id: int, payload: SelectBodyRequest, db: Session, current_
         raise HTTPException(status_code=500, detail="Failed to select body")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)

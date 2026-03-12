@@ -204,6 +204,10 @@ tr:hover td{background:rgba(247,228,216,.35);}
         <div class="al ae" id="w-err"></div>
         <div class="al as" id="w-ok"></div>
         <div class="form-grid">
+          <div class="fl fl-full"><label>Story Type</label><div style="display:flex;gap:16px;margin-top:4px"><label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="radio" name="story-type" value="mine" checked onchange="switchStoryType('mine')"> My Story</label><label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="radio" name="story-type" value="someone" onchange="switchStoryType('someone')"> For Someone Else</label><label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="radio" name="story-type" value="team" onchange="switchStoryType('team')"> Team Story</label></div></div>
+          <div class="fl fl-full" id="w-for-wrap" style="display:none;"><label>Employee <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(person this story is about)</span></label><select id="w-for-tricon"><option value="">Select employee...</option></select></div>
+          <div class="fl fl-full" id="w-team-wrap" style="display:none;"><label>Team <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(team this story is about)</span></label><select id="w-team-id"><option value="">Select team...</option></select></div>
+
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
           <div class="fl fl-full"><label>Your Story</label><textarea id="w-body" rows="5" placeholder="Write about your achievement, contribution, or milestone..." oninput="cc('w-body','w-bc',5000)"></textarea><div class="cc" id="w-bc">0 / 5000</div></div>
@@ -275,9 +279,10 @@ tr:hover td{background:rgba(247,228,216,.35);}
     <div class="sec-head"><h2>Teams</h2><p>Manage Tricon teams.</p></div>
     <div class="panel" style="max-width:400px;margin-bottom:20px;">
       <div class="panel-head"><span class="panel-title">Create New Team</span></div>
-      <div style="padding:16px 20px;display:flex;gap:10px;">
-        <input type="text" id="team-name" placeholder="Team name" style="flex:1;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:0 12px;outline:none;transition:border-color .18s;" onfocus="this.style.borderColor='var(--brown)'" onblur="this.style.borderColor='var(--border)'" />
-        <button class="btn bp" onclick="createTeam()">Create</button>
+      <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+        <input type="text" id="team-name" placeholder="Team name" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:0 12px;outline:none;transition:border-color .18s;" onfocus="this.style.borderColor='var(--brown)'" onblur="this.style.borderColor='var(--border)'" />
+        <input type="text" id="team-pic" placeholder="Team picture URL (.jpg/.png)" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:0 12px;outline:none;transition:border-color .18s;" onfocus="this.style.borderColor='var(--brown)'" onblur="this.style.borderColor='var(--border)'" />
+        <button class="btn bp" style="width:100%;height:40px;" onclick="createTeam()">Create Team</button>
       </div>
       <div class="al ae" id="team-err" style="margin:0 20px 14px;display:none;"></div>
     </div>
@@ -494,6 +499,36 @@ function buildPag(containerId,current,hasMore,loadFn){
 }
 
 // ==================== EMPLOYEE ====================
+function switchStoryType(type){
+  document.getElementById('w-for-wrap').style.display=type==='someone'?'block':'none';
+  document.getElementById('w-team-wrap').style.display=type==='team'?'block':'none';
+  if(type==='someone')loadEmployeeDropdown();
+  if(type==='team')loadTeamDropdown();
+}
+
+async function loadEmployeeDropdown(){
+  const sel=document.getElementById('w-for-tricon');
+  if(sel.dataset.loaded==='1')return;
+  sel.innerHTML='<option value="">Loading...</option>';
+  try{
+    const r=await fetch(`${API}/users/all`,{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();
+    sel.innerHTML=`<option value="">Select employee...</option>`+d.map(e=>`<option value="${e.tricon_id}">${e.name} — ${e.tricon_id}</option>`).join('');
+    sel.dataset.loaded='1';
+  }catch(e){console.error(e);sel.innerHTML='<option>Failed to load</option>';}
+}
+
+async function loadTeamDropdown(){
+  const sel=document.getElementById('w-team-id');
+  if(sel.dataset.loaded==='1')return;
+  sel.innerHTML='<option value="">Loading...</option>';
+  try{
+    const r=await fetch(`${API}/teams/all`,{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();
+    sel.innerHTML=`<option value="">Select team...</option>`+d.map(t=>`<option value="${t.team_id}">${t.team_name} — #${t.team_id}</option>`).join('');
+    sel.dataset.loaded='1';
+  }catch(e){console.error(e);sel.innerHTML='<option>Failed to load</option>';}
+}
 
 async function submitStory(){
   hideAl('w-err');hideAl('w-ok');
@@ -503,15 +538,21 @@ async function submitStory(){
   const ai_body=document.getElementById('w-ai').value.trim();
   const extra=document.getElementById('w-extra').value.trim()||null;
   if(!title||!designation||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
-  if(title.length>200)return showAl('w-err','Title must have less than 200 characters')
+  if(title.length>200)return showAl('w-err','Title must have less than 200 characters.');
   if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
-  if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters ')
+  if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters.');
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
-  if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters ')
+  if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters.');
   if(extra&&extra.length>500)return showAl('w-err','Extra content must be less than 500 characters.');
+  const storyType=document.querySelector('input[name="story-type"]:checked').value;
+  const is_team_story=storyType==='team';
+  const story_for_tricon=storyType==='someone'?document.getElementById('w-for-tricon').value.trim():null;
+  const team_id=storyType==='team'?parseInt(document.getElementById('w-team-id').value)||null:null;
+  if(storyType==='someone'&&!story_for_tricon)return showAl('w-err','Please select the employee this story is about.');
+  if(storyType==='team'&&!team_id)return showAl('w-err','Please select a team.');
   const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
   try{
-    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra,story_for:user.user_id,is_team_story:false})});
+    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation,body,ai_body,extra,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
     ['w-title','w-desig','w-body','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');
@@ -741,9 +782,11 @@ async function loadTeams(){
 async function createTeam(){
   const name=document.getElementById('team-name').value.trim();
   if(!name)return;
+  const pic=document.getElementById('team-pic').value.trim();
+  if(!pic)return showAl('team-err','Team picture URL is required.');
   hideAl('team-err');
   try{
-    const r=await fetch(`${API}/teams/`,{method:'POST',headers:hdr(),body:JSON.stringify({team_name:name})});
+    const r=await fetch(`${API}/teams/`,{method:'POST',headers:hdr(),body:JSON.stringify({team_name:name,team_picture:document.getElementById('team-pic').value.trim()||null})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Failed to create team');
     document.getElementById('team-name').value='';toast(`Team "${name}" created!`);loadTeams();
   }catch(e){showAl('team-err',e.message);}
