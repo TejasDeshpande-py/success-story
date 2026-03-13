@@ -59,7 +59,7 @@
 </head>
 <body>
 <nav>
-  <a class="logo" href="feed.html">Tricon<span>Stories</span></a>
+  <a class="logo" href="/feed">Tricon<span>Stories</span></a>
 </nav>
 <main>
   <div>
@@ -89,7 +89,7 @@
 
       </div>
     </div>
-    <div class="footer">Don't have an account? <a href="register.html">Register</a> &nbsp;·&nbsp; <a href="feed.html">← Back to stories</a></div>
+    <div class="footer">Don't have an account? <a href="/register">Register</a> &nbsp;·&nbsp; <a href="/feed">← Back to stories</a></div>
   </div>
 </main>
 
@@ -106,6 +106,7 @@ async function doLogin(){
   const email=document.getElementById('em').value.trim();
   const password=document.getElementById('pw').value;
   if(!email)return showErr('Please enter your email address.');
+  if(!email.toLowerCase().endsWith('@tricon.com'))return showErr('Email must be a @tricon.com address.');
   if(!password)return showErr('Please enter your password.');
   const btn=document.getElementById('lbtn');
   btn.textContent='Signing in...';btn.disabled=true;
@@ -114,7 +115,7 @@ async function doLogin(){
     const d=await r.json();
     if(!r.ok)throw new Error(d.detail||'Invalid email or password.');
     localStorage.setItem('token',d.access_token);
-    window.location.href='dashboard.html';
+    window.location.href='/dashboard';
   }catch(e){showErr(e.message);btn.textContent='Sign In';btn.disabled=false;}
 }
 </script>

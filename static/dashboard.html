@@ -177,7 +177,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-top">
-    <a class="logo" href="feed.html">Tricon<span>Stories</span></a>
+    <a class="logo" href="/feed">Tricon<span>Stories</span></a>
     <div class="sb-avatar" id="sav">—</div>
     <div class="sb-name" id="sname">Loading...</div>
     <span class="rbadge re" id="sbadge">Employee</span>
@@ -403,11 +403,11 @@ const esc=s=>(s||'').replace(/'/g,"\\'");
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
 
 window.addEventListener('DOMContentLoaded',async()=>{
-  if(!token){window.location.href='login.html';return;}
+  if(!token){window.location.href='/login';return;}
   try{await fetchUser();buildNav();
     if(user.role_id===0)showSec('write');
     else{loadOverviewStats();showSec('overview');}
-  }catch(e){console.error('init error:',e);window.location.href='login.html';}
+  }catch(e){console.error('init error:',e);window.location.href='/login';}
 });
 
 async function fetchUser(){
@@ -465,7 +465,7 @@ function showSec(id){
 }
 
 function hdr(){return{Authorization:`Bearer ${token}`,'Content-Type':'application/json'};}
-function logout(){localStorage.removeItem('token');window.location.href='login.html';}
+function logout(){localStorage.removeItem('token');window.location.href='/login';}
 
 // ALERTS
 function showAl(id,m){const e=document.getElementById(id);if(!e)return;e.textContent=m;e.classList.add('on');}

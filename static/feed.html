@@ -108,10 +108,10 @@
 <body>
 
 <nav>
-  <a class="logo" href="feed.html">Tricon<span>Stories</span></a>
+  <a class="logo" href="/feed">Tricon<span>Stories</span></a>
   <div class="nav-right">
-    <a class="btn btn-o" href="register.html">Register</a>
-    <a class="btn btn-p" href="login.html">Login</a>
+    <a class="btn btn-o" href="/register">Register</a>
+    <a class="btn btn-p" href="/login">Login</a>
   </div>
 </nav>
 
@@ -160,13 +160,15 @@ async function load(p){
     const d=await r.json();
     if(!d.length){g.innerHTML='<div class="msg"><div class="i">📭</div>No stories published yet.</div>';document.getElementById('pag').innerHTML='';return;}
     tot=d.length<PER?p:p+1;
+    pg=p;
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     g.innerHTML=d.map((s,i)=>{const inits=ini(s.name);return `
       <div class="card" style="animation-delay:${i*.06}s" onclick="openM(${s.story_id})">
         <div class="cpic">${cardPicHTML(s.picture,inits)}</div>
         <div class="cc">
-          <div class="ct">${s.title}</div>
-          <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${s.name}</div><div class="crole">${s.designation}</div></div></div>
-          <div class="cpreview">${s.content}</div>
+          <div class="ct">${esc(s.title)}</div>
+          <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${esc(s.name)}</div><div class="crole">${esc(s.designation)}</div></div></div>
+          <div class="cpreview">${esc(s.content)}</div>
           <button class="cread">Read Story →</button>
         </div>
       </div>`;}).join('');

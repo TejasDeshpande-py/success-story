@@ -80,7 +80,7 @@
 </style>
 </head>
 <body>
-<nav><a class="logo" href="feed.html">Tricon<span>Stories</span></a></nav>
+<nav><a class="logo" href="/feed">Tricon<span>Stories</span></a></nav>
 <main>
   <div>
     <div class="card">
@@ -141,7 +141,7 @@
         <button class="btn-full" id="rbtn" onclick="doReg()">Create Account</button>
       </div>
     </div>
-    <div class="footer">Already have an account? <a href="login.html">Login</a> &nbsp;·&nbsp; <a href="feed.html">← Back to stories</a></div>
+    <div class="footer">Already have an account? <a href="/login">Login</a> &nbsp;·&nbsp; <a href="/feed">← Back to stories</a></div>
   </div>
 </main>
 
@@ -188,11 +188,17 @@ async function doReg(){
   const password=document.getElementById('pw').value;
   const file=document.getElementById('pic').files[0];
   if(!name)return showErr('Please enter your full name.');
+  if(!/^[a-zA-Z\s]+$/.test(name))return showErr('Name must contain letters only.');
+  if(name.length<2)return showErr('Name is too short.');
+  if(name.length>100)return showErr('Name must be under 100 characters.');
   if(!tricon_id)return showErr('Please enter your Tricon ID.');
   if(!/^TRI\d+$/i.test(tricon_id))return showErr('Tricon ID must start with TRI followed by digits, e.g. TRI001.');
+  if(tricon_id.length>5)return showErr('Tricon ID is too long, e.g. TRI001.');
   if(!email)return showErr('Please enter your company email.');
   if(!email.toLowerCase().endsWith('@tricon.com'))return showErr('Email must be a @tricon.com address.');
   if(!password||password.length<8)return showErr('Password must be at least 8 characters.');
+  if(!/[A-Z]/.test(password))return showErr('Password must contain at least one uppercase letter.');
+  if(!/[0-9]/.test(password))return showErr('Password must contain at least one number.');
   if(!file)return showErr('Please upload a profile photo.');
   const btn=document.getElementById('rbtn');btn.textContent='Uploading photo...';btn.disabled=true;
   try{
@@ -205,7 +211,7 @@ async function doReg(){
     const d=await r.json();
     if(!r.ok){const msg=Array.isArray(d.detail)?d.detail[0].msg.replace('Value error, ',''):d.detail||'Registration failed';throw new Error(msg);}
     showOk('✅ Account created! Pending HR approval. Redirecting to login...');
-    setTimeout(()=>window.location.href='login.html',5500);
+    setTimeout(()=>window.location.href='/login',5500);
   }catch(e){showErr(e.message);btn.textContent='Create Account';btn.disabled=false;}
 }
 </script>
