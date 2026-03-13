@@ -89,7 +89,7 @@ class TeamResponse(BaseModel):
 
 class StoryCreate(BaseModel):
     title: str
-    designation: str = Field(..., max_length=100)
+    designation: str = Field("", max_length=100)
     body: str
     ai_body: str
     extra: Optional[str] = None
@@ -119,8 +119,8 @@ class StoryPublicResponse(BaseModel):
     extra: Optional[str]
     is_team_story: bool
     team_id: Optional[int]
-    name: str
-    picture: str
+    name: Optional[str]
+    picture: Optional[str]
     created_at: Optional[datetime]
 
     class Config:
@@ -143,8 +143,8 @@ class StoryResponse(BaseModel):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
     updated_by: Optional[int]
-    name: str
-    picture: str
+    name: Optional[str]
+    picture: Optional[str]
 
     class Config:
         from_attributes = True

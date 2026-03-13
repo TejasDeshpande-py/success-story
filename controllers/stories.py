@@ -7,10 +7,12 @@ from utils import story_to_dict, story_to_public_dict
 
 def get_my_stories(page: int, db: Session, paginate, current_user):
     limit, offset = paginate(page)
-    return db.query(SuccessStory).filter(
+    stories = db.query(SuccessStory).options(
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+    ).filter(
         SuccessStory.created_by == current_user.employee_id
-    ).offset(offset).limit(limit).all()
-
+    ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
+    return [story_to_dict(s) for s in stories]
 
 def get_published_stories(page: int, db: Session, paginate):
     limit, offset = paginate(page)

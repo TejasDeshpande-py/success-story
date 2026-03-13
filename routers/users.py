@@ -15,6 +15,9 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.get_active_users(page, db, paginate)
 
+@router.get("/me", response_model=UserResponse)
+def get_me(db=Depends(get_db), current_user=Depends(get_current_user)):
+    return current_user
 
 @router.get("/pending", response_model=List[UserResponse])
 def get_pending_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
