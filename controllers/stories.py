@@ -16,12 +16,19 @@ def get_my_stories(page: int, db: Session, paginate, current_user):
 
 def get_published_stories(page: int, db: Session, paginate):
     limit, offset = paginate(page)
+    total = db.query(SuccessStory).filter(SuccessStory.status == "Posted").count()
     stories = db.query(SuccessStory).options(
         joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.status == "Posted"
-    ).offset(offset).limit(limit).all()
-    return [story_to_public_dict(s) for s in stories]
+    ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
+    import math
+    return {
+        "stories": [story_to_public_dict(s) for s in stories],
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total > 0 else 1
+    }
 
 def get_story_detail(story_id: int, db: Session):
     story = db.query(SuccessStory).options(

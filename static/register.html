@@ -193,7 +193,7 @@ async function doReg(){
   if(name.length>100)return showErr('Name must be under 100 characters.');
   if(!tricon_id)return showErr('Please enter your Tricon ID.');
   if(!/^TRI\d+$/i.test(tricon_id))return showErr('Tricon ID must start with TRI followed by digits, e.g. TRI001.');
-  if(tricon_id.length>5)return showErr('Tricon ID is too long, e.g. TRI001.');
+  if(tricon_id.length>7)return showErr('Tricon ID is too long, e.g. TRI001.');
   if(!email)return showErr('Please enter your company email.');
   if(!email.toLowerCase().endsWith('@tricon.com'))return showErr('Email must be a @tricon.com address.');
   if(!password||password.length<8)return showErr('Password must be at least 8 characters.');

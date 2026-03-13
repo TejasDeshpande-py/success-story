@@ -39,11 +39,9 @@ def create_story(payload: StoryCreate, db: Session = Depends(get_db), current_us
 def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_story_detail(story_id, db)
 
-@router.get("/", response_model=List[StoryPublicResponse])
+@router.get("/")
 def get_stories(page: int = 1, db: Session = Depends(get_db)):
     return stories_controller.get_published_stories(page, db, paginate)
-
-
 @router.get("/{story_id}", response_model=StoryPublicResponse)
 def get_story(story_id: int, db: Session = Depends(get_db)):
     return stories_controller.get_published_story(story_id, db)

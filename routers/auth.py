@@ -27,7 +27,8 @@ def upload_picture(file: UploadFile = File(...)):
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, webp allowed")
     filename = f"{uuid.uuid4()}{ext}"
+    os.makedirs("static/uploads", exist_ok=True)
     path = f"static/uploads/{filename}"
     with open(path, "wb") as f:
         shutil.copyfileobj(file.file, f)
-    return {"url": f"http://127.0.0.1:8000/static/uploads/{filename}"}
+    return {"url": f"/static/uploads/{filename}"}

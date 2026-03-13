@@ -7,6 +7,12 @@ from auth import authenticate_user
 
 
 def register_user(payload: RegisterRequest, db: Session):
+    if len(payload.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    if not any(c.isupper() for c in payload.password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter")
+    if not any(c.isdigit() for c in payload.password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one number")
     existing = db.query(Employee.employee_id).filter(
         Employee.email == payload.email
     ).scalar()
