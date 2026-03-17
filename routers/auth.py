@@ -24,11 +24,29 @@ def upload_picture(file: UploadFile = File(...)):
     allowed = [".jpg", ".jpeg", ".png", ".webp"]
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed:
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, webp allowed")
+    
     filename = f"{uuid.uuid4()}{ext}"
-    os.makedirs("static/uploads", exist_ok=True)
-    path = f"static/uploads/{filename}"
-    with open(path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-    return {"url": f"/static/uploads/{filename}"}
+    
+    import boto3
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    s3 = boto3.client(
+        "s3",
+        region_name=os.getenv("AWS_REGION"),
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+    )
+    try:
+        s3.upload_fileobj(
+            file.file,
+            os.getenv("AWS_BUCKET_NAME"),
+            filename,
+            ExtraArgs={"ContentType": file.content_type}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+    
+    url = f"https://{os.getenv('AWS_BUCKET_NAME')}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{filename}"
+    return {"url": url}
