@@ -17,6 +17,7 @@ else:
         email=os.getenv("ADMIN_EMAIL"),
         password_hash=hash_password(os.getenv("ADMIN_PASSWORD")),
         picture="https://randomuser.me/api/portraits/men/1.jpg",
+        tricon_id="TRI000",
         role_id=2,
         team_id=None,
         status="Active",
