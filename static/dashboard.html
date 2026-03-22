@@ -393,7 +393,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
 <div class="toast" id="toast"></div>
 
 <script>
-const API="http://127.0.0.1:8000";
+const API="";
 let token=localStorage.getItem('token');
 let user=null;
 let selBody=null;
@@ -568,11 +568,11 @@ async function loadMyStories(p=1){
   try{
     const r=await fetch(`${API}/stories/mine?page=${p}`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r.ok)throw 0;const d=await r.json();
-    if(!d.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
-    tb.innerHTML=d.map((s,i)=>`
+    if(!d.stories.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
+    tb.innerHTML=d.stories.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td><td>${stBadge(s.status)}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
       <td><div class="tdact">${s.status==='Pending'?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
-    buildPag('ms-pag',p,d.length===20,'loadMyStories');
+    buildPag('ms-pag',p,p<d.pages,'loadMyStories');
   }catch{tb.innerHTML=empty('Failed to load stories.');}
 }
 
@@ -598,15 +598,15 @@ async function saveEditStory(){
 async function loadOverviewStats(){
   try{
     const [pu,au,ps,pub]=await Promise.all([
-      fetch(`${API}/users/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
-      fetch(`${API}/users?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
-      fetch(`${API}/stories/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>[]),
-      fetch(`${API}/stories?page=1`).then(r=>r.json()).catch(()=>[]),
+      fetch(`${API}/users/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
+      fetch(`${API}/users?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
+      fetch(`${API}/stories/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
+      fetch(`${API}/stories?page=1`).then(r=>r.json()).catch(()=>({total:0})),
     ]);
-    document.getElementById('ov-pu').textContent=pu.length||0;
-    document.getElementById('ov-au').textContent=au.length||0;
-    document.getElementById('ov-ps').textContent=ps.length||0;
-    document.getElementById('ov-po').textContent=pub.length||0;
+    document.getElementById('ov-pu').textContent=Array.isArray(pu)?pu.length:pu.total||0;
+    document.getElementById('ov-au').textContent=Array.isArray(au)?au.length:au.total||0;
+    document.getElementById('ov-ps').textContent=Array.isArray(ps)?ps.length:ps.total||0;
+    document.getElementById('ov-po').textContent=pub.total||0;
   }catch{}
 }
 

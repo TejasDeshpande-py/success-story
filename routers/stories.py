@@ -14,7 +14,7 @@ from utils import paginate
 
 router = APIRouter(prefix="/stories", tags=["Stories"])
 
-@router.get("/mine", response_model=List[StoryResponse])
+@router.get("/mine")
 def get_my_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
     return stories_controller.get_my_stories(page, db, paginate, current_user)
 
