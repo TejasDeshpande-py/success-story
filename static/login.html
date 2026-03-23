@@ -94,7 +94,9 @@
 </main>
 
 <script>
-const API="http://127.0.0.1:8000";
+const API="";
+const existingToken=localStorage.getItem('token');
+if(existingToken){try{const payload=JSON.parse(atob(existingToken.split('.')[1]));if(payload.exp*1000>Date.now())window.location.href='/dashboard';}catch(e){}}
 function tog(){const i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';}
 function kd(e){if(e.key==='Enter')doLogin();}
 
@@ -106,7 +108,7 @@ async function doLogin(){
   const email=document.getElementById('em').value.trim();
   const password=document.getElementById('pw').value;
   if(!email)return showErr('Please enter your email address.');
-  if(!email.toLowerCase().endsWith('@tricon.com'))return showErr('Email must be a @tricon.com address.');
+  if(!email.toLowerCase().endsWith('@triconinfotech.com'))return showErr('Email must be a @triconinfotech.com address.');
   if(!password)return showErr('Please enter your password.');
   const btn=document.getElementById('lbtn');
   btn.textContent='Signing in...';btn.disabled=true;
