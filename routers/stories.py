@@ -18,7 +18,7 @@ router = APIRouter(prefix="/stories", tags=["Stories"])
 def get_my_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
     return stories_controller.get_my_stories(page, db, paginate, current_user)
 
-@router.get("/pending", response_model=List[StoryResponse])
+@router.get("/pending")
 def get_pending_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_stories_by_status("Pending", page, db, paginate)
 
@@ -26,7 +26,7 @@ def get_pending_stories(page: int = 1, db: Session = Depends(get_db), current_us
 def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_story_detail(story_id, db)
 
-@router.get("/rejected", response_model=List[StoryResponse])
+@router.get("/rejected")
 def get_rejected_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_stories_by_status("Rejected", page, db, paginate)
 

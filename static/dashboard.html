@@ -622,7 +622,7 @@ async function loadOverviewStats(){
     ]);
     document.getElementById('ov-pu').textContent=pu.total||0;
     document.getElementById('ov-au').textContent=au.total||0;
-    document.getElementById('ov-ps').textContent=Array.isArray(ps)?ps.length:ps.total||0;
+    document.getElementById('ov-ps').textContent=ps.total||0;
     document.getElementById('ov-po').textContent=pub.total||0;
   }catch{}
 }
@@ -690,15 +690,15 @@ async function loadPendingStories(p=1){
   try{
     const r=await fetch(`${API}/stories/pending?page=${p}`,{headers:hdr()});
     if(!r.ok)throw 0;const d=await r.json();
-    if(!d.length){tb.innerHTML=empty('No pending stories.');document.getElementById('ps-pag').innerHTML='';return;}
-    tb.innerHTML=d.map((s,i)=>`
+    if(!d.stories.length){tb.innerHTML=empty('No pending stories.');document.getElementById('ps-pag').innerHTML='';return;}
+    tb.innerHTML=d.stories.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td>
       <td style="font-size:12px">${s.name}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
       <td><div class="tdact">
         <button class="btn btn-sm bp" onclick="openReview(${s.story_id})">Review</button>
         <button class="btn btn-sm bgo" onclick="openHREdit(${s.story_id})">Edit</button>
       </div></td></tr>`).join('');
-    buildPag('ps-pag',p,d.length===20,'loadPendingStories');
+    buildPag('ps-pag',p,p<d.pages,'loadPendingStories');
   }catch{tb.innerHTML=empty('Failed to load.');}
 }
 
@@ -746,14 +746,14 @@ async function loadRejectedStories(p=1){
   try{
     const r=await fetch(`${API}/stories/rejected?page=${p}`,{headers:hdr()});
     if(!r.ok)throw 0;const d=await r.json();
-    if(!d.length){tb.innerHTML=empty('No rejected stories.');document.getElementById('rs-pag').innerHTML='';return;}
-    tb.innerHTML=d.map((s,i)=>`
+    if(!d.stories.length){tb.innerHTML=empty('No rejected stories.');document.getElementById('rs-pag').innerHTML='';return;}
+    tb.innerHTML=d.stories.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td>
       <td style="font-size:12px">${s.name}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
       <td><div class="tdact">
         <button class="btn btn-sm bgo" onclick="openHREdit(${s.story_id})">Edit & Review</button>
       </div></td></tr>`).join('');
-    buildPag('rs-pag',p,d.length===20,'loadRejectedStories');
+    buildPag('rs-pag',p,p<d.pages,'loadRejectedStories');
   }catch{tb.innerHTML=empty('Failed to load.');}
 }
 

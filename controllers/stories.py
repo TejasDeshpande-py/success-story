@@ -62,13 +62,20 @@ def get_published_story(story_id: int, db: Session):
 
 
 def get_stories_by_status(status: str, page: int, db: Session, paginate):
+    import math
     limit, offset = paginate(page)
+    total = db.query(SuccessStory).filter(SuccessStory.status == status).count()
     stories = db.query(SuccessStory).options(
         joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.status == status
     ).offset(offset).limit(limit).all()
-    return [story_to_dict(s) for s in stories]
+    return {
+        "stories": [story_to_dict(s) for s in stories],
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total > 0 else 1
+    }
 
 
 def create_story(payload: StoryCreate, db: Session, current_user: Employee):
