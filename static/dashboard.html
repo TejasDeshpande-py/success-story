@@ -211,7 +211,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
           <div class="fl fl-full"><label>Your Story</label><textarea id="w-body" rows="5" placeholder="Write about your achievement, contribution, or milestone..." oninput="cc('w-body','w-bc',5000)"></textarea><div class="cc" id="w-bc">0 / 5000</div></div>
-          <div class="fl fl-full"><label>AI-Enhanced Version</label><textarea id="w-ai" rows="5" placeholder="Paste the AI-polished version of your story here..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
+          <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bgo" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:11px;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
           <div class="fl fl-full"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><input type="text" id="w-extra" placeholder="e.g. Recognised by the project manager" oninput="cc('w-extra','w-xc',500)"/><div class="cc" id="w-xc">0 / 500</div></div>
         </div>
         <div style="margin-top:4px"><button class="btn-full bp" id="w-btn" onclick="submitStory()">Submit Story</button></div>
@@ -404,6 +404,7 @@ const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'
 
 window.addEventListener('DOMContentLoaded',async()=>{
   if(!token){window.location.href='/login';return;}
+  history.replaceState(null,'','/dashboard');
   try{await fetchUser();buildNav();
     if(user.role_id===0)showSec('write');
     else{loadOverviewStats();showSec('overview');}
@@ -591,6 +592,21 @@ async function saveEditStory(){
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
     closeOv('ov-edit');toast('Story updated!');loadMyStories(msPg);
   }catch(e){showAl('edit-err',e.message);}
+}
+
+async function rephraseStory(){
+  const body=document.getElementById('w-body').value.trim();
+  if(!body||body.length<50)return showAl('w-err','Write at least 50 characters in Your Story before rephrasing.');
+  const btn=document.getElementById('rephrase-btn');
+  btn.textContent='✨ Rephrasing...';btn.disabled=true;
+  try{
+    const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({body})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Rephrase failed');
+    document.getElementById('w-ai').value=d.rephrased;
+    cc('w-ai','w-ac',5000);
+    toast('AI version generated!');
+  }catch(e){showAl('w-err',e.message);}
+  finally{btn.textContent='✨ Rephrase with AI';btn.disabled=false;}
 }
 
 // ==================== HR ====================

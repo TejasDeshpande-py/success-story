@@ -5,6 +5,8 @@ from database import get_db
 from schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
 import controllers.auth as auth_controller
 import shutil, uuid, os
+import httpx
+from auth import get_current_user
 
 router = APIRouter(tags=["Auth"])
 
@@ -50,3 +52,31 @@ def upload_picture(file: UploadFile = File(...)):
     
     url = f"https://{os.getenv('AWS_BUCKET_NAME')}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{filename}"
     return {"url": url}
+
+
+@router.post("/rephrase")
+async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
+    body = payload.get("body", "").strip()
+    if not body:
+        raise HTTPException(status_code=400, detail="Body is required")
+    
+    groq_key = os.getenv("GROQ_API_KEY")
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [
+                    {"role": "system", "content": "You are a professional writer. Rephrase the given employee success story to make it more impactful, professional and engaging. Keep it first person. Return only the rephrased story, nothing else."},
+                    {"role": "user", "content": body}
+                ],
+                "max_tokens": 1000
+            },
+            timeout=30
+        )
+        d = r.json()
+    
+    if "choices" not in d:
+        raise HTTPException(status_code=500, detail=f"Groq error: {d}")
+    return {"rephrased": d["choices"][0]["message"]["content"]}

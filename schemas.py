@@ -28,8 +28,8 @@ class RegisterRequest(BaseModel):
 
     @field_validator("email")
     def email_must_be_company(cls, v):
-        if not v.endswith("@tricon.com"):
-            raise ValueError("Email must be a @tricon.com address")
+        if not v.endswith("@triconinfotech.com"):
+            raise ValueError("Email must be a @triconinfotech.com address")
         return v
 
     @field_validator("tricon_id")
