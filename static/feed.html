@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <title>TriconStories</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -140,7 +141,7 @@
 </div>
 
 <script>
-const API="http://127.0.0.1:8000";
+const API="";
 const PER=9;let pg=1,tot=1;
 const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
