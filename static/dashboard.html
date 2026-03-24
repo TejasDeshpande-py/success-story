@@ -620,8 +620,8 @@ async function loadOverviewStats(){
       fetch(`${API}/stories/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
       fetch(`${API}/stories?page=1`).then(r=>r.json()).catch(()=>({total:0})),
     ]);
-    document.getElementById('ov-pu').textContent=Array.isArray(pu)?pu.length:pu.total||0;
-    document.getElementById('ov-au').textContent=Array.isArray(au)?au.length:au.total||0;
+    document.getElementById('ov-pu').textContent=pu.total||0;
+    document.getElementById('ov-au').textContent=au.total||0;
     document.getElementById('ov-ps').textContent=Array.isArray(ps)?ps.length:ps.total||0;
     document.getElementById('ov-po').textContent=pub.total||0;
   }catch{}
@@ -633,15 +633,15 @@ async function loadPendingUsers(p=1){
   try{
     const r=await fetch(`${API}/users/pending?page=${p}`,{headers:hdr()});
     if(!r.ok)throw 0;const d=await r.json();
-    if(!d.length){tb.innerHTML=empty('No pending users.');document.getElementById('pu-pag').innerHTML='';return;}
-    tb.innerHTML=d.map((u,i)=>`
+    if(!d.users.length){tb.innerHTML=empty('No pending users.');document.getElementById('pu-pag').innerHTML='';return;}
+    tb.innerHTML=d.users.map((u,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${u.name}</div></td><td style="font-size:12px">${u.email}</td>
       <td><span class="tid-chip">${u.tricon_id||'—'}</span></td>
       <td><div class="tdact">
         <button class="btn btn-sm bgs" onclick="openApprove(${u.employee_id},'${esc(u.name)}','${u.email}','${u.tricon_id||''}')">Approve</button>
         <button class="btn btn-sm bgr" onclick="quickReject(${u.employee_id})">Reject</button>
       </div></td></tr>`).join('');
-    buildPag('pu-pag',p,d.length===20,'loadPendingUsers');
+    buildPag('pu-pag',p,p<d.pages,'loadPendingUsers');
   }catch{tb.innerHTML=empty('Failed to load.');}
 }
 
@@ -675,12 +675,12 @@ async function loadActiveUsers(p=1){
   try{
     const r=await fetch(`${API}/users?page=${p}`,{headers:hdr()});
     if(!r.ok)throw 0;const d=await r.json();
-    if(!d.length){tb.innerHTML=empty('No active users.');document.getElementById('au-pag').innerHTML='';return;}
-    tb.innerHTML=d.map((u,i)=>`
+    if(!d.users.length){tb.innerHTML=empty('No active users.');document.getElementById('au-pag').innerHTML='';return;}
+    tb.innerHTML=d.users.map((u,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${u.name}</div></td><td style="font-size:12px">${u.email}</td>
       <td><span class="tid-chip">${u.tricon_id||'—'}</span></td>
       <td>${roleBadge(u.role_id)}</td><td style="font-size:12px">${u.team_id||'—'}</td><td>${stBadge(u.status)}</td></tr>`).join('');
-    buildPag('au-pag',p,d.length===20,'loadActiveUsers');
+    buildPag('au-pag',p,p<d.pages,'loadActiveUsers');
   }catch{tb.innerHTML=empty('Failed to load.');}
 }
 

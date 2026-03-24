@@ -11,7 +11,7 @@ from auth import require_hr_or_admin, get_current_user
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/")
 def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.get_active_users(page, db, paginate)
 
@@ -19,7 +19,7 @@ def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Em
 def get_me(db=Depends(get_db), current_user=Depends(get_current_user)):
     return current_user
 
-@router.get("/pending", response_model=List[UserResponse])
+@router.get("/pending")
 def get_pending_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.get_pending_users(page, db, paginate)
 

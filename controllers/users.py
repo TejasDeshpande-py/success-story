@@ -14,17 +14,33 @@ def get_active_users(page: int, db: Session, paginate):
 
 
 
-def get_pending_users(page: int, db: Session, paginate):
+def get_active_users(page: int, db: Session, paginate):
+    import math
     limit, offset = paginate(page)
-    return db.query(Employee).filter(
+    total = db.query(Employee).filter(Employee.status == "Active").count()
+    users = db.query(Employee).filter(
+        Employee.status == "Active"
+    ).offset(offset).limit(limit).all()
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total > 0 else 1
+    }
+
+def get_pending_users(page: int, db: Session, paginate):
+    import math
+    limit, offset = paginate(page)
+    total = db.query(Employee).filter(Employee.status == "Pending").count()
+    users = db.query(Employee).filter(
         Employee.status == "Pending"
     ).offset(offset).limit(limit).all()
-
-
-def get_all_active_users(db: Session):
-    return db.query(Employee).filter(
-        Employee.status == "Active"
-    ).all()
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total > 0 else 1
+    }
 
 
 def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, current_user: Employee):
