@@ -81,7 +81,7 @@
 </style>
 </head>
 <body>
-<nav><a class="logo" href="/feed">Tricon<span>Stories</span></a></nav>
+<nav><a class="logo" href="/feed" style="display:flex;align-items:center;gap:8px;"><img src="/static/tricon-logo.png" alt="Tricon" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">Tricon<span>Stories</span></a></nav>
 <main>
   <div>
     <div class="card">
@@ -112,10 +112,10 @@
         <div class="f">
           <label>Company Email</label>
           <div class="irow">
-            <input type="email" id="em" placeholder="you@tricon.com" oninput="chkEmail(this.value)" />
-            <span class="ibadge ib-n" id="em-badge">@tricon.com</span>
+            <input type="email" id="em" placeholder="you@triconinfotech.com" oninput="chkEmail(this.value)" />
+            <span class="ibadge ib-n" id="em-badge">@triconinfotech.com</span>
           </div>
-          <div class="fhint" id="em-hint">Only <strong>@tricon.com</strong> addresses accepted</div>
+          <div class="fhint" id="em-hint">Only <strong>@triconinfotech.com</strong> addresses accepted</div>
         </div>
 
         <div class="f">
@@ -159,10 +159,10 @@ function chkTid(v){
 }
 function chkEmail(v){
   const inp=document.getElementById('em'),b=document.getElementById('em-badge'),h=document.getElementById('em-hint');
-  if(!v){inp.className='';b.className='ibadge ib-n';b.textContent='@tricon.com';h.className='fhint';h.innerHTML='Only <strong>@tricon.com</strong> addresses accepted';return;}
-  const ok=v.toLowerCase().endsWith('@tricon.com');
+  if(!v){inp.className='';b.className='ibadge ib-n';b.textContent='@triconinfotech.com';h.className='fhint';h.innerHTML='Only <strong>@triconinfotech.com</strong> addresses accepted';return;}
+  const ok=v.toLowerCase().endsWith('@triconinfotech.com');
   inp.className=ok?'valid':'invalid';b.className='ibadge '+(ok?'ib-ok':'ib-bad');b.textContent=ok?'✓ Valid':'✗ Invalid';
-  h.className='fhint '+(ok?'ok':'bad');h.textContent=ok?'Company email accepted!':'Must be a @tricon.com address';
+  h.className='fhint '+(ok?'ok':'bad');h.textContent=ok?'Company email accepted!':'Must be a @triconinfotech.com address';
 }
 function chkStr(v){
   const f=document.getElementById('sf'),l=document.getElementById('sl');f.className='sfill';
@@ -196,7 +196,7 @@ async function doReg(){
   if(!/^TRI\d+$/i.test(tricon_id))return showErr('Tricon ID must start with TRI followed by digits, e.g. TRI001.');
   if(tricon_id.length>7)return showErr('Tricon ID is too long, e.g. TRI001.');
   if(!email)return showErr('Please enter your company email.');
-  if(!email.toLowerCase().endsWith('@tricon.com'))return showErr('Email must be a @tricon.com address.');
+  if(!email.toLowerCase().endsWith('@triconinfotech.com'))return showErr('Email must be a @triconinfotech.com address.');
   if(!password||password.length<8)return showErr('Password must be at least 8 characters.');
   if(!/[A-Z]/.test(password))return showErr('Password must contain at least one uppercase letter.');
   if(!/[0-9]/.test(password))return showErr('Password must contain at least one number.');

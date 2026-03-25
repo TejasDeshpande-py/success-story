@@ -50,6 +50,7 @@ class SuccessStory(Base):
     selected_body = Column(Boolean, nullable=True, default=None)
     status        = Column(Enum("Pending", "Posted", "Rejected"), nullable=False, default="Pending")
     extra         = Column(String(500), nullable=True)
+    story_picture = Column(String(500), nullable=True)
     is_team_story = Column(Boolean, nullable=False, default=False)
     team_id       = Column(Integer, ForeignKey("teams.team_id"), nullable=True, default=None)
     story_for     = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)

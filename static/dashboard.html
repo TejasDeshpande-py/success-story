@@ -172,13 +172,15 @@ tr:hover td{background:rgba(247,228,216,.35);}
 /* TRICONID BADGE */
 .tid-chip{font-size:11px;font-weight:600;background:rgba(124,74,45,.08);color:var(--brownlt);border:1px solid rgba(124,74,45,.2);border-radius:100px;padding:2px 9px;}
 </style>
+<link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
 </head>
 <body>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-top">
-    <a class="logo" href="/feed">Tricon<span>Stories</span></a>
+    <a class="logo" href="/feed" style="display:flex;align-items:center;gap:8px;"><img src="/static/tricon-logo.png" alt="Tricon" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">Tricon<span>Stories</span></a>
     <div class="sb-avatar" id="sav">—</div>
     <div class="sb-name" id="sname">Loading...</div>
     <span class="rbadge re" id="sbadge">Employee</span>
@@ -211,9 +213,9 @@ tr:hover td{background:rgba(247,228,216,.35);}
 
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
-          <div class="fl fl-full"><label>Your Story</label><textarea id="w-body" rows="5" placeholder="Write about your achievement, contribution, or milestone..." oninput="cc('w-body','w-bc',5000)"></textarea><div class="cc" id="w-bc">0 / 5000</div></div>
+          <div class="fl fl-full"><label>Your Story</label><div id="w-body-editor" style="background:white;border-radius:8px;"></div><div class="cc" id="w-bc">0 / 5000</div></div>
           <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bgo" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:11px;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
-          <div class="fl fl-full"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><input type="text" id="w-extra" placeholder="e.g. Recognised by the project manager" oninput="cc('w-extra','w-xc',500)"/><div class="cc" id="w-xc">0 / 500</div></div>
+          <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
         </div>
         <div style="margin-top:4px"><button class="btn-full bp" id="w-btn" onclick="submitStory()">Submit Story</button></div>
       </div>
@@ -328,7 +330,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <input type="hidden" id="edit-id" />
       <div class="al ae" id="edit-err"></div>
       <div class="form-grid">
-        <div class="fl fl-full"><label>Story Body</label><textarea id="edit-body" rows="7"></textarea></div>
+        <div class="fl fl-full"><label>Story Body</label><div id="edit-body-editor" style="background:white;border-radius:8px;min-height:160px;"></div></div>
       </div>
     </div>
     <div class="mfoot">
@@ -536,7 +538,7 @@ async function submitStory(){
   hideAl('w-err');hideAl('w-ok');
   const title=document.getElementById('w-title').value.trim();
   const designation=document.getElementById('w-desig').value.trim();
-  const body=document.getElementById('w-body').value.trim();
+  const body=quill.root.innerHTML.trim();
   const ai_body=document.getElementById('w-ai').value.trim();
   const extra=document.getElementById('w-extra').value.trim()||null;
   if(!title||(!designation&&storyType!=='team')||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
@@ -555,10 +557,19 @@ async function submitStory(){
   if(storyType==='team'&&!team_id)return showAl('w-err','Please select a team.');
   const btn=document.getElementById('w-btn');btn.textContent='Submitting...';btn.disabled=true;
   try{
-    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation:storyType==='team'?'':designation,body,ai_body,extra,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
+    let story_picture=null;
+    const picFile=document.getElementById('w-story-pic').files[0];
+    if(picFile){
+      const fd=new FormData();fd.append('file',picFile);
+      const ur=await fetch(`${API}/upload-picture`,{method:'POST',body:fd});
+      const ud=await ur.json();
+      if(!ur.ok)throw new Error(ud.detail||'Picture upload failed');
+      story_picture=ud.url;
+    }
+    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation:storyType==='team'?'':designation,body,ai_body,extra,story_picture,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
-    ['w-title','w-desig','w-body','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');
+    ['w-title','w-desig','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');quill.setContents([]);
     ['w-tc','w-bc','w-ac','w-xc'].forEach(id=>document.getElementById(id).textContent='0 / '+({'w-tc':200,'w-bc':5000,'w-ac':5000,'w-xc':500}[id.replace('c','c')]||'—'));
   }catch(e){showAl('w-err',e.message);}
   finally{btn.textContent='Submit Story';btn.disabled=false;}
@@ -580,13 +591,13 @@ async function loadMyStories(p=1){
 
 function openEditStory(id,body){
   document.getElementById('edit-id').value=id;
-  document.getElementById('edit-body').value=body;
+  editQuill.clipboard.dangerouslyPasteHTML(body);
   hideAl('edit-err');openOv('ov-edit');
 }
 async function saveEditStory(){
   hideAl('edit-err');
   const id=document.getElementById('edit-id').value;
-  const body=document.getElementById('edit-body').value.trim();
+  const body=editQuill.root.innerHTML.trim();
   if(!body)return showAl('edit-err','Body cannot be empty.');
   try{
     const r=await fetch(`${API}/stories/${id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({body})});
@@ -596,7 +607,7 @@ async function saveEditStory(){
 }
 
 async function rephraseStory(){
-  const body=document.getElementById('w-body').value.trim();
+  const body=quill.root.innerHTML.trim();
   if(!body||body.length<50)return showAl('w-err','Write at least 50 characters in Your Story before rephrasing.');
   const btn=document.getElementById('rephrase-btn');
   btn.textContent='✨ Rephrasing...';btn.disabled=true;
@@ -822,6 +833,12 @@ async function createTeam(){
     toast(`Team "${name}" created!`);loadTeams();
   }catch(e){showAl('team-err',e.message);}
 }
+const editQuill=new Quill('#edit-body-editor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],['clean']]}});
+const quill=new Quill('#w-body-editor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],['clean']]},placeholder:'Write about your achievement, contribution, or milestone...'});
+document.querySelector('#w-body-editor .ql-editor').style.minHeight='140px';
+document.querySelector('#w-body-editor .ql-editor').style.resize='vertical';
+document.querySelector('#w-body-editor .ql-editor').style.overflow='auto';
+quill.on('text-change',()=>{const len=quill.getText().trim().length;document.getElementById('w-bc').textContent=`${len} / 5000`;});
 </script>
 </body>
 </html>
