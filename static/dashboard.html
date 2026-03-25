@@ -573,7 +573,7 @@ async function loadMyStories(p=1){
     if(!d.stories.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
     tb.innerHTML=d.stories.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td><td>${stBadge(s.status)}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
-      <td><div class="tdact">${s.status==='Pending'?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
+      <td><div class="tdact">${(s.status==='Pending'||s.status==='Rejected')?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
     buildPag('ms-pag',p,p<d.pages,'loadMyStories');
   }catch{tb.innerHTML=empty('Failed to load stories.');}
 }

@@ -6,15 +6,6 @@ from schemas import ApproveUserRequest
 
 
 def get_active_users(page: int, db: Session, paginate):
-    limit, offset = paginate(page)
-    return db.query(Employee).filter(
-        Employee.status == "Active"
-    ).offset(offset).limit(limit).all()
-
-
-
-
-def get_active_users(page: int, db: Session, paginate):
     import math
     limit, offset = paginate(page)
     total = db.query(Employee).filter(Employee.status == "Active").count()
@@ -42,6 +33,10 @@ def get_pending_users(page: int, db: Session, paginate):
         "pages": math.ceil(total / limit) if total > 0 else 1
     }
 
+def get_all_active_users(db: Session):
+    return db.query(Employee).filter(
+        Employee.status == "Active"
+    ).all()
 
 def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, current_user: Employee):
     user = db.query(Employee).filter(
@@ -78,9 +73,6 @@ def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session, cur
 
     db.refresh(user)
     return user
-
-    
-
 
 def reject_user(employee_id: int, db: Session, current_user: Employee):
     user = db.query(Employee).filter(
