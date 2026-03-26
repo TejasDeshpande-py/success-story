@@ -201,6 +201,7 @@ async function doReg(){
   if(!/[A-Z]/.test(password))return showErr('Password must contain at least one uppercase letter.');
   if(!/[0-9]/.test(password))return showErr('Password must contain at least one number.');
   if(!file)return showErr('Please upload a profile photo.');
+  if(file.size>5*1024*1024)return showErr('Profile picture must be under 5MB.');
   const btn=document.getElementById('rbtn');btn.textContent='Uploading photo...';btn.disabled=true;
   try{
     const fd=new FormData();fd.append('file',file);

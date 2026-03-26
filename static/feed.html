@@ -86,13 +86,13 @@
 
   .ov{position:fixed;inset:0;z-index:200;background:rgba(44,26,16,.46);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
   .ov.open{display:flex;}
-  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
+  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:780px;width:100%;max-height:92vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
   .mod::-webkit-scrollbar{width:4px;}
   .mod::-webkit-scrollbar-thumb{background:var(--rose);border-radius:4px;}
   .mod-top{height:3px;background:linear-gradient(90deg,var(--brown2),var(--brownlt));border-radius:14px 14px 0 0;}
   @keyframes modIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .mhdr{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 26px 0;gap:16px;}
-  .mttl{font-family:'Playfair Display',serif;font-size:clamp(16px,2.5vw,21px);font-weight:700;line-height:1.28;color:var(--text);}
+  .mttl{font-family:'Playfair Display',serif;font-size:clamp(16px,2.5vw,21px);font-weight:700;line-height:1.28;color:var(--text);word-break:break-word;}
   .xb{width:28px;height:28px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s;flex-shrink:0;}
   .xb:hover{color:var(--red);border-color:rgba(184,50,37,.25);}
   .mmeta{display:flex;align-items:center;gap:12px;padding:14px 26px 0;}
@@ -136,7 +136,7 @@
     <div class="mmeta" id="m-meta"></div>
     <div class="mdiv"></div>
     <div id="m-story-pic-container" style="display:none;margin:0 26px 16px;">
-      <img id="m-story-pic" src="" alt="Story" style="width:100%;max-height:260px;object-fit:cover;border-radius:8px;">
+      <img id="m-story-pic" src="" alt="Story" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;background:#f5e6da;">
     </div>
     <div class="mbody" id="m-body"></div>
     <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
@@ -204,8 +204,8 @@ async function openM(id){
     const s=await r.json();const inits=ini(s.name);
     document.getElementById('m-title').textContent=s.title;
     document.getElementById('m-meta').innerHTML=validPic(s.picture)
-      ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div><div style="font-size:14px;font-weight:600;color:var(--text)">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`
-      :`<div class="mav-fb">${inits}</div><div><div style="font-size:14px;font-weight:600;color:var(--text)">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`;
+      ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`
+      :`<div class="mav-fb">${inits}</div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`;
     const picC=document.getElementById('m-story-pic-container');
     const picI=document.getElementById('m-story-pic');
     if(s.story_picture){picI.src=s.story_picture;picC.style.display='block';}

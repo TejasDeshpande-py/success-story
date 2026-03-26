@@ -212,10 +212,11 @@ tr:hover td{background:rgba(247,228,216,.35);}
           <div class="fl fl-full" id="w-team-wrap" style="display:none;"><label>Team <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(team this story is about)</span></label><select id="w-team-id"><option value="">Select team...</option></select></div>
 
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
-          <div class="fl fl-full"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
+          <div class="fl"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
+          <div class="fl"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><textarea id="w-extra" rows="2" placeholder="e.g. Q2 2025, Project Apollo" oninput="cc('w-extra','w-ec',100)" style="resize:vertical;min-height:42px;"></textarea><div class="cc" id="w-ec">0 / 100</div></div>
           <div class="fl fl-full"><label>Your Story</label><div id="w-body-editor" style="background:white;border-radius:8px;"></div><div class="cc" id="w-bc">0 / 5000</div></div>
           <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bgo" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:11px;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
-          <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
+          <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view, Story picture must be under 10MB)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
         </div>
         <div style="margin-top:4px"><button class="btn-full bp" id="w-btn" onclick="submitStory()">Submit Story</button></div>
       </div>
@@ -284,7 +285,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="panel-head"><span class="panel-title">Create New Team</span></div>
       <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
         <input type="text" id="team-name" placeholder="Team name" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:0 12px;outline:none;transition:border-color .18s;" onfocus="this.style.borderColor='var(--brown)'" onblur="this.style.borderColor='var(--border)'" />
-        <input type="file" id="team-pic" accept=".jpg,.jpeg,.png,.webp" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 12px;outline:none;cursor:pointer;" />
+        <input type="file" id="team-pic" accept=".jpg,.jpeg,.png,.webp" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 12px;outline:none;cursor:pointer;" /><div style="font-size:11px;color:var(--muted);margin-top:3px;">Max file size: 5MB</div>
         <button class="btn bp" style="width:100%;height:40px;" onclick="createTeam()">Create Team</button>
       </div>
       <div class="al ae" id="team-err" style="margin:0 20px 14px;display:none;"></div>
@@ -351,6 +352,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
         <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Author</div>
         <div style="font-size:13px;color:var(--text)" id="rev-author"></div>
       </div>
+      <div id="rev-pic-container" style="display:none;margin-bottom:14px;"><img id="rev-pic-img" src="" alt="Story Picture" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;"></div>
       <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Select body to publish</div>
       <div class="body-choice" id="bc-orig" onclick="pickBody('original')">
         <div class="bc-label">Original</div>
@@ -540,16 +542,14 @@ async function submitStory(){
   const designation=document.getElementById('w-desig').value.trim();
   const body=quill.root.innerHTML.trim();
   const ai_body=document.getElementById('w-ai').value.trim();
-  const extra=document.getElementById('w-extra').value.trim()||null;
+  const extra=null;
+  const storyType=document.querySelector('input[name="story-type"]:checked').value;
   if(!title||(!designation&&storyType!=='team')||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
-  if(title.length>200)return showAl('w-err','Title must have less than 200 characters.');
   if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
   if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters.');
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
   if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters.');
   if(designation.length>100)return showAl('w-err','Designation must be under 100 characters.');
-  if(extra&&extra.length>500)return showAl('w-err','Extra content must be less than 500 characters.');
-  const storyType=document.querySelector('input[name="story-type"]:checked').value;
   const is_team_story=storyType==='team';
   const story_for_tricon=storyType==='someone'?document.getElementById('w-for-tricon').value.trim():null;
   const team_id=storyType==='team'?parseInt(document.getElementById('w-team-id').value)||null:null;
@@ -560,8 +560,9 @@ async function submitStory(){
     let story_picture=null;
     const picFile=document.getElementById('w-story-pic').files[0];
     if(picFile){
+      if(picFile.size>10*1024*1024)return showAl('w-err','Story picture must be under 10MB.');
       const fd=new FormData();fd.append('file',picFile);
-      const ur=await fetch(`${API}/upload-picture`,{method:'POST',body:fd});
+      const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
       const ud=await ur.json();
       if(!ur.ok)throw new Error(ud.detail||'Picture upload failed');
       story_picture=ud.url;
@@ -569,8 +570,14 @@ async function submitStory(){
     const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation:storyType==='team'?'':designation,body,ai_body,extra,story_picture,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
-    ['w-title','w-desig','w-ai','w-extra'].forEach(id=>document.getElementById(id).value='');quill.setContents([]);
-    ['w-tc','w-bc','w-ac','w-xc'].forEach(id=>document.getElementById(id).textContent='0 / '+({'w-tc':200,'w-bc':5000,'w-ac':5000,'w-xc':500}[id.replace('c','c')]||'—'));
+    setTimeout(()=>hideAl('w-ok'),5000);
+    ['w-title','w-desig','w-ai'].forEach(id=>document.getElementById(id).value='');
+    quill.setContents([]);
+    document.getElementById('w-story-pic').value='';
+    document.querySelector('input[name="story-type"][value="mine"]').checked=true;
+    switchStoryType('mine');
+    const ccMap={'w-tc':'0 / 200','w-bc':'0 / 5000','w-ac':'0 / 5000','w-ec':'0 / 100'};
+    Object.keys(ccMap).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ccMap[id];});
   }catch(e){showAl('w-err',e.message);}
   finally{btn.textContent='Submit Story';btn.disabled=false;}
 }
@@ -629,7 +636,7 @@ async function loadOverviewStats(){
       fetch(`${API}/users/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
       fetch(`${API}/users?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
       fetch(`${API}/stories/pending?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
-      fetch(`${API}/stories?page=1`).then(r=>r.json()).catch(()=>({total:0})),
+      fetch(`${API}/stories?page=1`,{headers:hdr()}).then(r=>r.json()).catch(()=>({total:0})),
     ]);
     document.getElementById('ov-pu').textContent=pu.total||0;
     document.getElementById('ov-au').textContent=au.total||0;
@@ -721,6 +728,10 @@ async function openReview(id){
     document.getElementById('rev-author').textContent=`${s.name} — ${s.designation}`;
     document.getElementById('rev-orig').textContent=s.body;
     document.getElementById('rev-ai').textContent=s.ai_body;
+    const revPicC=document.getElementById('rev-pic-container');
+    const revPicI=document.getElementById('rev-pic-img');
+    if(s.story_picture){revPicI.src=s.story_picture;revPicC.style.display='block';}
+    else revPicC.style.display='none';
     selBody=null;
     document.getElementById('bc-orig').className='body-choice';
     document.getElementById('bc-ai').className='body-choice';
@@ -820,10 +831,11 @@ async function createTeam(){
   if(!name)return showAl('team-err','Team name is required.');
   const file=document.getElementById('team-pic').files[0];
   if(!file)return showAl('team-err','Team picture is required.');
+  if(file.size>5*1024*1024)return showAl('team-err','Team picture must be under 5MB.');
   hideAl('team-err');
   try{
     const fd=new FormData();fd.append('file',file);
-    const ur=await fetch(`${API}/upload-picture`,{method:'POST',body:fd});
+    const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
     const ud=await ur.json();
     if(!ur.ok)throw new Error(ud.detail||'Photo upload failed');
     const r=await fetch(`${API}/teams/`,{method:'POST',headers:hdr(),body:JSON.stringify({team_name:name,team_picture:ud.url})});

@@ -14,7 +14,7 @@ class TokenResponse(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    name: str
+    name: str = Field(..., max_length=50)
     email: str
     password: str
     picture: str
@@ -93,6 +93,7 @@ class StoryCreate(BaseModel):
     body: str
     ai_body: str
     extra: Optional[str] = None
+    story_picture: Optional[str] = None
     story_for: Optional[int] = None
     story_for_tricon: Optional[str] = None
     is_team_story: bool = False
@@ -121,6 +122,7 @@ class StoryPublicResponse(BaseModel):
     team_id: Optional[int]
     name: Optional[str]
     picture: Optional[str]
+    story_picture: Optional[str] = None
     created_at: Optional[datetime]
 
     class Config:
@@ -145,6 +147,7 @@ class StoryResponse(BaseModel):
     updated_by: Optional[int]
     name: Optional[str]
     picture: Optional[str]
+    story_picture: Optional[str] = None
 
     class Config:
         from_attributes = True
