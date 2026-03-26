@@ -181,6 +181,19 @@ function prevPic(input){
 function showErr(m){const e=document.getElementById('err');e.textContent=m;e.classList.add('on');document.getElementById('ok').classList.remove('on');e.scrollIntoView({behavior:'smooth',block:'nearest'});}
 function showOk(m){const e=document.getElementById('ok');e.textContent=m;e.classList.add('on');document.getElementById('err').classList.remove('on');}
 
+async function checkMime(file){
+  return new Promise((resolve)=>{
+    const r=new FileReader();
+    r.onloadend=()=>{
+      const b=new Uint8Array(r.result);
+      const jpg=b[0]===0xFF&&b[1]===0xD8&&b[2]===0xFF;
+      const png=b[0]===0x89&&b[1]===0x50&&b[2]===0x4E&&b[3]===0x47;
+      const webp=b[8]===0x57&&b[9]===0x45&&b[10]===0x42&&b[11]===0x50;
+      resolve(jpg||png||webp);
+    };
+    r.readAsArrayBuffer(file.slice(0,12));
+  });
+}
 async function doReg(){
   document.getElementById('err').classList.remove('on');document.getElementById('ok').classList.remove('on');
   const name=document.getElementById('nm').value.trim();
@@ -201,7 +214,7 @@ async function doReg(){
   if(!/[A-Z]/.test(password))return showErr('Password must contain at least one uppercase letter.');
   if(!/[0-9]/.test(password))return showErr('Password must contain at least one number.');
   if(!file)return showErr('Please upload a profile photo.');
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return showErr('Profile picture must be a JPG, PNG, or WEBP image.');
+  if(!await checkMime(file))return showErr('Profile picture must be a real JPG, PNG, or WEBP image.');
   if(file.size>5*1024*1024)return showErr('Profile picture must be under 5MB.');
   const btn=document.getElementById('rbtn');btn.textContent='Uploading photo...';btn.disabled=true;
   try{

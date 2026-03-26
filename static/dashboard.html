@@ -215,7 +215,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
           <div class="fl"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
           <div class="fl"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><textarea id="w-extra" rows="2" placeholder="e.g. Q2 2025, Project Apollo" oninput="cc('w-extra','w-ec',100)" style="resize:vertical;min-height:42px;"></textarea><div class="cc" id="w-ec">0 / 100</div></div>
           <div class="fl fl-full"><label>Your Story</label><div id="w-body-editor" style="background:white;border-radius:8px;"></div><div class="cc" id="w-bc">0 / 5000</div></div>
-          <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bgo" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:11px;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
+          <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bp" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:12px;font-weight:600;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
           <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view, Story picture must be under 10MB)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
         </div>
         <div style="margin-top:4px"><button class="btn-full bp" id="w-btn" onclick="submitStory()">Submit Story</button></div>
@@ -403,6 +403,19 @@ let token=localStorage.getItem('token');
 let user=null;
 let selBody=null;
 
+async function checkMime(file){
+  return new Promise((resolve)=>{
+    const r=new FileReader();
+    r.onloadend=()=>{
+      const b=new Uint8Array(r.result);
+      const jpg=b[0]===0xFF&&b[1]===0xD8&&b[2]===0xFF;
+      const png=b[0]===0x89&&b[1]===0x50&&b[2]===0x4E&&b[3]===0x47;
+      const webp=b[8]===0x57&&b[9]===0x45&&b[10]===0x42&&b[11]===0x50;
+      resolve(jpg||png||webp);
+    };
+    r.readAsArrayBuffer(file.slice(0,12));
+  });
+}
 const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
 const esc=s=>(s||'').replace(/'/g,"\\'");
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
@@ -561,7 +574,7 @@ async function submitStory(){
     let story_picture=null;
     const picFile=document.getElementById('w-story-pic').files[0];
     if(picFile){
-      if(!['image/jpeg','image/png','image/webp'].includes(picFile.type))return showAl('w-err','Story picture must be a JPG, PNG, or WEBP image.');
+      if(!await checkMime(picFile))return showAl('w-err','Story picture must be a real JPG, PNG, or WEBP image.');
       if(picFile.size>10*1024*1024)return showAl('w-err','Story picture must be under 10MB.');
       const fd=new FormData();fd.append('file',picFile);
       const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
@@ -833,7 +846,7 @@ async function createTeam(){
   if(!name)return showAl('team-err','Team name is required.');
   const file=document.getElementById('team-pic').files[0];
   if(!file)return showAl('team-err','Team picture is required.');
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return showAl('team-err','Team picture must be a JPG, PNG, or WEBP image.');
+  if(!await checkMime(file))return showAl('team-err','Team picture must be a real JPG, PNG, or WEBP image.');
   if(file.size>5*1024*1024)return showAl('team-err','Team picture must be under 5MB.');
   hideAl('team-err');
   try{
