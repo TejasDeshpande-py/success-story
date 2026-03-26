@@ -191,7 +191,7 @@ async function doReg(){
   if(!name)return showErr('Please enter your full name.');
   if(!/^[a-zA-Z\s]+$/.test(name))return showErr('Name must contain letters only.');
   if(name.length<2)return showErr('Name is too short.');
-  if(name.length>100)return showErr('Name must be under 100 characters.');
+  if(name.length>50)return showErr('Name must be under 50 characters.');
   if(!tricon_id)return showErr('Please enter your Tricon ID.');
   if(!/^TRI\d+$/i.test(tricon_id))return showErr('Tricon ID must start with TRI followed by digits, e.g. TRI001.');
   if(tricon_id.length>7)return showErr('Tricon ID is too long, e.g. TRI001.');
@@ -201,6 +201,7 @@ async function doReg(){
   if(!/[A-Z]/.test(password))return showErr('Password must contain at least one uppercase letter.');
   if(!/[0-9]/.test(password))return showErr('Password must contain at least one number.');
   if(!file)return showErr('Please upload a profile photo.');
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return showErr('Profile picture must be a JPG, PNG, or WEBP image.');
   if(file.size>5*1024*1024)return showErr('Profile picture must be under 5MB.');
   const btn=document.getElementById('rbtn');btn.textContent='Uploading photo...';btn.disabled=true;
   try{

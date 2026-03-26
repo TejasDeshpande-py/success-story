@@ -542,7 +542,7 @@ async function submitStory(){
   const designation=document.getElementById('w-desig').value.trim();
   const body=quill.root.innerHTML.trim();
   const ai_body=document.getElementById('w-ai').value.trim();
-  const extra=null;
+  const extra=document.getElementById('w-extra').value.trim()||null;
   const storyType=document.querySelector('input[name="story-type"]:checked').value;
   if(!title||(!designation&&storyType!=='team')||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
   if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
@@ -550,6 +550,7 @@ async function submitStory(){
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
   if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters.');
   if(designation.length>100)return showAl('w-err','Designation must be under 100 characters.');
+  if(extra&&extra.length>100)return showAl('w-err','Extra info must be under 100 characters.');
   const is_team_story=storyType==='team';
   const story_for_tricon=storyType==='someone'?document.getElementById('w-for-tricon').value.trim():null;
   const team_id=storyType==='team'?parseInt(document.getElementById('w-team-id').value)||null:null;
@@ -560,6 +561,7 @@ async function submitStory(){
     let story_picture=null;
     const picFile=document.getElementById('w-story-pic').files[0];
     if(picFile){
+      if(!['image/jpeg','image/png','image/webp'].includes(picFile.type))return showAl('w-err','Story picture must be a JPG, PNG, or WEBP image.');
       if(picFile.size>10*1024*1024)return showAl('w-err','Story picture must be under 10MB.');
       const fd=new FormData();fd.append('file',picFile);
       const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
@@ -571,7 +573,7 @@ async function submitStory(){
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
     setTimeout(()=>hideAl('w-ok'),5000);
-    ['w-title','w-desig','w-ai'].forEach(id=>document.getElementById(id).value='');
+    ['w-title','w-desig','w-extra','w-ai'].forEach(id=>document.getElementById(id).value='');
     quill.setContents([]);
     document.getElementById('w-story-pic').value='';
     document.querySelector('input[name="story-type"][value="mine"]').checked=true;
@@ -831,6 +833,7 @@ async function createTeam(){
   if(!name)return showAl('team-err','Team name is required.');
   const file=document.getElementById('team-pic').files[0];
   if(!file)return showAl('team-err','Team picture is required.');
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return showAl('team-err','Team picture must be a JPG, PNG, or WEBP image.');
   if(file.size>5*1024*1024)return showAl('team-err','Team picture must be under 5MB.');
   hideAl('team-err');
   try{
