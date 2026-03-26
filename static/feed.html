@@ -111,8 +111,8 @@
 <nav>
   <a class="logo" href="/feed" style="display:flex;align-items:center;gap:8px;"><img src="/static/tricon-logo.png" alt="Tricon" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">Tricon<span>Stories</span></a>
   <div class="nav-right">
-    <a class="btn btn-o" href="/register">Register</a>
-    <a class="btn btn-p" href="/login">Login</a>
+    <a class="btn btn-o" id="nav-register" href="/register">Register</a>
+    <a class="btn btn-p" id="nav-login" href="/login">Login</a>
   </div>
 </nav>
 
@@ -145,6 +145,8 @@
 
 <script>
 const API="";
+const _t=localStorage.getItem('token');
+if(_t){try{const _p=JSON.parse(atob(_t.split('.')[1]));if(_p.exp*1000>Date.now()){document.getElementById('nav-register').textContent='Dashboard';document.getElementById('nav-register').href='/dashboard';document.getElementById('nav-login').style.display='none';}}catch(e){}}
 const PER=9;let pg=1,tot=1;
 const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';

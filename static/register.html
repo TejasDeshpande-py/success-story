@@ -148,6 +148,8 @@
 
 <script>
 const API="";
+const existingToken=localStorage.getItem('token');
+if(existingToken){try{const payload=JSON.parse(atob(existingToken.split('.')[1]));if(payload.exp*1000>Date.now())window.location.href='/dashboard';}catch(e){}}
 function tog(){const i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';}
 
 function chkTid(v){
