@@ -273,8 +273,8 @@ def publish_story(story_id: int, db: Session, current_user: Employee):
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    if story.status != "Pending":
-        raise HTTPException(status_code=400, detail="Only pending stories can be published")
+    if story.status not in ["Pending", "Rejected"]:
+        raise HTTPException(status_code=400, detail="Only pending or rejected stories can be published")
 
     if story.selected_body is None:
         raise HTTPException(status_code=400, detail="A body must be selected before publishing")
