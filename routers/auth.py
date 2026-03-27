@@ -22,12 +22,19 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/upload-picture")
-def upload_picture(file: UploadFile = File(...)):
+def upload_picture(file: UploadFile = File(...), current_user=Depends(get_current_user)):
     allowed = [".jpg", ".jpeg", ".png", ".webp"]
+    allowed_mime = ["image/jpeg", "image/png", "image/webp"]
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed:
         raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, webp allowed")
-    
+    if file.content_type not in allowed_mime:
+        raise HTTPException(status_code=400, detail="Invalid file type — only JPG, PNG, WEBP allowed")
+    contents = file.file.read(10 * 1024 * 1024 + 1)
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File must be under 10MB")
+    file.file.seek(0)
+
     filename = f"{uuid.uuid4()}{ext}"
     
     import boto3

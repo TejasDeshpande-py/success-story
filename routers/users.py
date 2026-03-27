@@ -19,6 +19,10 @@ def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Em
 def get_me(db=Depends(get_db), current_user=Depends(get_current_user)):
     return current_user
 
+@router.patch("/me", response_model=UserResponse)
+def update_me(payload: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return users_controller.update_me(payload, db, current_user)
+
 @router.get("/pending")
 def get_pending_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.get_pending_users(page, db, paginate)

@@ -66,6 +66,7 @@ class UserResponse(BaseModel):
     role_id: Optional[int]
     team_id: Optional[int]
     status: str
+    picture: Optional[str] = None
     created_at: Optional[datetime]
 
     class Config:
@@ -109,7 +110,7 @@ class HRStoryUpdate(BaseModel):
     title: Optional[str] = None
     designation: Optional[str] = None
     ai_body: Optional[str] = None
-    extra: Optional[str] = None
+    extra: Optional[str] = Field(None, max_length=100)
 
 
 class StoryPublicResponse(BaseModel):
@@ -123,6 +124,7 @@ class StoryPublicResponse(BaseModel):
     name: Optional[str]
     picture: Optional[str]
     story_picture: Optional[str] = None
+    created_by_name: Optional[str] = None
     created_at: Optional[datetime]
 
     class Config:

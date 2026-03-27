@@ -3,6 +3,24 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from model import Employee, Team
 from schemas import ApproveUserRequest
+from security import hash_password, verify_password
+import boto3, os
+from urllib.parse import urlparse
+
+def delete_s3_picture(url: str):
+    if not url:
+        return
+    try:
+        key = urlparse(url).path.lstrip('/')
+        s3 = boto3.client(
+            "s3",
+            region_name=os.getenv("AWS_REGION"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+        )
+        s3.delete_object(Bucket=os.getenv("AWS_BUCKET_NAME"), Key=key)
+    except Exception:
+        pass
 
 
 def get_active_users(page: int, db: Session, paginate):
@@ -97,3 +115,30 @@ def reject_user(employee_id: int, db: Session, current_user: Employee):
 
     db.refresh(user)
     return user
+
+def update_me(payload: dict, db: Session, current_user: Employee):
+    if "picture" in payload and payload["picture"]:
+        delete_s3_picture(current_user.picture)
+        current_user.picture = payload["picture"]
+    if "new_password" in payload and payload["new_password"]:
+        if not payload.get("old_password"):
+            raise HTTPException(status_code=400, detail="Current password is required")
+        if not verify_password(payload["old_password"], current_user.password_hash):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        if verify_password(payload["new_password"], current_user.password_hash):
+            raise HTTPException(status_code=400, detail="New password cannot be same as current password")
+        if len(payload["new_password"]) < 8:
+            raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
+        if not any(c.isupper() for c in payload["new_password"]):
+            raise HTTPException(status_code=400, detail="New password must contain an uppercase letter")
+        if not any(c.isdigit() for c in payload["new_password"]):
+            raise HTTPException(status_code=400, detail="New password must contain a number")
+        current_user.password_hash = hash_password(payload["new_password"])
+    current_user.updated_at = datetime.now(timezone.utc)
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+    return current_user

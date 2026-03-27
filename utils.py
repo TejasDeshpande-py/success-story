@@ -18,6 +18,8 @@ def story_to_public_dict(s: SuccessStory):
         "team_id": s.team_id,
         "name": s.team.team_name if s.is_team_story and s.team else (s.story_for_emp.name if s.story_for_emp else None),
         "picture": s.team.team_picture if s.is_team_story and s.team else (s.story_for_emp.picture if s.story_for_emp else None),
+        "story_picture": s.story_picture,
+        "created_by_name": s.creator.name if s.creator else None,
         "created_at": s.created_at,
     }
 

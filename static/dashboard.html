@@ -222,7 +222,56 @@ tr:hover td{background:rgba(247,228,216,.35);}
       </div>
     </div>
   </div>
-
+<div class="sec" id="sec-profile">
+  <div class="sec-head"><h2>My Profile</h2><p>View and update your account details.</p></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;">
+    <!-- Profile Info -->
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Account Info</span></div>
+      <div style="padding:20px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+        <div id="prof-av" style="width:90px;height:90px;border-radius:50%;overflow:hidden;border:3px solid var(--rose);background:var(--rosebg);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--brown);flex-shrink:0;"></div>
+        <div style="text-align:center;">
+          <div id="prof-name" style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+          <div id="prof-email" style="font-size:13px;color:var(--muted);margin-bottom:4px;"></div>
+          <div id="prof-tid" style="font-size:12px;color:var(--brownlt);font-weight:600;"></div>
+        </div>
+        <div class="al ae" id="pic-err" style="width:100%;"></div>
+        <div class="al as" id="pic-ok" style="width:100%;"></div>
+        <div style="width:100%;">
+          <label style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px;">Update Profile Picture</label>
+          <input type="file" id="prof-pic" accept=".jpg,.jpeg,.png,.webp" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px;outline:none;cursor:pointer;" onchange="prevProfilePic(this)"/>
+<div id="prof-pic-preview" style="display:none;margin-top:8px;text-align:center;">
+  <img id="prof-pic-prev-img" src="" style="width:60px;height:60px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--rose);">
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;">New picture preview</div>
+</div>
+<div style="font-size:11px;color:var(--muted);margin-top:4px;">Max 5MB — JPG, PNG, WEBP only</div>
+        </div>
+        <button class="btn bp" style="width:100%;" onclick="updatePicture()">Update Picture</button>
+      </div>
+    </div>
+    <!-- Change Password -->
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Change Password</span></div>
+      <div style="padding:20px 22px;display:flex;flex-direction:column;gap:12px;">
+        <div class="al ae" id="pw-err"></div>
+        <div class="al as" id="pw-ok"></div>
+        <div class="fl">
+          <label>Current Password</label>
+          <input type="password" id="prof-old-pw" placeholder="Enter current password"/>
+        </div>
+        <div class="fl">
+          <label>New Password</label>
+          <input type="password" id="prof-new-pw" placeholder="Min 8 chars, 1 uppercase, 1 number"/>
+        </div>
+        <div class="fl">
+          <label>Confirm New Password</label>
+          <input type="password" id="prof-confirm-pw" placeholder="Re-enter new password"/>
+        </div>
+        <button class="btn bp" style="width:100%;margin-top:4px;" onclick="updatePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+</div>
   <div class="sec" id="sec-mystories">
     <div class="sec-head"><h2>My Stories</h2><p>Stories you have submitted.</p></div>
     <div class="panel">
@@ -450,6 +499,7 @@ function buildNav(){
   const nav=document.getElementById('navarea');const role=user?.role_id??0;
   const hrItems=[
     {sec:'overview',ic:'📊',label:'Overview'},
+    {sec:'profile',ic:'👤',label:'My Profile'},
     {sec:'pendingusers',ic:'👤',label:'Pending Users'},
     {sec:'activeusers',ic:'👥',label:'Active Users'},
     {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
@@ -459,6 +509,7 @@ function buildNav(){
     {sec:'mystories',ic:'📄',label:'My Stories'},
   ];
   const empItems=[
+    {sec:'profile',ic:'👤',label:'My Profile'},
     {sec:'write',ic:'✍️',label:'Write Story'},
     {sec:'mystories',ic:'📄',label:'My Stories'},
   ];
@@ -473,8 +524,9 @@ function showSec(id){
   const ni=document.getElementById(`ni-${id}`);
   if(sec)sec.classList.add('active');
   if(ni)ni.classList.add('active');
-  const titles={write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
+  const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
+  if(id==='profile'){loadProfile();}
   if(id==='mystories')loadMyStories(1);
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
@@ -642,7 +694,69 @@ async function rephraseStory(){
   }catch(e){showAl('w-err',e.message);}
   finally{btn.textContent='✨ Rephrase with AI';btn.disabled=false;}
 }
-
+// ==================== PROFILE ====================
+function loadProfile(){
+  const av=document.getElementById('prof-av');
+  if(user.picture){
+    av.innerHTML=`<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;object-position:top;" onerror="this.parentElement.textContent='${ini(user.name)}'">`;
+  } else {
+    av.textContent=ini(user.name);
+  }
+  document.getElementById('prof-name').textContent=user.name||'—';
+  document.getElementById('prof-email').textContent=user.email||'—';
+  document.getElementById('prof-tid').textContent=user.tricon_id?`Tricon ID: ${user.tricon_id}`:'';
+}
+function prevProfilePic(input){
+  const file=input.files[0];if(!file)return;
+  const prev=document.getElementById('prof-pic-preview');
+  const img=document.getElementById('prof-pic-prev-img');
+  img.src=URL.createObjectURL(file);
+  prev.style.display='block';
+}
+async function updatePicture(){
+  hideAl('pic-err');hideAl('pic-ok');
+  const file=document.getElementById('prof-pic').files[0];
+  if(!file)return showAl('pic-err','Please select a picture first.');
+  if(!await checkMime(file))return showAl('pic-err','Picture must be a real JPG, PNG, or WEBP image.');
+  if(file.size>5*1024*1024)return showAl('pic-err','Picture must be under 5MB.');
+  try{
+    const fd=new FormData();fd.append('file',file);
+    const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
+    const ud=await ur.json();
+    if(!ur.ok)throw new Error(ud.detail||'Upload failed');
+    const r=await fetch(`${API}/users/me`,{method:'PATCH',headers:hdr(),body:JSON.stringify({picture:ud.url})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    user.picture=ud.url;
+    showAl('pic-ok','✅ Profile picture updated!');
+    loadProfile();
+    const av=document.getElementById('sav');
+    av.innerHTML=`<img src="${ud.url}" onerror="this.parentElement.textContent='${ini(user.name)}'">`;
+    toast('Profile picture updated!');
+    document.getElementById('prof-pic').value='';
+    document.getElementById('prof-pic-preview').style.display='none';
+  }catch(e){showAl('pic-err',e.message);}
+}
+async function updatePassword(){
+  hideAl('pw-err');hideAl('pw-ok');
+  const old_password=document.getElementById('prof-old-pw').value;
+  const new_password=document.getElementById('prof-new-pw').value;
+  const confirm=document.getElementById('prof-confirm-pw').value;
+  if(!old_password)return showAl('pw-err','Please enter your current password.');
+  if(!new_password)return showAl('pw-err','Please enter a new password.');
+  if(new_password.length<8)return showAl('pw-err','New password must be at least 8 characters.');
+  if(!/[A-Z]/.test(new_password))return showAl('pw-err','New password must contain an uppercase letter.');
+  if(!/[0-9]/.test(new_password))return showAl('pw-err','New password must contain a number.');
+  if(new_password!==confirm)return showAl('pw-err','Passwords do not match.');
+  try{
+    const r=await fetch(`${API}/users/me`,{method:'PATCH',headers:hdr(),body:JSON.stringify({old_password,new_password})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    showAl('pw-ok','✅ Password updated successfully!');
+    document.getElementById('prof-old-pw').value='';
+    document.getElementById('prof-new-pw').value='';
+    document.getElementById('prof-confirm-pw').value='';
+    toast('Password updated!');
+  }catch(e){showAl('pw-err',e.message);}
+}
 // ==================== HR ====================
 
 async function loadOverviewStats(){
