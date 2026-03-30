@@ -234,6 +234,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
           <div id="prof-name" style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
           <div id="prof-email" style="font-size:13px;color:var(--muted);margin-bottom:4px;"></div>
           <div id="prof-tid" style="font-size:12px;color:var(--brownlt);font-weight:600;"></div>
+          <div id="prof-team" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
         </div>
         <div class="al ae" id="pic-err" style="width:100%;"></div>
         <div class="al as" id="pic-ok" style="width:100%;"></div>
@@ -305,7 +306,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
     <div class="sec-head"><h2>Active Users</h2><p>All approved members.</p></div>
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Active Members</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Tricon ID</th><th>Role</th><th>Team</th><th>Status</th></tr></thead><tbody id="au-tbody"></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Tricon ID</th><th>Role</th><th>Team</th><th>Status</th><th>Actions</th></tr></thead><tbody id="au-tbody"></tbody></table></div>
       <div class="pag" id="au-pag"></div>
     </div>
   </div>
@@ -444,6 +445,26 @@ tr:hover td{background:rgba(247,228,216,.35);}
   </div>
 </div>
 
+<div class="ov" id="ov-changeteam">
+  <div class="mod">
+    <div class="mod-top"></div>
+    <div class="mhdr"><h3>Change Team</h3><button class="xb" onclick="closeOv('ov-changeteam')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="ct-id" />
+      <div style="font-size:13px;color:var(--sub);margin-bottom:14px;" id="ct-info"></div>
+      <div class="al ae" id="ct-err"></div>
+      <div class="fl">
+        <label>Select New Team</label>
+        <select id="ct-team"><option value="">Loading...</option></select>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Select "No Team" to remove from current team.</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeOv('ov-changeteam')">Cancel</button>
+      <button class="btn bp" onclick="confirmChangeTeam()">Update Team</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -705,6 +726,17 @@ function loadProfile(){
   document.getElementById('prof-name').textContent=user.name||'—';
   document.getElementById('prof-email').textContent=user.email||'—';
   document.getElementById('prof-tid').textContent=user.tricon_id?`Tricon ID: ${user.tricon_id}`:'';
+  const teamEl=document.getElementById('prof-team');
+  if(teamEl){
+    if(user.team_id){
+      fetch(`${API}/teams/all`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(teams=>{
+        const team=teams.find(t=>t.team_id===user.team_id);
+        teamEl.textContent=team?`Team: ${team.team_name} (#${team.team_id})`:`Team ID: ${user.team_id}`;
+      }).catch(()=>{teamEl.textContent=`Team ID: ${user.team_id}`;});
+    } else {
+      teamEl.textContent='No team assigned';
+    }
+  }
 }
 function prevProfilePic(input){
   const file=input.files[0];if(!file)return;
@@ -826,7 +858,8 @@ async function loadActiveUsers(p=1){
     tb.innerHTML=d.users.map((u,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${u.name}</div></td><td style="font-size:12px">${u.email}</td>
       <td><span class="tid-chip">${u.tricon_id||'—'}</span></td>
-      <td>${roleBadge(u.role_id)}</td><td style="font-size:12px">${u.team_id||'—'}</td><td>${stBadge(u.status)}</td></tr>`).join('');
+      <td>${roleBadge(u.role_id)}</td><td style="font-size:12px">${u.team_id||'—'}</td><td>${stBadge(u.status)}</td>
+      <td><div class="tdact"><button class="btn btn-sm bgo" onclick="openChangeTeam(${u.employee_id},'${esc(u.name)}',${u.team_id||0})">Team</button><button class="btn btn-sm bgr" onclick="deleteUser(${u.employee_id},'${esc(u.name)}')">Delete</button></div></td></tr>`).join('');
     buildPag('au-pag',p,p<d.pages,'loadActiveUsers');
   }catch{tb.innerHTML=empty('Failed to load.');}
 }
@@ -955,6 +988,39 @@ async function directPublish(id){
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Publish failed');
     toast('Story published!');loadRejectedStories(rsPg);loadOverviewStats();
   }catch(e){toast(e.message);}
+}
+
+async function deleteUser(id,name){
+  if(!confirm(`Delete ${name}? This cannot be undone.`))return;
+  try{
+    const r=await fetch(`${API}/users/${id}`,{method:'DELETE',headers:hdr()});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Delete failed');
+    toast(`${name} deleted.`);loadActiveUsers(auPg);loadOverviewStats();
+  }catch(e){toast(e.message);}
+}
+
+async function openChangeTeam(id,name,currentTeam){
+  document.getElementById('ct-id').value=id;
+  document.getElementById('ct-info').textContent=`${name} — current team: ${currentTeam||'None'}`;
+  hideAl('ct-err');
+  const sel=document.getElementById('ct-team');
+  sel.innerHTML='<option value="">Loading...</option>';
+  try{
+    const r=await fetch(`${API}/teams/all`,{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();
+    sel.innerHTML='<option value="">No Team</option>'+d.map(t=>`<option value="${t.team_id}" ${t.team_id===currentTeam?'selected':''}>${t.team_name} — #${t.team_id}</option>`).join('');
+  }catch{sel.innerHTML='<option value="">Failed to load</option>';}
+  openOv('ov-changeteam');
+}
+async function confirmChangeTeam(){
+  hideAl('ct-err');
+  const id=document.getElementById('ct-id').value;
+  const team_id=document.getElementById('ct-team').value;
+  try{
+    const r=await fetch(`${API}/users/${id}/team`,{method:'PATCH',headers:hdr(),body:JSON.stringify({team_id:team_id?parseInt(team_id):null})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    closeOv('ov-changeteam');toast('Team updated!');loadActiveUsers(auPg);
+  }catch(e){showAl('ct-err',e.message);}
 }
 async function loadTeams(){
   const tb=document.getElementById('tm-tbody');tb.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;

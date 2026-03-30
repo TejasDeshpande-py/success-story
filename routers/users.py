@@ -39,3 +39,11 @@ def approve_user(employee_id: int, payload: ApproveUserRequest, db: Session = De
 @router.patch("/{employee_id}/reject", response_model=UserResponse)
 def reject_user(employee_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return users_controller.reject_user(employee_id, db, current_user)
+
+@router.delete("/{employee_id}")
+def delete_user(employee_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return users_controller.delete_user(employee_id, db, current_user)
+
+@router.patch("/{employee_id}/team")
+def update_employee_team(employee_id: int, payload: dict, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return users_controller.update_employee_team(employee_id, payload, db, current_user)
