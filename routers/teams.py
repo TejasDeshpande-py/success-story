@@ -31,3 +31,7 @@ def get_teams(
 @router.get("/all", response_model=List[TeamResponse])
 def get_all_teams_list(db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
     return teams_controller.get_all_teams_list(db)
+
+@router.patch("/{team_id}")
+def update_team(team_id: int, payload: dict, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return teams_controller.update_team(team_id, payload, db, current_user)
