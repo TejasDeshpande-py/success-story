@@ -147,6 +147,7 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
         selected_body=None,
         status="Pending",
         extra=payload.extra,
+        story_picture=payload.story_picture,
         is_team_story=payload.is_team_story,
         team_id=team_id,
         story_for=story_for_id,
@@ -314,3 +315,32 @@ def reject_story(story_id: int, db: Session, current_user: Employee):
         raise HTTPException(status_code=500, detail="Failed to reject story")
 
     return {"message": "Story rejected successfully", "story_id": story.story_id}
+
+def delete_story(story_id: int, db: Session, current_user: Employee):
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+    try:
+        db.delete(story)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete story")
+    return {"message": "Story deleted successfully", "story_id": story_id}
+
+
+def unpublish_story(story_id: int, db: Session, current_user: Employee):
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+    if story.status != "Posted":
+        raise HTTPException(status_code=400, detail="Only published stories can be unpublished")
+    story.status = "Rejected"
+    story.updated_by = current_user.employee_id
+    story.updated_at = datetime.now(timezone.utc)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to unpublish story")
+    return {"message": "Story unpublished successfully", "story_id": story_id}

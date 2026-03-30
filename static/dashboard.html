@@ -291,6 +291,11 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="stat stat-3"><div class="stat-n" id="ov-ps">—</div><div class="stat-l">Pending Stories</div></div>
       <div class="stat stat-4"><div class="stat-n" id="ov-po">—</div><div class="stat-l">Published Stories</div></div>
     </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Published Stories</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Published</th><th>Actions</th></tr></thead><tbody id="pub-tbody"></tbody></table></div>
+      <div class="pag" id="pub-pag"></div>
+    </div>
   </div>
 
   <div class="sec" id="sec-pendingusers">
@@ -319,7 +324,14 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="pag" id="ps-pag"></div>
     </div>
   </div>
-
+<div class="sec" id="sec-publishedstories">
+    <div class="sec-head"><h2>Published Stories</h2><p>All published stories — unpublish or delete.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Published</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Published</th><th>Actions</th></tr></thead><tbody id="pub-tbody"></tbody></table></div>
+      <div class="pag" id="pub-pag"></div>
+    </div>
+  </div>
   <div class="sec" id="sec-rejectedstories">
     <div class="sec-head"><h2>Rejected Stories</h2><p>Previously rejected story submissions.</p></div>
     <div class="panel">
@@ -495,7 +507,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   history.replaceState(null,'','/dashboard');
   try{await fetchUser();buildNav();
     if(user.role_id===0)showSec('write');
-    else{loadOverviewStats();showSec('overview');}
+    else{showSec('overview');}
   }catch(e){console.error('init error:',e);window.location.href='/login';}
 });
 
@@ -548,6 +560,7 @@ function showSec(id){
   const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
   if(id==='profile'){loadProfile();}
+  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);}
   if(id==='mystories')loadMyStories(1);
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
@@ -978,6 +991,41 @@ async function saveHREdit(){
     closeOv('ov-hredit');toast('Story updated!');
     loadPendingStories(psPg);loadRejectedStories(rsPg);
   }catch(e){showAl('hre-err',e.message);}
+}
+let pubPg=1;
+async function loadPublishedStories(p=1){
+  pubPg=p;const tb=document.getElementById('pub-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/stories/?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.stories.length){tb.innerHTML=empty('No published stories.');document.getElementById('pub-pag').innerHTML='';return;}
+    tb.innerHTML=d.stories.map((s,i)=>`
+      <tr><td>${(p-1)*10+i+1}</td><td><div class="tname">${s.title}</div></td>
+      <td style="font-size:12px">${s.name||'—'}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><div class="tdact">
+        <button class="btn btn-sm bgo" onclick="unpublishStory(${s.story_id})">Unpublish</button>
+        <button class="btn btn-sm bgr" onclick="deletePublishedStory(${s.story_id})">Delete</button>
+      </div></td></tr>`).join('');
+    buildPag('pub-pag',p,p<d.pages,'loadPublishedStories');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
+
+async function unpublishStory(id){
+  if(!confirm('Unpublish this story? It will move to Rejected.'))return;
+  try{
+    const r=await fetch(`${API}/stories/${id}/unpublish`,{method:'PATCH',headers:hdr()});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Failed');
+    toast('Story unpublished.');loadPublishedStories(pubPg);loadOverviewStats();
+  }catch(e){toast(e.message);}
+}
+
+async function deletePublishedStory(id){
+  if(!confirm('Permanently delete this story? This cannot be undone.'))return;
+  try{
+    const r=await fetch(`${API}/stories/${id}`,{method:'DELETE',headers:hdr()});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Failed');
+    toast('Story deleted.');loadPublishedStories(pubPg);loadOverviewStats();
+  }catch(e){toast(e.message);}
 }
 
 async function directPublish(id){

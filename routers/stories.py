@@ -70,3 +70,11 @@ def reject_story(story_id: int, db: Session = Depends(get_db), current_user: Emp
 @router.patch("/{story_id}", response_model=StoryResponse)
 def edit_story(story_id: int, payload: EmployeeStoryUpdate, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
     return stories_controller.edit_story(story_id, payload, db, current_user)
+
+@router.delete("/{story_id}")
+def delete_story(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return stories_controller.delete_story(story_id, db, current_user)
+
+@router.patch("/{story_id}/unpublish")
+def unpublish_story(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return stories_controller.unpublish_story(story_id, db, current_user)
