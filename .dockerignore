@@ -1,0 +1,6 @@
+*.pyc
+*.pyo
+.env
+.git
+*.db
+venv/
