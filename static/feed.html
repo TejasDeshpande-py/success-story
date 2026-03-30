@@ -205,9 +205,10 @@ async function openM(id){
     const r=await fetch(`${API}/stories/${id}`);if(!r.ok)throw 0;
     const s=await r.json();const inits=ini(s.name);
     document.getElementById('m-title').textContent=s.title;
+    const createdBy=s.created_by_name?`<div style="font-size:11px;color:var(--brownlt);margin-top:3px;font-weight:500;">✍️ Written by ${s.created_by_name}</div>`:'';
     document.getElementById('m-meta').innerHTML=validPic(s.picture)
-      ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`
-      :`<div class="mav-fb">${inits}</div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div></div>`;
+      ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div>${createdBy}</div>`
+      :`<div class="mav-fb">${inits}</div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div>${createdBy}</div>`;
     const picC=document.getElementById('m-story-pic-container');
     const picI=document.getElementById('m-story-pic');
     if(s.story_picture){picI.src=s.story_picture;picC.style.display='block';}
