@@ -185,7 +185,7 @@ pg=d.page;
         <div class="cc">
           <div class="ct">${esc(s.title)}</div>
           <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${esc(s.name)}</div><div class="crole">${esc(s.designation)}</div><div class="crole">${fmtDate(s.created_at)}</div></div></div>
-          <div class="cpreview">${esc(s.content)}</div>
+          <div class="cpreview">${s.content.replace(/<[^>]*>/g,'')}</div>
           <button class="cread">Read Story →</button>
         </div>
       </div>`;}).join('');
