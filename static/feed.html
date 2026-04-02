@@ -139,7 +139,7 @@
 <div class="ov" id="ov" onclick="bgX(event)">
   <div class="mod">
     <div class="mod-top"></div>
-    <div class="mhdr"><div class="mttl" id="m-title"></div><div style="display:flex;gap:8px;align-items:center;flex-shrink:0;"><div class="share-wrap"><button class="share-btn" id="m-share-id" onclick="toggleShare(event,'modal')">⬆</button><div class="share-drop" id="share-modal"><button class="share-opt" onclick="copyLink(event,'modal')">🔗 Copy Link</button><button class="share-opt" onclick="shareLinkedIn(event,'modal','')">💼 Share on LinkedIn</button></div></div><button class="xb" onclick="closeM()">✕</button></div></div>
+    <div class="mhdr"><div class="mttl" id="m-title"></div><div style="display:flex;gap:8px;align-items:center;flex-shrink:0;"><div class="share-wrap"><button class="share-btn" id="m-share-id" onclick="toggleShare(event,'modal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button><div class="share-drop" id="share-modal"><button class="share-opt" onclick="copyLink(event,'modal')">🔗 Copy Link</button><button class="share-opt" onclick="shareLinkedIn(event,'modal','')">💼 Share on LinkedIn</button></div></div><button class="xb" onclick="closeM()">✕</button></div></div>
     <div class="mmeta" id="m-meta"></div>
     <div class="mdiv"></div>
     <div id="m-story-pic-container" style="display:none;margin:0 26px 16px;">
@@ -196,7 +196,7 @@ pg=d.page;
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
             <button class="cread">Read Story →</button>
             <div class="share-wrap">
-              <button class="share-btn" onclick="toggleShare(event,${s.story_id})">⬆</button>
+              <button class="share-btn" onclick="toggleShare(event,${s.story_id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
               <div class="share-drop" id="share-${s.story_id}">
                 <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
                 <button class="share-opt" onclick="shareLinkedIn(event,${s.story_id},'${s.title.replace(/'/g,"\\'")}')" >💼 Share on LinkedIn</button>

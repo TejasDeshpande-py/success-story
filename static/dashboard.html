@@ -536,6 +536,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 async function fetchUser(){
   const payload=JSON.parse(atob(token.split('.')[1]));
+  if(payload.exp*1000<Date.now()){
+    localStorage.removeItem('token');
+    window.location.href='/login';
+    return;
+  }
   user={email:payload.sub,role_id:payload.role_id??0,user_id:payload.user_id,name:payload.sub};
   try{
     const r=await fetch(`${API}/users/me`,{headers:{Authorization:`Bearer ${token}`}});
