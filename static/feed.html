@@ -248,10 +248,20 @@ function toggleShare(e,id){
 function copyLink(e,id){
   e.stopPropagation();
   const url=id==='modal'?window.location.href:`${window.location.origin}/feed?story=${id}`;
-  navigator.clipboard.writeText(url).then(()=>{
-    document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(url).then(()=>alert('Link copied!'));
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=url;
+    ta.style.position='fixed';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.focus();ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
     alert('Link copied!');
-  });
+  }
 }
 function shareLinkedIn(e,id,title){
   e.stopPropagation();
