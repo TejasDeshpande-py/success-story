@@ -7,7 +7,7 @@ import uuid, os
 import httpx
 import boto3
 from auth import get_current_user
-from main import limiter
+from limiter import limiter
 
 router = APIRouter(tags=["Auth"])
 
