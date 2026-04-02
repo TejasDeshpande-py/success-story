@@ -69,7 +69,11 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
                             "- Make it engaging and human — not robotic or overly formal\n"
                             "- Use clear paragraphs with good flow\n"
                             "- Length should be similar to the original — do not pad or cut excessively\n"
-                            "- Return only the rewritten story text, no headings, no explanations"
+                            "- Return only the rewritten story text, no headings, no explanations\n"
+                            "- Avoid filler phrases like 'nothing short of remarkable', 'testament to', "
+                            "'I'm thrilled', 'incredible journey' — these are corporate clichés\n"
+                            "- Be concise — say more with fewer words\n"
+                            "- Let the achievement speak for itself, don't over-explain the impact"
                         )
                     },
                     {"role": "user", "content": f"Rewrite this employee success story:\n\n{body}"}
