@@ -4,3 +4,4 @@
 .git
 *.db
 venv/
+__pycache__/
