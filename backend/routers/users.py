@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_db
-from model import Employee
-from schemas import UserResponse, ApproveUserRequest
-from utils import paginate
-import controllers.users as users_controller
-from auth import require_hr_or_admin, get_current_user
+from backend.database import get_db
+from backend.model import Employee
+from backend.schemas import UserResponse, ApproveUserRequest
+from backend.utils import paginate
+import backend.controllers.users as users_controller
+from backend.auth import require_hr_or_admin, get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

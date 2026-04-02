@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_db
-from model import Employee
-from schemas import TeamCreate, TeamResponse
-from auth import require_hr_or_admin, get_current_user
-from utils import paginate
-import controllers.teams as teams_controller
+from backend.database import get_db
+from backend.model import Employee
+from backend.schemas import TeamCreate, TeamResponse
+from backend.auth import require_hr_or_admin, get_current_user
+from backend.utils import paginate
+import backend.controllers.teams as teams_controller
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 

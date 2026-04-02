@@ -1,6 +1,6 @@
-from database import SessionLocal
-from model import Employee
-from security import hash_password
+from backend.database import SessionLocal
+from backend.model import Employee
+from backend.security import hash_password
 from dotenv import load_dotenv
 import os
 

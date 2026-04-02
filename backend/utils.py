@@ -1,4 +1,4 @@
-from model import SuccessStory
+from backend.model import SuccessStory
 
 
 def paginate(page: int):

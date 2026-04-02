@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from model import Employee, Team
-from schemas import TeamCreate
+from backend.model import Employee, Team
+from backend.schemas import TeamCreate
 
 
 def create_team(payload: TeamCreate, db: Session, current_user: Employee):

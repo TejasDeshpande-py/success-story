@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
-from model import Employee, Team, SuccessStory
-from schemas import ApproveUserRequest
-from security import hash_password, verify_password
+from backend.model import Employee, Team, SuccessStory
+from backend.schemas import ApproveUserRequest
+from backend.security import hash_password, verify_password
 import boto3, os
 from urllib.parse import urlparse
 

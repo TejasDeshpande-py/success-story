@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
-from model import Employee, SuccessStory
-from schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest
-from utils import story_to_dict, story_to_public_dict
+from backend.model import Employee, SuccessStory
+from backend.schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest
+from backend.utils import story_to_dict, story_to_public_dict
 
 def get_my_stories(page: int, db: Session, paginate, current_user):
     import math

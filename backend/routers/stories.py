@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_db
-from model import Employee
-from schemas import (
+from backend.database import get_db
+from backend.model import Employee
+from backend.schemas import (
     StoryCreate, StoryResponse, StoryPublicResponse,
     PublishResponse, RejectResponse, SelectBodyRequest,
     EmployeeStoryUpdate, HRStoryUpdate
 )
-from auth import get_current_user, require_hr_or_admin
-import controllers.stories as stories_controller
-from utils import paginate
+from backend.auth import get_current_user, require_hr_or_admin
+import backend.controllers.stories as stories_controller
+from backend.utils import paginate
 
 router = APIRouter(prefix="/stories", tags=["Stories"])
 
