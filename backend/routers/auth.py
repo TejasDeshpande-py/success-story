@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Request
 from sqlalchemy.orm import Session
-from database import get_db
-from schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
-import controllers.auth as auth_controller
+from backend.database import get_db
+from backend.schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
+import backend.controllers.auth as auth_controller
 import uuid, os
 import httpx
 import boto3
-from auth import get_current_user
-from limiter import limiter
+from backend.auth import get_current_user
+from backend.limiter import limiter
 
 router = APIRouter(tags=["Auth"])
 

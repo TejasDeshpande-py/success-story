@@ -2,10 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers import auth, stories, users, teams
+from backend.routers import auth, stories, users, teams
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from limiter import limiter
+from backend.limiter import limiter
 import logging
 
 logging.basicConfig(level=logging.ERROR)
@@ -35,24 +35,24 @@ app.include_router(stories.router)
 app.include_router(users.router)
 app.include_router(teams.router)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 @app.get("/")
 def root():
-    return FileResponse("static/feed.html")
+    return FileResponse("frontend/feed.html")
 
 @app.get("/feed")
 def feed():
-    return FileResponse("static/feed.html")
+    return FileResponse("frontend/feed.html")
 
 @app.get("/login")
 def login():
-    return FileResponse("static/login.html")
+    return FileResponse("frontend/login.html")
 
 @app.get("/dashboard")
 def dashboard():
-    return FileResponse("static/dashboard.html")
+    return FileResponse("frontend/dashboard.html")
 
 @app.get("/register")
 def register():
-    return FileResponse("static/register.html")
+    return FileResponse("frontend/register.html")
