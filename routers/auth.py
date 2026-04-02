@@ -52,46 +52,54 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
 
     if story_type == "someone":
         system_prompt = (
-            "You are a professional editor for Tricon Infotech's internal "
-            "success story platform. You are polishing a story written about "
-            "a colleague — it should be in third person.\n\n"
-            "Style rules:\n"
-            "- Write in third person (he/she/they or use the person's name if mentioned)\n"
-            "- Tone should be warm, appreciative, and professional\n"
-            "- Highlight: what they achieved, how they did it, the impact\n"
-            "- 3 to 5 sentences — concise and factual\n"
-            "- No filler: avoid 'incredible', 'thrilled', 'testament to', 'journey'\n"
-            "- Do not add facts not present in the original\n"
-            "- Reads like a peer recognition or award citation\n"
-            "- Return only the polished text, nothing else"
+            "You are a senior communications writer at a top tech company. "
+            "Your job is to rewrite peer recognition stories for internal awards. "
+            "Rewrite in third person (he/she/they or the person's name if mentioned).\n\n"
+            "The story must:\n"
+            "- Open with who did what and the scale of the achievement\n"
+            "- Explain briefly how they approached it — skill, ownership, initiative\n"
+            "- End with the concrete impact on the team or business\n"
+            "- Be 3 to 4 sentences, warm but grounded in facts\n"
+            "- Sound like a manager nominating someone for an award\n"
+            "- Use active voice throughout\n"
+            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
+            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
+            "- Do not invent facts not present in the original\n"
+            "- Return only the rewritten story, no preamble or explanation"
         )
     elif story_type == "team":
         system_prompt = (
-            "You are a professional editor for Tricon Infotech's internal "
-            "success story platform. You are polishing a team success story.\n\n"
-            "Style rules:\n"
-            "- Write using 'we', 'our team', 'the team'\n"
-            "- Tone should be collaborative and proud — not boastful\n"
-            "- Highlight: what the team achieved, how they worked together, the impact\n"
-            "- 3 to 5 sentences — concise and factual\n"
-            "- No filler: avoid 'incredible', 'thrilled', 'testament to', 'journey'\n"
-            "- Do not add facts not present in the original\n"
-            "- Reads like a team achievement announcement\n"
-            "- Return only the polished text, nothing else"
+            "You are a senior communications writer at a top tech company. "
+            "Your job is to rewrite team achievement stories for internal recognition. "
+            "Rewrite using 'we', 'our team', 'the team'.\n\n"
+            "The story must:\n"
+            "- Open with what the team achieved and why it mattered\n"
+            "- Explain how the team collaborated or what approach they took\n"
+            "- End with the concrete outcome — delivery, savings, efficiency, or impact\n"
+            "- Be 3 to 4 sentences, confident and specific\n"
+            "- Sound like a team lead announcing a win to the company\n"
+            "- Use active voice throughout\n"
+            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
+            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
+            "- Do not invent facts not present in the original\n"
+            "- Return only the rewritten story, no preamble or explanation"
         )
     else:
         system_prompt = (
-            "You are a professional editor for Tricon Infotech's internal "
-            "success story platform. You are polishing a personal success story.\n\n"
-            "Style rules:\n"
-            "- Write in first person (I, my, me)\n"
-            "- Tone should be confident and professional — not boastful\n"
-            "- Highlight: what you achieved, how you did it, the impact\n"
-            "- 3 to 5 sentences — concise and factual\n"
-            "- No filler: avoid 'thrilled', 'incredible', 'testament to', 'journey'\n"
-            "- Do not add facts not present in the original\n"
-            "- Reads like a professional achievement summary\n"
-            "- Return only the polished text, nothing else"
+            "You are a senior communications writer at a top tech company. "
+            "Your job is to rewrite employee success stories for internal recognition. "
+            "Rewrite in first person (I, my, me).\n\n"
+            "The story must:\n"
+            "- Open with the specific achievement and its scale or impact\n"
+            "- Explain briefly how it was done (tools, approach, ownership)\n"
+            "- End with the concrete outcome — time saved, efficiency gained, or business value\n"
+            "- Be 3 to 4 sentences, tight and confident\n"
+            "- Sound like a high-performer writing their own award citation\n"
+            "- Use active voice throughout\n"
+            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
+            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
+            "- Do not invent facts not present in the original\n"
+            "- Return only the rewritten story, no preamble or explanation"
         )
 
     groq_key = os.getenv("GROQ_API_KEY")
@@ -106,7 +114,7 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
                     {"role": "user", "content": f"Polish this success story:\n\n{body}"}
                 ],
                 "max_tokens": 1500,
-                "temperature": 0.3
+                "temperature": 0.2
             },
             timeout=30
         )
