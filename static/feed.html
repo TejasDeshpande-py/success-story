@@ -86,7 +86,7 @@
 
   .ov{position:fixed;inset:0;z-index:200;background:rgba(44,26,16,.46);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
   .ov.open{display:flex;}
-  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:780px;width:100%;max-height:92vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
+  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:960px;width:100%;max-height:92vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
   .mod::-webkit-scrollbar{width:4px;}
   .mod::-webkit-scrollbar-thumb{background:var(--rose);border-radius:4px;}
   .mod-top{height:3px;background:linear-gradient(90deg,var(--brown2),var(--brownlt));border-radius:14px 14px 0 0;}
@@ -104,6 +104,13 @@
   .mextra{margin:14px 26px 26px;padding:11px 14px;background:rgba(61,112,53,.07);border:1px solid rgba(61,112,53,.2);border-radius:8px;font-size:13px;color:var(--green);display:none;align-items:center;gap:8px;}
   .msg{text-align:center;padding:60px 24px;color:var(--muted);font-size:14px;grid-column:1/-1;}
   .msg .i{font-size:30px;margin-bottom:10px;}
+  .share-wrap{position:relative;display:inline-block;}
+  .share-btn{width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .18s;flex-shrink:0;}
+  .share-btn:hover{border-color:var(--brown);color:var(--brown);}
+  .share-drop{position:absolute;bottom:38px;right:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 18px rgba(90,45,15,.12);min-width:160px;z-index:99;display:none;overflow:hidden;}
+  .share-drop.open{display:block;}
+  .share-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:var(--sub);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;}
+  .share-opt:hover{background:var(--rosebg);color:var(--brown);}
 </style>
 </head>
 <body>
@@ -132,7 +139,7 @@
 <div class="ov" id="ov" onclick="bgX(event)">
   <div class="mod">
     <div class="mod-top"></div>
-    <div class="mhdr"><div class="mttl" id="m-title"></div><button class="xb" onclick="closeM()">✕</button></div>
+    <div class="mhdr"><div class="mttl" id="m-title"></div><div style="display:flex;gap:8px;align-items:center;flex-shrink:0;"><div class="share-wrap"><button class="share-btn" id="m-share-id" onclick="toggleShare(event,'modal')">⬆</button><div class="share-drop" id="share-modal"><button class="share-opt" onclick="copyLink(event,'modal')">🔗 Copy Link</button><button class="share-opt" onclick="shareLinkedIn(event,'modal','')">💼 Share on LinkedIn</button></div></div><button class="xb" onclick="closeM()">✕</button></div></div>
     <div class="mmeta" id="m-meta"></div>
     <div class="mdiv"></div>
     <div id="m-story-pic-container" style="display:none;margin:0 26px 16px;">
@@ -186,7 +193,16 @@ pg=d.page;
           <div class="ct">${esc(s.title)}</div>
           <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${esc(s.name)}</div><div class="crole">${esc(s.designation)}</div><div class="crole">${fmtDate(s.created_at)}</div></div></div>
           <div class="cpreview">${s.content.replace(/<[^>]*>/g,'')}</div>
-          <button class="cread">Read Story →</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+            <button class="cread">Read Story →</button>
+            <div class="share-wrap">
+              <button class="share-btn" onclick="toggleShare(event,${s.story_id})">⬆</button>
+              <div class="share-drop" id="share-${s.story_id}">
+                <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
+                <button class="share-opt" onclick="shareLinkedIn(event,${s.story_id},'${s.title.replace(/'/g,"\\'")}')" >💼 Share on LinkedIn</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>`;}).join('');
     buildPag();
@@ -205,6 +221,8 @@ async function openM(id){
     const r=await fetch(`${API}/stories/${id}`);if(!r.ok)throw 0;
     const s=await r.json();const inits=ini(s.name);
     document.getElementById('m-title').textContent=s.title;
+    document.getElementById('m-share-id').dataset.id=id;
+    document.getElementById('m-share-id').dataset.title=s.title;
     const createdBy=s.created_by_name?`<div style="font-size:11px;color:var(--brownlt);margin-top:3px;font-weight:500;">✍️ Written by ${s.created_by_name}</div>`:'';
     document.getElementById('m-meta').innerHTML=validPic(s.picture)
       ?`<div class="mav"><img src="${s.picture}" onerror="this.parentElement.outerHTML='<div class=mav-fb>${inits}</div>'"></div><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${s.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${s.designation}</div>${createdBy}</div>`
@@ -222,6 +240,28 @@ async function openM(id){
 function closeM(){document.getElementById('ov').classList.remove('open');document.body.style.overflow='';}
 function bgX(e){if(e.target===document.getElementById('ov'))closeM();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+function toggleShare(e,id){
+  e.stopPropagation();
+  document.querySelectorAll('.share-drop').forEach(d=>{if(d.id!==`share-${id}`)d.classList.remove('open');});
+  document.getElementById(`share-${id}`).classList.toggle('open');
+}
+function copyLink(e,id){
+  e.stopPropagation();
+  const url=id==='modal'?window.location.href:`${window.location.origin}/feed?story=${id}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
+    alert('Link copied!');
+  });
+}
+function shareLinkedIn(e,id,title){
+  e.stopPropagation();
+  const url=id==='modal'?window.location.href:`${window.location.origin}/feed?story=${id}`;
+  const t=id==='modal'?document.getElementById('m-title').textContent:title;
+  const li=`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(t)}`;
+  window.open(li,'_blank');
+  document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
+}
+document.addEventListener('click',()=>document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open')));
 load(1);
 </script>
 </body>
