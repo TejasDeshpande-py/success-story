@@ -745,7 +745,7 @@ async function rephraseStory(){
   try{
     const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({body})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Rephrase failed');
-    document.getElementById('w-ai').value=d.rephrased;
+    document.getElementById('w-ai').value=d.rephrased_body;
     cc('w-ai','w-ac',5000);
     toast('AI version generated!');
   }catch(e){showAl('w-err',e.message);}

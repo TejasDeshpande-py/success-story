@@ -56,14 +56,30 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
             json={
                 "model": "llama-3.1-8b-instant",
                 "messages": [
-                    {"role": "system", "content": "You are a professional writer. Rephrase the given employee success story to make it more impactful, professional and engaging. Keep it first person. Return only the rephrased story, nothing else."},
-                    {"role": "user", "content": body}
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a professional corporate writer for Tricon Infotech. "
+                            "Your job is to rewrite employee success stories in a compelling, "
+                            "warm, and professional tone suitable for an internal company platform.\n\n"
+                            "Rules:\n"
+                            "- Keep ALL the same facts, names, projects, and outcomes from the original\n"
+                            "- Do NOT add new facts or achievements that were not mentioned\n"
+                            "- Write in first person (I, we, my, our)\n"
+                            "- Make it engaging and human — not robotic or overly formal\n"
+                            "- Use clear paragraphs with good flow\n"
+                            "- Length should be similar to the original — do not pad or cut excessively\n"
+                            "- Return only the rewritten story text, no headings, no explanations"
+                        )
+                    },
+                    {"role": "user", "content": f"Rewrite this employee success story:\n\n{body}"}
                 ],
-                "max_tokens": 1000
+                "max_tokens": 1500,
+                "temperature": 0.5
             },
             timeout=30
         )
         d = r.json()
     if "choices" not in d:
         raise HTTPException(status_code=500, detail=f"Groq error: {d}")
-    return {"rephrased": d["choices"][0]["message"]["content"]}
+    return {"rephrased_body": d["choices"][0]["message"]["content"]}
