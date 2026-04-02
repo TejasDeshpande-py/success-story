@@ -116,6 +116,7 @@ async function doLogin(){
   try{
     const r=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     const d=await r.json();
+    if(r.status===429)throw new Error(d.detail||'Too many login attempts. Please wait 1 minute before trying again.');
     if(!r.ok)throw new Error(d.detail||'Invalid email or password.');
     localStorage.setItem('token',d.access_token);
     window.location.href='/dashboard';

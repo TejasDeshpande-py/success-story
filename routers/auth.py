@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
@@ -7,6 +7,7 @@ import uuid, os
 import httpx
 import boto3
 from auth import get_current_user
+from main import limiter
 
 router = APIRouter(tags=["Auth"])
 
@@ -15,7 +16,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     return auth_controller.register_user(payload, db)
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    request.state.email_key = payload.email.lower()
     return auth_controller.login_user(payload.email, payload.password, db)
 
 @router.post("/upload-picture")
