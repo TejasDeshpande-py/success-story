@@ -46,8 +46,54 @@ def upload_picture(file: UploadFile = File(...)):
 @router.post("/rephrase")
 async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
     body = payload.get("body", "").strip()
+    story_type = payload.get("story_type", "mine")
     if not body:
         raise HTTPException(status_code=400, detail="Body is required")
+
+    if story_type == "someone":
+        system_prompt = (
+            "You are a professional editor for Tricon Infotech's internal "
+            "success story platform. You are polishing a story written about "
+            "a colleague — it should be in third person.\n\n"
+            "Style rules:\n"
+            "- Write in third person (he/she/they or use the person's name if mentioned)\n"
+            "- Tone should be warm, appreciative, and professional\n"
+            "- Highlight: what they achieved, how they did it, the impact\n"
+            "- 3 to 5 sentences — concise and factual\n"
+            "- No filler: avoid 'incredible', 'thrilled', 'testament to', 'journey'\n"
+            "- Do not add facts not present in the original\n"
+            "- Reads like a peer recognition or award citation\n"
+            "- Return only the polished text, nothing else"
+        )
+    elif story_type == "team":
+        system_prompt = (
+            "You are a professional editor for Tricon Infotech's internal "
+            "success story platform. You are polishing a team success story.\n\n"
+            "Style rules:\n"
+            "- Write using 'we', 'our team', 'the team'\n"
+            "- Tone should be collaborative and proud — not boastful\n"
+            "- Highlight: what the team achieved, how they worked together, the impact\n"
+            "- 3 to 5 sentences — concise and factual\n"
+            "- No filler: avoid 'incredible', 'thrilled', 'testament to', 'journey'\n"
+            "- Do not add facts not present in the original\n"
+            "- Reads like a team achievement announcement\n"
+            "- Return only the polished text, nothing else"
+        )
+    else:
+        system_prompt = (
+            "You are a professional editor for Tricon Infotech's internal "
+            "success story platform. You are polishing a personal success story.\n\n"
+            "Style rules:\n"
+            "- Write in first person (I, my, me)\n"
+            "- Tone should be confident and professional — not boastful\n"
+            "- Highlight: what you achieved, how you did it, the impact\n"
+            "- 3 to 5 sentences — concise and factual\n"
+            "- No filler: avoid 'thrilled', 'incredible', 'testament to', 'journey'\n"
+            "- Do not add facts not present in the original\n"
+            "- Reads like a professional achievement summary\n"
+            "- Return only the polished text, nothing else"
+        )
+
     groq_key = os.getenv("GROQ_API_KEY")
     async with httpx.AsyncClient() as client:
         r = await client.post(
@@ -56,30 +102,11 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
             json={
                 "model": "llama-3.1-8b-instant",
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a professional corporate writer for Tricon Infotech. "
-                            "Your job is to rewrite employee success stories in a compelling, "
-                            "warm, and professional tone suitable for an internal company platform.\n\n"
-                            "Rules:\n"
-                            "- Keep ALL the same facts, names, projects, and outcomes from the original\n"
-                            "- Do NOT add new facts or achievements that were not mentioned\n"
-                            "- Write in first person (I, we, my, our)\n"
-                            "- Make it engaging and human — not robotic or overly formal\n"
-                            "- Use clear paragraphs with good flow\n"
-                            "- Length should be similar to the original — do not pad or cut excessively\n"
-                            "- Return only the rewritten story text, no headings, no explanations\n"
-                            "- Avoid filler phrases like 'nothing short of remarkable', 'testament to', "
-                            "'I'm thrilled', 'incredible journey' — these are corporate clichés\n"
-                            "- Be concise — say more with fewer words\n"
-                            "- Let the achievement speak for itself, don't over-explain the impact"
-                        )
-                    },
-                    {"role": "user", "content": f"Rewrite this employee success story:\n\n{body}"}
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Polish this success story:\n\n{body}"}
                 ],
                 "max_tokens": 1500,
-                "temperature": 0.5
+                "temperature": 0.3
             },
             timeout=30
         )
