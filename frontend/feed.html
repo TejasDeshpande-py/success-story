@@ -112,6 +112,30 @@
   .share-drop.open{display:block;}
   .share-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:var(--sub);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;}
   .share-opt:hover{background:var(--rosebg);color:var(--brown);}
+
+  /* Reactions */
+  .react-wrap{position:relative;display:inline-block;}
+  .react-btn{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;transition:all .18s;flex-shrink:0;}
+  .react-btn:hover{border-color:var(--brown);color:var(--brown);}
+  .react-btn.reacted{border-color:var(--brown);background:var(--rosebg);color:var(--brown);}
+  .react-picker{position:absolute;bottom:38px;left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:9999;white-space:nowrap;}
+  .react-picker.up-card{bottom:38px;}
+  .react-picker.open{display:flex;gap:4px;}
+  .react-emoji{font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px;transition:background .15s;border:none;background:none;line-height:1;}
+  .react-emoji:hover{background:var(--rosebg);transform:scale(1.2);}
+  .react-emoji.mine{background:var(--rosebg);outline:2px solid var(--brown);}
+  .reactions-strip{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:6px;min-height:22px;}
+  .r-badge{display:inline-flex;align-items:center;gap:3px;background:var(--rosebg);border:1px solid var(--rose);border-radius:100px;padding:2px 8px;font-size:12px;cursor:pointer;transition:all .15s;}
+  .r-badge:hover{border-color:var(--brown);}
+  .r-badge.mine{border-color:var(--brown);background:rgba(124,74,45,.1);}
+
+  /* Reactions people list popup */
+  .react-list-ov{position:fixed;inset:0;z-index:300;background:rgba(44,26,16,.3);display:none;align-items:center;justify-content:center;}
+  .react-list-ov.open{display:flex;}
+  .react-list-box{background:white;border-radius:12px;padding:20px;min-width:260px;max-width:360px;max-height:400px;overflow-y:auto;box-shadow:var(--shadow-lg);}
+  .react-list-title{font-weight:600;font-size:14px;margin-bottom:12px;color:var(--text);}
+  .react-person{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:var(--sub);border-bottom:1px solid var(--border);}
+  .react-person:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -147,16 +171,90 @@
       <img id="m-story-pic" src="" alt="Story" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;background:#f5e6da;">
     </div>
     <div class="mbody" id="m-body"></div>
-    <div id="m-views" style="display:flex;align-items:center;gap:5px;padding:0 26px 10px;font-size:12px;color:var(--muted);">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-  <span id="m-view-count">0</span>
+    <div style="padding:0 26px 10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span id="m-view-count">0 views</span>
+      </div>
+      <div class="react-wrap">
+        <button class="react-btn" id="m-react-btn" onclick="togglePicker(event,'rp-modal')">😊 React</button>
+        <div class="react-picker" id="rp-modal">
+          ${EMOJIS.map(e=>`<button class="react-emoji" onclick="doReact(event,'modal','${e}','modal')">${e}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="reactions-strip" id="rs-modal" style="padding:0 26px 10px;"></div>
+    <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
+  </div>
 </div>
-<div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
+
+<div class="react-list-ov" id="react-list-ov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="react-list-box">
+    <div class="react-list-title" id="react-list-title">Reactions</div>
+    <div id="react-list-people"></div>
   </div>
 </div>
 
 <script>
 const API="";
+const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🎉","🏆","🔥","💪","🤝","🫂","👏","⭐","💯"];
+const isLoggedIn=()=>{try{const t=localStorage.getItem('token');if(!t)return false;const p=JSON.parse(atob(t.split('.')[1]));return p.exp*1000>Date.now();}catch{return false;}};
+const authHeader=()=>{const t=localStorage.getItem('token');return t?{Authorization:`Bearer ${t}`}:{};};
+
+function renderReactionStrip(reactions,myReaction,storyId){
+  if(!reactions||!reactions.length)return '';
+  const sorted=[...reactions].sort((a,b)=>b.count-a.count);
+  const show=sorted.slice(0,2);
+  const extra=sorted.length>2?sorted.length-2:0;
+  let html=show.map(r=>`<span class="r-badge ${myReaction===r.emoji?'mine':''}" onclick="showReactList(event,${JSON.stringify(reactions).replace(/"/g,'&quot;')},'${storyId}')">${r.emoji} ${r.count}</span>`).join('');
+  if(extra)html+=`<span class="r-badge" onclick="showReactList(event,${JSON.stringify(reactions).replace(/"/g,'&quot;')},'${storyId}')">+${extra}</span>`;
+  return html;
+}
+
+function showReactList(e,reactions,storyId){
+  e.stopPropagation();
+  const ov=document.getElementById('react-list-ov');
+  const people=document.getElementById('react-list-people');
+  document.getElementById('react-list-title').textContent='Reactions';
+  people.innerHTML=reactions.flatMap(r=>r.names.map(n=>`<div class="react-person"><span style="font-size:18px">${r.emoji}</span><span>${n}</span></div>`)).join('');
+  ov.classList.add('open');
+}
+
+function togglePicker(e,id){
+  e.stopPropagation();
+  if(!isLoggedIn()){alert('Please login to react!');return;}
+  document.querySelectorAll('.react-picker').forEach(p=>{if(p.id!==id)p.classList.remove('open');});
+  document.getElementById(id).classList.toggle('open');
+}
+
+async function doReact(e,storyId,emoji,context){
+  e.stopPropagation();
+  if(!isLoggedIn()){alert('Please login to react!');return;}
+  const sid=context==='modal'?document.getElementById('m-share-id').dataset.id:storyId;
+  try{
+    const r=await fetch(`${API}/stories/${sid}/react`,{method:'POST',headers:{'Content-Type':'application/json',...authHeader()},body:JSON.stringify({emoji})});
+    if(!r.ok)throw 0;
+    const s=await r.json();
+    // update card reactions strip
+    const rs=document.getElementById(`rs-${sid}`);
+    if(rs)rs.innerHTML=renderReactionStrip(s.reactions||[],s.my_reaction,sid);
+    // update card react button
+    const cardBtn=document.querySelector(`#rp-${sid}`)?.previousElementSibling;
+    if(cardBtn){cardBtn.textContent=s.my_reaction?`${s.my_reaction} React`:'😊 React';cardBtn.className=`react-btn${s.my_reaction?' reacted':''}`;}
+    // update card picker
+    document.querySelectorAll(`#rp-${sid} .react-emoji`).forEach(b=>{b.className='react-emoji'+(s.my_reaction===b.textContent?' mine':'');});
+    // update modal if open
+    if(context==='modal'||document.getElementById('m-share-id').dataset.id==sid){
+      const mrs=document.getElementById('rs-modal');
+      if(mrs)mrs.innerHTML=renderReactionStrip(s.reactions||[],s.my_reaction,'modal');
+      const mBtn=document.getElementById('m-react-btn');
+      if(mBtn){mBtn.textContent=s.my_reaction?`${s.my_reaction} React`:'😊 React';mBtn.className=`react-btn${s.my_reaction?' reacted':''}`;}
+      document.querySelectorAll('#rp-modal .react-emoji').forEach(b=>{b.className='react-emoji'+(s.my_reaction===b.textContent?' mine':'');});
+    }
+  }catch{alert('Failed to react. Try again.');}
+  document.querySelectorAll('.react-picker').forEach(p=>p.classList.remove('open'));
+}
+
 const _t=localStorage.getItem('token');
 if(_t){try{const _p=JSON.parse(atob(_t.split('.')[1]));if(_p.exp*1000>Date.now()){document.getElementById('nav-register').textContent='Dashboard';document.getElementById('nav-register').href='/dashboard';document.getElementById('nav-login').style.display='none';}}catch(e){}}
 const PER=9;let pg=1,tot=1;
@@ -202,13 +300,22 @@ pg=d.page;
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             ${s.view_count||0}
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+          <div class="reactions-strip" id="rs-${s.story_id}">${renderReactionStrip(s.reactions||[],s.my_reaction,s.story_id)}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
             <button class="cread">Read Story →</button>
-            <div class="share-wrap" onclick="event.stopPropagation()">
-              <button class="share-btn" onclick="toggleShare(event,${s.story_id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
-              <div class="share-drop up" id="share-${s.story_id}">
-                <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
-                <button class="share-opt" onclick="shareLinkedIn(event,${s.story_id},'${s.title.replace(/'/g,"\\'")}')" >💼 Share on LinkedIn</button>
+            <div style="display:flex;gap:6px;align-items:center;" onclick="event.stopPropagation()">
+              <div class="react-wrap">
+                <button class="react-btn ${s.my_reaction?'reacted':''}" onclick="togglePicker(event,'rp-${s.story_id}')">${s.my_reaction||'😊'} React</button>
+                <div class="react-picker open-up" id="rp-${s.story_id}">
+                  ${EMOJIS.map(e=>`<button class="react-emoji ${s.my_reaction===e?'mine':''}" onclick="doReact(event,${s.story_id},'${e}','card')">${e}</button>`).join('')}
+                </div>
+              </div>
+              <div class="share-wrap">
+                <button class="share-btn" onclick="toggleShare(event,${s.story_id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+                <div class="share-drop up" id="share-${s.story_id}">
+                  <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
+                  <button class="share-opt" onclick="shareLinkedIn(event,${s.story_id},'${s.title.replace(/'/g,"\\'")}')" >💼 Share on LinkedIn</button>
+                </div>
               </div>
             </div>
           </div>
@@ -244,6 +351,13 @@ async function openM(id){
     const ex=document.getElementById('m-extra');
     if(s.extra){document.getElementById('m-xt').textContent=s.extra;ex.style.display='flex';}else ex.style.display='none';
     document.getElementById('m-view-count').textContent=`${s.view_count||0} views`;
+    // reactions in modal
+    const mrs=document.getElementById('rs-modal');
+    mrs.innerHTML=renderReactionStrip(s.reactions||[],s.my_reaction,'modal');
+    const mBtn=document.getElementById('m-react-btn');
+    mBtn.textContent=s.my_reaction?`${s.my_reaction} React`:'😊 React';
+    mBtn.className=`react-btn${s.my_reaction?' reacted':''}`;
+    document.querySelectorAll('#rp-modal .react-emoji').forEach(b=>{b.className='react-emoji'+(s.my_reaction===b.textContent?' mine':'');});
     document.getElementById('ov').classList.add('open');document.body.style.overflow='hidden';
   }catch{}
 }
@@ -284,7 +398,10 @@ function shareLinkedIn(e,id,title){
   window.open(li,'_blank');
   document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
 }
-document.addEventListener('click',()=>document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open')));
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.react-picker').forEach(d=>d.classList.remove('open'));
+});
 load(1).then(()=>{
   const params=new URLSearchParams(window.location.search);
   const storyId=params.get('story');
