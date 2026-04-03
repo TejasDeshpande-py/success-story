@@ -195,7 +195,7 @@ pg=d.page;
           <div class="cpreview">${s.content.replace(/<[^>]*>/g,'')}</div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
             <button class="cread">Read Story →</button>
-            <div class="share-wrap">
+            <div class="share-wrap" onclick="event.stopPropagation()">
               <button class="share-btn" onclick="toggleShare(event,${s.story_id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
               <div class="share-drop" id="share-${s.story_id}">
                 <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
