@@ -275,7 +275,11 @@ function shareLinkedIn(e,id,title){
   document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
 }
 document.addEventListener('click',()=>document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open')));
-load(1);
+load(1).then(()=>{
+  const params=new URLSearchParams(window.location.search);
+  const storyId=params.get('story');
+  if(storyId)openM(parseInt(storyId));
+});
 </script>
 </body>
 </html>
