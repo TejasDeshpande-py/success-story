@@ -108,6 +108,7 @@
   .share-btn{width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .18s;flex-shrink:0;}
   .share-btn:hover{border-color:var(--brown);color:var(--brown);}
   .share-drop{position:absolute;top:38px;right:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 18px rgba(90,45,15,.12);min-width:160px;z-index:9999;display:none;overflow:hidden;}
+  .share-drop.up{top:auto;bottom:38px;}
   .share-drop.open{display:block;}
   .share-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:var(--sub);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;}
   .share-opt:hover{background:var(--rosebg);color:var(--brown);}
@@ -197,7 +198,7 @@ pg=d.page;
             <button class="cread">Read Story →</button>
             <div class="share-wrap" onclick="event.stopPropagation()">
               <button class="share-btn" onclick="toggleShare(event,${s.story_id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
-              <div class="share-drop" id="share-${s.story_id}">
+              <div class="share-drop up" id="share-${s.story_id}">
                 <button class="share-opt" onclick="copyLink(event,${s.story_id})">🔗 Copy Link</button>
                 <button class="share-opt" onclick="shareLinkedIn(event,${s.story_id},'${s.title.replace(/'/g,"\\'")}')" >💼 Share on LinkedIn</button>
               </div>
