@@ -250,7 +250,8 @@ function toggleShare(e,id){
 }
 function copyLink(e,id){
   e.stopPropagation();
-  const url=id==='modal'?window.location.href:`${window.location.origin}/feed?story=${id}`;
+  const storyId=id==='modal'?document.getElementById('m-share-id').dataset.id:id;
+  const url=`${window.location.origin}/feed?story=${storyId}`;
   document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
   if(navigator.clipboard&&window.isSecureContext){
     navigator.clipboard.writeText(url).then(()=>alert('Link copied!'));
