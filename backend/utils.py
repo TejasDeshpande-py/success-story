@@ -7,7 +7,23 @@ def paginate(page: int):
     return limit, offset
 
 
-def story_to_public_dict(s: SuccessStory):
+def story_to_public_dict(s: SuccessStory, current_user_id: int = None):
+    
+    # group reactions by emoji
+    reaction_map = {}
+    for r in (s.reactions or []):
+        if r.emoji not in reaction_map:
+            reaction_map[r.emoji] = {"emoji": r.emoji, "count": 0, "names": []}
+        reaction_map[r.emoji]["count"] += 1
+        reaction_map[r.emoji]["names"].append(r.employee.name if r.employee else "Unknown")
+
+    my_reaction = None
+    if current_user_id:
+        for r in (s.reactions or []):
+            if r.employee_id == current_user_id:
+                my_reaction = r.emoji
+                break
+
     return {
         "story_id": s.story_id,
         "title": s.title,
@@ -22,6 +38,8 @@ def story_to_public_dict(s: SuccessStory):
         "view_count": s.view_count or 0,
         "created_by_name": s.creator.name if s.creator else None,
         "created_at": s.created_at,
+        "reactions": list(reaction_map.values()),
+        "my_reaction": my_reaction,
     }
 
 
