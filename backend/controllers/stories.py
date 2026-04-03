@@ -58,6 +58,12 @@ def get_published_story(story_id: int, db: Session):
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
+    story.view_count = (story.view_count or 0) + 1
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return story_to_public_dict(story)
 
 

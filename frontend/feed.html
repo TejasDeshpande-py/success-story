@@ -147,7 +147,11 @@
       <img id="m-story-pic" src="" alt="Story" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;background:#f5e6da;">
     </div>
     <div class="mbody" id="m-body"></div>
-    <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
+    <div id="m-views" style="display:flex;align-items:center;gap:5px;padding:0 26px 10px;font-size:12px;color:var(--muted);">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  <span id="m-view-count">0</span>
+</div>
+<div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
   </div>
 </div>
 
@@ -194,6 +198,10 @@ pg=d.page;
           <div class="ct">${esc(s.title)}</div>
           <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${esc(s.name)}</div><div class="crole">${esc(s.designation)}</div><div class="crole">${fmtDate(s.created_at)}</div></div></div>
           <div class="cpreview">${s.content.replace(/<[^>]*>/g,'')}</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-bottom:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${s.view_count||0}
+          </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
             <button class="cread">Read Story →</button>
             <div class="share-wrap" onclick="event.stopPropagation()">
@@ -235,6 +243,7 @@ async function openM(id){
     document.getElementById('m-body').innerHTML=s.content;
     const ex=document.getElementById('m-extra');
     if(s.extra){document.getElementById('m-xt').textContent=s.extra;ex.style.display='flex';}else ex.style.display='none';
+    document.getElementById('m-view-count').textContent=`${s.view_count||0} views`;
     document.getElementById('ov').classList.add('open');document.body.style.overflow='hidden';
   }catch{}
 }

@@ -124,6 +124,7 @@ class StoryPublicResponse(BaseModel):
     name: Optional[str]
     picture: Optional[str]
     story_picture: Optional[str] = None
+    view_count: int = 0
     created_by_name: Optional[str] = None
     created_at: Optional[datetime]
 
