@@ -178,9 +178,7 @@
       </div>
       <div class="react-wrap">
         <button class="react-btn" id="m-react-btn" onclick="togglePicker(event,'rp-modal')">😊 React</button>
-        <div class="react-picker" id="rp-modal">
-          ${EMOJIS.map(e=>`<button class="react-emoji" onclick="doReact(event,'modal','${e}','modal')">${e}</button>`).join('')}
-        </div>
+        <div class="react-picker" id="rp-modal"></div>
       </div>
     </div>
     <div class="reactions-strip" id="rs-modal" style="padding:0 26px 10px;"></div>
@@ -358,6 +356,7 @@ async function openM(id){
     mBtn.textContent=s.my_reaction?`${s.my_reaction} React`:'😊 React';
     mBtn.className=`react-btn${s.my_reaction?' reacted':''}`;
     document.querySelectorAll('#rp-modal .react-emoji').forEach(b=>{b.className='react-emoji'+(s.my_reaction===b.textContent?' mine':'');});
+    document.getElementById('rp-modal').innerHTML=EMOJIS.map(e=>`<button class="react-emoji" onclick="doReact(event,'modal','${e}','modal')">${e}</button>`).join('');
     document.getElementById('ov').classList.add('open');document.body.style.overflow='hidden';
   }catch{}
 }
