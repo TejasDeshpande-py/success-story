@@ -57,7 +57,7 @@
   @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:560px){.grid{grid-template-columns:1fr;}}
 
-  .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;animation:fadeup .38s ease both;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:visible;cursor:pointer;transition:all .25s;animation:fadeup .38s ease both;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);}
   .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:var(--rose);}
   @keyframes fadeup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
@@ -118,8 +118,7 @@
   .react-btn{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;transition:all .18s;flex-shrink:0;}
   .react-btn:hover{border-color:var(--brown);color:var(--brown);}
   .react-btn.reacted{border-color:var(--brown);background:var(--rosebg);color:var(--brown);}
-  .react-picker{position:absolute;bottom:38px;left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:9999;white-space:nowrap;}
-  .react-picker.up-card{bottom:38px;}
+  .react-picker{position:absolute;bottom:38px;left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:9999;width:220px;flex-wrap:wrap;}
   .react-picker.open{display:flex;gap:4px;}
   .react-emoji{font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px;transition:background .15s;border:none;background:none;line-height:1;}
   .react-emoji:hover{background:var(--rosebg);transform:scale(1.2);}
