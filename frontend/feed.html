@@ -242,8 +242,10 @@ function bgX(e){if(e.target===document.getElementById('ov'))closeM();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
 function toggleShare(e,id){
   e.stopPropagation();
+  e.preventDefault();
   document.querySelectorAll('.share-drop').forEach(d=>{if(d.id!==`share-${id}`)d.classList.remove('open');});
-  document.getElementById(`share-${id}`).classList.toggle('open');
+  const drop=document.getElementById(`share-${id}`);
+  if(drop)drop.classList.toggle('open');
 }
 function copyLink(e,id){
   e.stopPropagation();
