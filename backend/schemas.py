@@ -113,6 +113,11 @@ class HRStoryUpdate(BaseModel):
     extra: Optional[str] = Field(None, max_length=100)
 
 
+class ReactionSummary(BaseModel):
+    emoji: str
+    count: int
+    names: list[str]
+
 class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
@@ -127,9 +132,15 @@ class StoryPublicResponse(BaseModel):
     view_count: int = 0
     created_by_name: Optional[str] = None
     created_at: Optional[datetime]
+    reactions: list[ReactionSummary] = []
+    my_reaction: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class ReactRequest(BaseModel):
+    emoji: str
 
 
 class StoryResponse(BaseModel):

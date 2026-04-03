@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
-from backend.model import Employee, SuccessStory
-from backend.schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest
+from backend.model import Employee, SuccessStory, StoryReaction
+from backend.schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest, ReactRequest
 from backend.utils import story_to_dict, story_to_public_dict
 
 def get_my_stories(page: int, db: Session, paginate, current_user):
@@ -23,17 +23,18 @@ def get_my_stories(page: int, db: Session, paginate, current_user):
         "pages": math.ceil(total / limit) if total > 0 else 1
     }
 
-def get_published_stories(page: int, db: Session, paginate):
+def get_published_stories(page: int, db: Session, paginate, current_user_id: int = None):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(SuccessStory.status == "Posted").count()
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
     ).filter(
         SuccessStory.status == "Posted"
     ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
     import math
     return {
-        "stories": [story_to_public_dict(s) for s in stories],
+        "stories": [story_to_public_dict(s, current_user_id) for s in stories],
         "total": total,
         "page": page,
         "pages": math.ceil(total / limit) if total > 0 else 1
@@ -47,9 +48,10 @@ def get_story_detail(story_id: int, db: Session):
         raise HTTPException(status_code=404, detail="Story not found")
     return story_to_dict(story)
 
-def get_published_story(story_id: int, db: Session):
+def get_published_story(story_id: int, db: Session, current_user_id: int = None):
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
     ).filter(
         SuccessStory.story_id == story_id,
         SuccessStory.status == "Posted"
@@ -64,7 +66,46 @@ def get_published_story(story_id: int, db: Session):
     except Exception:
         db.rollback()
 
-    return story_to_public_dict(story)
+    return story_to_public_dict(story, current_user_id)
+
+
+def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_user: Employee):
+    ALLOWED = ["👍","❤️","😂","😮","😢","🙏","🎉","🏆","🔥","💪","🤝","🫂","👏","⭐","💯"]
+    if payload.emoji not in ALLOWED:
+        raise HTTPException(status_code=400, detail="Invalid emoji")
+
+    existing = db.query(StoryReaction).filter(
+        StoryReaction.story_id == story_id,
+        StoryReaction.employee_id == current_user.employee_id
+    ).first()
+
+    if existing:
+        if existing.emoji == payload.emoji:
+            # same emoji → remove reaction
+            db.delete(existing)
+        else:
+            # different emoji → switch reaction
+            existing.emoji = payload.emoji
+    else:
+        # new reaction
+        db.add(StoryReaction(
+            story_id=story_id,
+            employee_id=current_user.employee_id,
+            emoji=payload.emoji
+        ))
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to save reaction")
+
+    story = db.query(SuccessStory).options(
+        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
+    ).filter(SuccessStory.story_id == story_id).first()
+
+    return story_to_public_dict(story, current_user.employee_id)
 
 
 def get_stories_by_status(status: str, page: int, db: Session, paginate):

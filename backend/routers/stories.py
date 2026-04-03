@@ -6,9 +6,13 @@ from backend.model import Employee
 from backend.schemas import (
     StoryCreate, StoryResponse, StoryPublicResponse,
     PublishResponse, RejectResponse, SelectBodyRequest,
-    EmployeeStoryUpdate, HRStoryUpdate
+    EmployeeStoryUpdate, HRStoryUpdate, ReactRequest
 )
 from backend.auth import get_current_user, require_hr_or_admin
+from typing import Optional
+from fastapi import Request
+from backend.security import decode_token
+from jose import JWTError
 import backend.controllers.stories as stories_controller
 from backend.utils import paginate
 
@@ -39,12 +43,32 @@ def create_story(payload: StoryCreate, db: Session = Depends(get_db), current_us
 def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.get_story_detail(story_id, db)
 
+def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[Employee]:
+    try:
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not token:
+            return None
+        payload = decode_token(token)
+        email = payload.get("sub")
+        if not email:
+            return None
+        return db.query(Employee).filter(Employee.email == email).first()
+    except (JWTError, Exception):
+        return None
+
 @router.get("/")
-def get_stories(page: int = 1, db: Session = Depends(get_db)):
-    return stories_controller.get_published_stories(page, db, paginate)
+def get_stories(page: int = 1, db: Session = Depends(get_db), current_user: Optional[Employee] = Depends(get_optional_user)):
+    uid = current_user.employee_id if current_user else None
+    return stories_controller.get_published_stories(page, db, paginate, uid)
+
 @router.get("/{story_id}", response_model=StoryPublicResponse)
-def get_story(story_id: int, db: Session = Depends(get_db)):
-    return stories_controller.get_published_story(story_id, db)
+def get_story(story_id: int, db: Session = Depends(get_db), current_user: Optional[Employee] = Depends(get_optional_user)):
+    uid = current_user.employee_id if current_user else None
+    return stories_controller.get_published_story(story_id, db, uid)
+
+@router.post("/{story_id}/react")
+def react_to_story(story_id: int, payload: ReactRequest, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return stories_controller.react_to_story(story_id, payload, db, current_user)
 
 
 @router.patch("/{story_id}/edit", response_model=StoryResponse)
