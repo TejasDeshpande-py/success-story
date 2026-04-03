@@ -63,3 +63,17 @@ class SuccessStory(Base):
     creator       = relationship("Employee", back_populates="stories", foreign_keys=[created_by])
     story_for_emp = relationship("Employee", foreign_keys=[story_for])
     team          = relationship("Team", back_populates="stories", foreign_keys=[team_id])
+    reactions     = relationship("StoryReaction", back_populates="story", cascade="all, delete-orphan")
+
+
+class StoryReaction(Base):
+    __tablename__ = "story_reactions"
+
+    reaction_id  = Column(Integer, primary_key=True, index=True)
+    story_id     = Column(Integer, ForeignKey("success_stories.story_id"), nullable=False)
+    employee_id  = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
+    emoji        = Column(String(10), nullable=False)
+    created_at   = Column(DateTime, server_default=func.now())
+
+    story        = relationship("SuccessStory", back_populates="reactions")
+    employee     = relationship("Employee")
