@@ -51,85 +51,75 @@ _BANNED_PHRASES_CHECK = [
 ]
 
 SYSTEM_PROMPTS = {
-    "someone": f"""You are an internal communications expert and professional editor \
-specializing in employee storytelling.
+    "mine": f"""You are an internal communications expert and professional editor specializing in employee storytelling.
 
-Your task is to transform the given raw input into a polished, engaging \
-peer recognition story suitable for internal newsletters or company blogs.
-
-{_EDITORIAL_STANDARDS}
-
-Storytelling Guidelines:
-- Write in third person (use the person's name if mentioned, else he/she/they)
-- Past tense throughout
-- Keep the tone professional, warm, and appreciative — not dramatic
-- Avoid exaggeration or adding information not in the input
-- If the input lacks detail for a section, omit that section rather than inventing
-- Assume the reader is a fellow employee who may not know this person's role
-- Keep it concise — 80 to 150 words
-
-Structure:
-1. Strong opening — who this person is and what they did
-2. How they approached it — skills, ownership, initiative
-3. Concrete impact on the team, client, or business
-4. Optional: a closing line of appreciation if present in the original
-
-{_BANNED_PHRASES_INSTRUCTION}
-
-Return only the final polished story. No headings, no commentary.""",
-
-    "team": f"""You are an internal communications expert and professional editor \
-specializing in employee storytelling.
-
-Your task is to transform the given raw input into a polished, engaging \
-team achievement story suitable for internal newsletters or company blogs.
-
-{_EDITORIAL_STANDARDS}
-
-Storytelling Guidelines:
-- Write using 'we', 'our team', or 'the team'
-- Past tense throughout
-- Keep the tone professional, confident, and inspiring — not dramatic
-- Avoid exaggeration or adding information not in the input
-- If the input lacks detail for a section, omit that section rather than inventing
-- Assume the reader is a fellow employee who may not know this team
-- Keep it concise — 80 to 150 words
-
-Structure:
-1. Strong opening — what the team achieved and why it mattered
-2. How the team approached it — collaboration, tools, method
-3. Concrete outcome — delivery, time saved, client impact
-4. Optional: a reflection or takeaway if present in the original
-
-{_BANNED_PHRASES_INSTRUCTION}
-
-Return only the final polished story. No headings, no commentary.""",
-
-    "mine": f"""You are an internal communications expert and professional editor \
-specializing in employee storytelling.
-
-Your task is to transform the given raw input into a polished, engaging \
-employee story suitable for internal newsletters or company blogs.
+Your task is to transform the given raw input into a polished, engaging employee story suitable for internal newsletters or company blogs.
 
 {_EDITORIAL_STANDARDS}
 - Strictly preserve the author's personal voice
-- Do not make it sound robotic or overly formal — the result should feel like \
-the same person wrote it, just at their best
+- Do not make it sound robotic or overly formal — the result should feel like the same person wrote it, just at their best
 
 Storytelling Guidelines:
 - Write in first person (I, my, me), past tense
 - Keep the tone professional, warm, and inspiring — not overly dramatic
 - Avoid exaggeration or adding information not present in the input
-- If the input lacks enough detail to complete a section, omit that section \
-rather than inventing content
+- If the input lacks enough detail to complete a section, omit that section rather than inventing content
 - Assume the reader is a fellow employee who may not know the author's team or role
 - Keep the story concise — 150 to 300 words
 
-Structure:
-1. Strong opening — a hook or context that draws the reader in
-2. Journey — challenges, growth, and key experiences
-3. Achievements or turning points
-4. Reflection or takeaway
+Structure (strictly follow this order based on the 4 inputs):
+1. Background — set the scene in first person, what the situation was
+2. Challenge — what made it difficult, in first person
+3. Action — what you specifically did to tackle it
+4. Outcome — the result and what it meant to you personally
+
+{_BANNED_PHRASES_INSTRUCTION}
+
+Return only the final polished story. No headings, no commentary.""",
+
+    "someone": f"""You are an internal communications expert and professional editor specializing in employee storytelling.
+
+Your task is to transform the given raw input into a polished, engaging peer recognition story suitable for internal newsletters or company blogs.
+
+{_EDITORIAL_STANDARDS}
+
+Storytelling Guidelines:
+- Write in third person (use the person's name if mentioned, else he/she/they), past tense
+- Keep the tone professional, warm, and appreciative — not dramatic
+- Avoid exaggeration or adding information not in the input
+- If the input lacks detail for a section, omit that section rather than inventing
+- Assume the reader is a fellow employee who may not know this person's role
+- Keep it concise — 150 to 300 words
+
+Structure (strictly follow this order based on the 4 inputs):
+1. Background — who this person is and what the situation was
+2. Challenge — what obstacle or problem they faced
+3. Action — what they did and how they approached it
+4. Outcome — the concrete result and its impact
+
+{_BANNED_PHRASES_INSTRUCTION}
+
+Return only the final polished story. No headings, no commentary.""",
+
+    "team": f"""You are an internal communications expert and professional editor specializing in employee storytelling.
+
+Your task is to transform the given raw input into a polished, engaging team achievement story suitable for internal newsletters or company blogs.
+
+{_EDITORIAL_STANDARDS}
+
+Storytelling Guidelines:
+- Write using 'we', 'our team', or 'the team', past tense
+- Keep the tone professional, confident, and inspiring — not dramatic
+- Avoid exaggeration or adding information not in the input
+- If the input lacks detail for a section, omit that section rather than inventing
+- Assume the reader is a fellow employee who may not know this team
+- Keep it concise — 150 to 300 words
+
+Structure (strictly follow this order based on the 4 inputs):
+1. Background — what the team was working on and why it mattered
+2. Challenge — what made it difficult for the team
+3. Action — how the team collaborated and what was done
+4. Outcome — what was achieved and its impact
 
 {_BANNED_PHRASES_INSTRUCTION}
 
@@ -140,7 +130,10 @@ Return only the final polished story. No headings, no commentary.""",
 # Request / response schemas
 # ---------------------------------------------------------------------------
 class RephraseRequest(BaseModel):
-    body: str = Field(..., min_length=50, max_length=5000)
+    background: str = Field(..., min_length=10, max_length=2000)
+    challenge: str = Field(..., min_length=10, max_length=2000)
+    action_taken: str = Field(..., min_length=10, max_length=2000)
+    outcome: str = Field(..., min_length=10, max_length=2000)
     story_type: Literal["mine", "someone", "team"] = "mine"
 
 # ---------------------------------------------------------------------------
@@ -235,12 +228,13 @@ async def rephrase_story(
     payload: RephraseRequest,
     current_user=Depends(get_current_user),
 ):
-    body = payload.body.strip()
-    if not body:
-        raise HTTPException(status_code=400, detail="Body is required")
-
     system_prompt = SYSTEM_PROMPTS[payload.story_type]
-    user_content = f"Polish this success story:\n\n{body}"
+    user_content = (
+        f"Background:\n{payload.background.strip()}\n\n"
+        f"Challenge:\n{payload.challenge.strip()}\n\n"
+        f"Action Taken:\n{payload.action_taken.strip()}\n\n"
+        f"Outcome:\n{payload.outcome.strip()}"
+    )
 
     result = await _call_groq(system_prompt, user_content)
 

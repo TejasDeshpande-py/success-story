@@ -161,7 +161,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
 .body-choice:hover{border-color:var(--brownlt);}
 .body-choice.picked{border-color:var(--brown);background:rgba(124,74,45,.04);}
 .bc-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
-.bc-text{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300;max-height:100px;overflow-y:auto;}
+.bc-text{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300;max-height:100px;overflow-y:auto;white-space:pre-wrap;}
 .bc-text::-webkit-scrollbar{width:3px;}
 .bc-text::-webkit-scrollbar-thumb{background:var(--rose);}
 
@@ -214,7 +214,10 @@ tr:hover td{background:rgba(247,228,216,.35);}
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
           <div class="fl"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><textarea id="w-extra" rows="2" placeholder="e.g. Q2 2025, Project Apollo" oninput="cc('w-extra','w-ec',100)" style="resize:vertical;min-height:42px;"></textarea><div class="cc" id="w-ec">0 / 100</div></div>
-          <div class="fl fl-full"><label>Your Story</label><div id="w-body-editor" style="background:white;border-radius:8px;"></div><div class="cc" id="w-bc">0 / 5000</div></div>
+          <div class="fl fl-full"><label>Background <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the context or situation?</span></label><textarea id="w-background" rows="3" placeholder="e.g. Our client needed a critical module delivered in 2 weeks..." oninput="cc('w-background','w-bgc',2000)"></textarea><div class="cc" id="w-bgc">0 / 2000</div></div>
+          <div class="fl fl-full"><label>Challenge <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What problem or obstacle was faced?</span></label><textarea id="w-challenge" rows="3" placeholder="e.g. The codebase was undocumented and the team was short-staffed..." oninput="cc('w-challenge','w-chc',2000)"></textarea><div class="cc" id="w-chc">0 / 2000</div></div>
+          <div class="fl fl-full"><label>Action Taken <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What did you/the team do?</span></label><textarea id="w-action" rows="3" placeholder="e.g. I mapped the entire flow, set up daily syncs and built the module from scratch..." oninput="cc('w-action','w-acc',2000)"></textarea><div class="cc" id="w-acc">0 / 2000</div></div>
+          <div class="fl fl-full"><label>Outcome <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the result?</span></label><textarea id="w-outcome" rows="3" placeholder="e.g. Delivered on time, client renewed contract for next quarter..." oninput="cc('w-outcome','w-occ',2000)"></textarea><div class="cc" id="w-occ">0 / 2000</div></div>
           <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bp" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:12px;font-weight:600;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
           <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view, Story picture must be under 10MB)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
         </div>
@@ -328,8 +331,8 @@ tr:hover td{background:rgba(247,228,216,.35);}
     <div class="sec-head"><h2>Published Stories</h2><p>All published stories — unpublish or delete.</p></div>
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Published</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Published</th><th>Actions</th></tr></thead><tbody id="pub-tbody"></tbody></table></div>
-      <div class="pag" id="pub-pag"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Published</th><th>Actions</th></tr></thead><tbody id="pubs-tbody"></tbody></table></div>
+      <div class="pag" id="pubs-pag"></div>
     </div>
   </div>
   <div class="sec" id="sec-rejectedstories">
@@ -393,7 +396,10 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <input type="hidden" id="edit-id" />
       <div class="al ae" id="edit-err"></div>
       <div class="form-grid">
-        <div class="fl fl-full"><label>Story Body</label><div id="edit-body-editor" style="background:white;border-radius:8px;min-height:160px;"></div></div>
+        <div class="fl fl-full"><label>Background</label><textarea id="edit-background" rows="3" placeholder="What was the context or situation?"></textarea></div>
+        <div class="fl fl-full"><label>Challenge</label><textarea id="edit-challenge" rows="3" placeholder="What problem or obstacle was faced?"></textarea></div>
+        <div class="fl fl-full"><label>Action Taken</label><textarea id="edit-action" rows="3" placeholder="What did you/the team do?"></textarea></div>
+        <div class="fl fl-full"><label>Outcome</label><textarea id="edit-outcome" rows="3" placeholder="What was the result?"></textarea></div>
       </div>
     </div>
     <div class="mfoot">
@@ -446,7 +452,10 @@ tr:hover td{background:rgba(247,228,216,.35);}
         <div class="fl fl-full"><label>Title</label><input type="text" id="hre-title" /></div>
         <div class="fl"><label>Designation</label><input type="text" id="hre-desig" /></div>
         <div class="fl"><label>Extra Info</label><input type="text" id="hre-extra" /></div>
-        <div class="fl fl-full"><label>Body</label><textarea id="hre-body" rows="5"></textarea></div>
+        <div class="fl fl-full"><label>Background</label><textarea id="hre-background" rows="3"></textarea></div>
+        <div class="fl fl-full"><label>Challenge</label><textarea id="hre-challenge" rows="3"></textarea></div>
+        <div class="fl fl-full"><label>Action Taken</label><textarea id="hre-action" rows="3"></textarea></div>
+        <div class="fl fl-full"><label>Outcome</label><textarea id="hre-outcome" rows="3"></textarea></div>
         <div class="fl fl-full"><label>AI Body</label><textarea id="hre-ai" rows="5"></textarea></div>
       </div>
     </div>
@@ -564,6 +573,7 @@ function buildNav(){
     {sec:'pendingusers',ic:'👤',label:'Pending Users'},
     {sec:'activeusers',ic:'👥',label:'Active Users'},
     {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
+    {sec:'publishedstories',ic:'📰',label:'Published Stories'},
     {sec:'rejectedstories',ic:'❌',label:'Rejected Stories'},
     {sec:'teams',ic:'🏢',label:'Teams'},
     {sec:'write',ic:'✍️',label:'Write Story'},
@@ -585,7 +595,7 @@ function showSec(id){
   const ni=document.getElementById(`ni-${id}`);
   if(sec)sec.classList.add('active');
   if(ni)ni.classList.add('active');
-  const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
+  const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',publishedstories:'Published Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
   if(id==='profile'){loadProfile();}
   if(id==='overview'){loadOverviewStats();loadPublishedStories(1);}
@@ -593,6 +603,8 @@ function showSec(id){
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
   if(id==='pendingstories')loadPendingStories(1);
+  if(id==='publishedstories')loadPublishedStoriesSection(1);
+  if(id==='publishedstories')loadPublishedStoriesSection(1);
   if(id==='rejectedstories')loadRejectedStories(1);
   if(id==='teams')loadTeams();
 }
@@ -667,15 +679,19 @@ async function submitStory(){
   hideAl('w-err');hideAl('w-ok');
   const title=document.getElementById('w-title').value.trim();
   const designation=document.getElementById('w-desig').value.trim();
-  const body=quill.root.innerHTML.trim();
+  const background=document.getElementById('w-background').value.trim();
+  const challenge=document.getElementById('w-challenge').value.trim();
+  const action_taken=document.getElementById('w-action').value.trim();
+  const outcome=document.getElementById('w-outcome').value.trim();
   const ai_body=document.getElementById('w-ai').value.trim();
   const extra=document.getElementById('w-extra').value.trim()||null;
   const storyType=document.querySelector('input[name="story-type"]:checked').value;
-  if(!title||(!designation&&storyType!=='team')||!body||!ai_body)return showAl('w-err','Please fill in all required fields.');
-  if(body.length<50)return showAl('w-err','Story body must be at least 50 characters.');
-  if(body.length>5000)return showAl('w-err','Story body should be less than 5000 characters.');
+  if(!title||(!designation&&storyType!=='team')||!background||!challenge||!action_taken||!outcome||!ai_body)return showAl('w-err','Please fill in all required fields including all 4 story sections.');
+  if(background.length<10)return showAl('w-err','Background must be at least 10 characters.');
+  if(challenge.length<10)return showAl('w-err','Challenge must be at least 10 characters.');
+  if(action_taken.length<10)return showAl('w-err','Action Taken must be at least 10 characters.');
+  if(outcome.length<10)return showAl('w-err','Outcome must be at least 10 characters.');
   if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
-  if(ai_body.length>5000)return showAl('w-err','AI body should be less than 5000 characters.');
   if(designation.length>100)return showAl('w-err','Designation must be under 100 characters.');
   if(extra&&extra.length>100)return showAl('w-err','Extra info must be under 100 characters.');
   const is_team_story=storyType==='team';
@@ -696,16 +712,15 @@ async function submitStory(){
       if(!ur.ok)throw new Error(ud.detail||'Picture upload failed');
       story_picture=ud.url;
     }
-    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation:storyType==='team'?'':designation,body,ai_body,extra,story_picture,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
+    const r=await fetch(`${API}/stories/create`,{method:'POST',headers:hdr(),body:JSON.stringify({title,designation:storyType==='team'?'':designation,background,challenge,action_taken,outcome,ai_body,extra,story_picture,story_for:storyType==='someone'?null:user.user_id,story_for_tricon,is_team_story,team_id})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
     setTimeout(()=>hideAl('w-ok'),5000);
-    ['w-title','w-desig','w-extra','w-ai'].forEach(id=>document.getElementById(id).value='');
-    quill.setContents([]);
+    ['w-title','w-desig','w-extra','w-background','w-challenge','w-action','w-outcome','w-ai'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('w-story-pic').value='';
     document.querySelector('input[name="story-type"][value="mine"]').checked=true;
     switchStoryType('mine');
-    const ccMap={'w-tc':'0 / 200','w-bc':'0 / 5000','w-ac':'0 / 5000','w-ec':'0 / 100'};
+    const ccMap={'w-tc':'0 / 200','w-bgc':'0 / 2000','w-chc':'0 / 2000','w-acc':'0 / 2000','w-occ':'0 / 2000','w-ac':'0 / 5000','w-ec':'0 / 100'};
     Object.keys(ccMap).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ccMap[id];});
   }catch(e){showAl('w-err',e.message);}
   finally{btn.textContent='Submit Story';btn.disabled=false;}
@@ -720,36 +735,49 @@ async function loadMyStories(p=1){
     if(!d.stories.length){tb.innerHTML=empty('No stories yet.');document.getElementById('ms-pag').innerHTML='';return;}
     tb.innerHTML=d.stories.map((s,i)=>`
       <tr><td>${(p-1)*20+i+1}</td><td><div class="tname">${s.title}</div></td><td>${stBadge(s.status)}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
-      <td><div class="tdact">${(s.status==='Pending'||s.status==='Rejected')?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id},'${esc(s.body)}')">Edit</button>`:''}</div></td></tr>`).join('');
+      <td><div class="tdact">${(s.status==='Pending'||s.status==='Rejected')?`<button class="btn btn-sm bgo" onclick="openEditStory(${s.story_id})">Edit</button>`:''}</div></td></tr>`).join('');
     buildPag('ms-pag',p,p<d.pages,'loadMyStories');
   }catch{tb.innerHTML=empty('Failed to load stories.');}
 }
 
-function openEditStory(id,body){
-  document.getElementById('edit-id').value=id;
-  editQuill.clipboard.dangerouslyPasteHTML(body);
-  hideAl('edit-err');openOv('ov-edit');
+async function openEditStory(id){
+  try{
+    const r=await fetch(`${API}/stories/detail/${id}`,{headers:hdr()});
+    if(!r.ok)throw 0;const s=await r.json();
+    document.getElementById('edit-id').value=id;
+    document.getElementById('edit-background').value=s.background||'';
+    document.getElementById('edit-challenge').value=s.challenge||'';
+    document.getElementById('edit-action').value=s.action_taken||'';
+    document.getElementById('edit-outcome').value=s.outcome||'';
+    hideAl('edit-err');openOv('ov-edit');
+  }catch{toast('Failed to load story.');}
 }
 async function saveEditStory(){
   hideAl('edit-err');
   const id=document.getElementById('edit-id').value;
-  const body=editQuill.root.innerHTML.trim();
-  if(!body)return showAl('edit-err','Body cannot be empty.');
+  const background=document.getElementById('edit-background').value.trim();
+  const challenge=document.getElementById('edit-challenge').value.trim();
+  const action_taken=document.getElementById('edit-action').value.trim();
+  const outcome=document.getElementById('edit-outcome').value.trim();
+  if(!background||!challenge||!action_taken||!outcome)return showAl('edit-err','All 4 fields are required.');
   try{
-    const r=await fetch(`${API}/stories/${id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({body})});
+    const r=await fetch(`${API}/stories/${id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
     closeOv('ov-edit');toast('Story updated!');loadMyStories(msPg);
   }catch(e){showAl('edit-err',e.message);}
 }
 
 async function rephraseStory(){
-  const body=quill.root.innerHTML.trim();
-  if(!body||body.length<50)return showAl('w-err','Write at least 50 characters in Your Story before rephrasing.');
+  const background=document.getElementById('w-background').value.trim();
+  const challenge=document.getElementById('w-challenge').value.trim();
+  const action_taken=document.getElementById('w-action').value.trim();
+  const outcome=document.getElementById('w-outcome').value.trim();
+  if(!background||!challenge||!action_taken||!outcome)return showAl('w-err','Fill in all 4 sections before rephrasing.');
   const btn=document.getElementById('rephrase-btn');
   btn.textContent='✨ Rephrasing...';btn.disabled=true;
   try{
     const storyType=document.querySelector('input[name="story-type"]:checked').value;
-    const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({body,story_type:storyType})});
+    const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome,story_type:storyType})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Rephrase failed');
     document.getElementById('w-ai').value=d.rephrased_body;
     cc('w-ai','w-ac',5000);
@@ -930,7 +958,7 @@ async function openReview(id){
     if(!r.ok)throw 0;const s=await r.json();
     document.getElementById('rev-id').value=id;
     document.getElementById('rev-author').textContent=`${s.name} — ${s.designation}`;
-    document.getElementById('rev-orig').textContent=s.body;
+    document.getElementById('rev-orig').textContent=`${s.background}\n\n${s.challenge}\n\n${s.action_taken}\n\n${s.outcome}`;
     document.getElementById('rev-ai').textContent=s.ai_body;
     const revPicC=document.getElementById('rev-pic-container');
     const revPicI=document.getElementById('rev-pic-img');
@@ -991,8 +1019,11 @@ async function openHREdit(id){
     document.getElementById('hre-id').value=id;
     document.getElementById('hre-title').value=s.title;
     document.getElementById('hre-desig').value=s.designation;
-    document.getElementById('hre-body').value=s.body;
-    document.getElementById('hre-ai').value=s.ai_body;
+    document.getElementById('hre-background').value=s.background||'';
+    document.getElementById('hre-challenge').value=s.challenge||'';
+    document.getElementById('hre-action').value=s.action_taken||'';
+    document.getElementById('hre-outcome').value=s.outcome||'';
+    document.getElementById('hre-ai').value=s.ai_body||'';
     document.getElementById('hre-extra').value=s.extra||'';
     hideAl('hre-err');openOv('ov-hredit');
   }catch{}
@@ -1002,16 +1033,22 @@ async function saveHREdit(){
   const id=document.getElementById('hre-id').value;
   const title=document.getElementById('hre-title').value.trim();
   const desig=document.getElementById('hre-desig').value.trim();
-  const body=document.getElementById('hre-body').value.trim();
+  const background=document.getElementById('hre-background').value.trim();
+  const challenge=document.getElementById('hre-challenge').value.trim();
+  const action_taken=document.getElementById('hre-action').value.trim();
+  const outcome=document.getElementById('hre-outcome').value.trim();
   const ai=document.getElementById('hre-ai').value.trim();
   if(!title)return showAl('hre-err','Title cannot be empty.');
   if(!desig)return showAl('hre-err','Designation cannot be empty.');
-  if(!body)return showAl('hre-err','Body cannot be empty.');
+  if(!background)return showAl('hre-err','Background cannot be empty.');
+  if(!challenge)return showAl('hre-err','Challenge cannot be empty.');
+  if(!action_taken)return showAl('hre-err','Action Taken cannot be empty.');
+  if(!outcome)return showAl('hre-err','Outcome cannot be empty.');
   if(!ai)return showAl('hre-err','AI body cannot be empty.');
   if(title.length>200)return showAl('hre-err','Title must be under 200 characters.');
   if(desig.length>100)return showAl('hre-err','Designation must be under 100 characters.');
   const payload={
-    title,designation:desig,body,ai_body:ai,
+    title,designation:desig,background,challenge,action_taken,outcome,ai_body:ai,
     extra:document.getElementById('hre-extra').value.trim()||null
   };
   try{
@@ -1157,12 +1194,25 @@ async function createTeam(){
     toast(`Team "${name}" created!`);loadTeams();
   }catch(e){showAl('team-err',e.message);}
 }
-const editQuill=new Quill('#edit-body-editor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],['clean']]}});
-const quill=new Quill('#w-body-editor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],['clean']]},placeholder:'Write about your achievement, contribution, or milestone...'});
-document.querySelector('#w-body-editor .ql-editor').style.minHeight='140px';
-document.querySelector('#w-body-editor .ql-editor').style.resize='vertical';
-document.querySelector('#w-body-editor .ql-editor').style.overflow='auto';
-quill.on('text-change',()=>{const len=quill.getText().trim().length;document.getElementById('w-bc').textContent=`${len} / 5000`;});
+
+
+let pubsPg=1;
+async function loadPublishedStoriesSection(p=1){
+  pubsPg=p;const tb=document.getElementById('pubs-tbody');tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr>`;
+  try{
+    const r=await fetch(`${API}/stories/?page=${p}`,{headers:hdr()});
+    if(!r.ok)throw 0;const d=await r.json();
+    if(!d.stories.length){tb.innerHTML=empty('No published stories.');document.getElementById('pubs-pag').innerHTML='';return;}
+    tb.innerHTML=d.stories.map((s,i)=>`
+      <tr><td>${(p-1)*10+i+1}</td><td><div class="tname">${s.title}</div></td>
+      <td style="font-size:12px">${s.name||'—'}</td><td style="font-size:12px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><div class="tdact">
+        <button class="btn btn-sm bgo" onclick="unpublishStory(${s.story_id})">Unpublish</button>
+        <button class="btn btn-sm bgr" onclick="deletePublishedStory(${s.story_id})">Delete</button>
+      </div></td></tr>`).join('');
+    buildPag('pubs-pag',p,p<d.pages,'loadPublishedStoriesSection');
+  }catch{tb.innerHTML=empty('Failed to load.');}
+}
 </script>
 </body>
-</html>
+</html>only 
