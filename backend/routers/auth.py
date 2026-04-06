@@ -7,7 +7,7 @@ import uuid, os
 import httpx
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal
 from backend.auth import get_current_user
 from backend.limiter import limiter
@@ -140,7 +140,7 @@ Return only the final polished story. No headings, no commentary.""",
 # Request / response schemas
 # ---------------------------------------------------------------------------
 class RephraseRequest(BaseModel):
-    body: str
+    body: str = Field(..., min_length=50, max_length=5000)
     story_type: Literal["mine", "someone", "team"] = "mine"
 
 # ---------------------------------------------------------------------------
@@ -229,8 +229,10 @@ def upload_picture(
 
 
 @router.post("/rephrase")
+@limiter.limit("10/minute")
 async def rephrase_story(
-    payload: RephraseRequest,                 # FIX: typed Pydantic model, not raw dict
+    request: Request,
+    payload: RephraseRequest,
     current_user=Depends(get_current_user),
 ):
     body = payload.body.strip()
