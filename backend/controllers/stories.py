@@ -128,7 +128,10 @@ def get_stories_by_status(status: str, page: int, db: Session, paginate):
 def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     # strip whitespace
     payload.title = payload.title.strip()
-    payload.body = payload.body.strip()
+    payload.background = payload.background.strip()
+    payload.challenge = payload.challenge.strip()
+    payload.action_taken = payload.action_taken.strip()
+    payload.outcome = payload.outcome.strip()
     payload.ai_body = payload.ai_body.strip()
     if payload.designation:
         payload.designation = payload.designation.strip()
@@ -136,8 +139,14 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     # whitespace-only content check
     if not payload.title:
         raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if not payload.body.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="Story body cannot be whitespace only")
+    if not payload.background.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="Background cannot be whitespace only")
+    if not payload.challenge.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="Challenge cannot be whitespace only")
+    if not payload.action_taken.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="Action taken cannot be whitespace only")
+    if not payload.outcome.replace(' ', ''):
+        raise HTTPException(status_code=400, detail="Outcome cannot be whitespace only")
     if not payload.ai_body.replace(' ', ''):
         raise HTTPException(status_code=400, detail="AI body cannot be whitespace only")
 
@@ -166,7 +175,7 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     team_id = None
     if payload.is_team_story:
         if payload.team_id:
-            from model import Team
+            from backend.model import Team
             team = db.query(Team).filter(Team.team_id == payload.team_id).first()
             if not team:
                 raise HTTPException(status_code=404, detail="Selected team does not exist")
@@ -189,7 +198,10 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     story = SuccessStory(
         title=payload.title,
         designation=payload.designation,
-        body=payload.body,
+        background=payload.background,
+        challenge=payload.challenge,
+        action_taken=payload.action_taken,
+        outcome=payload.outcome,
         ai_body=payload.ai_body,
         selected_body=None,
         status="Pending",
@@ -229,7 +241,14 @@ def edit_story(story_id: int, payload: EmployeeStoryUpdate, db: Session, current
     if story.status not in ["Pending", "Rejected"]:
         raise HTTPException(status_code=400, detail="You can only edit Pending or Rejected stories")
 
-    story.body = payload.body
+    if payload.background is not None:
+        story.background = payload.background
+    if payload.challenge is not None:
+        story.challenge = payload.challenge
+    if payload.action_taken is not None:
+        story.action_taken = payload.action_taken
+    if payload.outcome is not None:
+        story.outcome = payload.outcome
     story.updated_by = current_user.employee_id
     story.updated_at = datetime.now(timezone.utc)
 
@@ -257,8 +276,14 @@ def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_us
     update_data = payload.model_dump(exclude_unset=True)
     if "title" in update_data and not update_data["title"].strip():
         raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if "body" in update_data and not update_data["body"].strip():
-        raise HTTPException(status_code=400, detail="Body cannot be empty")
+    if "background" in update_data and not update_data["background"].strip():
+        raise HTTPException(status_code=400, detail="Background cannot be empty")
+    if "challenge" in update_data and not update_data["challenge"].strip():
+        raise HTTPException(status_code=400, detail="Challenge cannot be empty")
+    if "action_taken" in update_data and not update_data["action_taken"].strip():
+        raise HTTPException(status_code=400, detail="Action taken cannot be empty")
+    if "outcome" in update_data and not update_data["outcome"].strip():
+        raise HTTPException(status_code=400, detail="Outcome cannot be empty")
     if "ai_body" in update_data and not update_data["ai_body"].strip():
         raise HTTPException(status_code=400, detail="AI body cannot be empty")
     if "designation" in update_data and not update_data["designation"].strip():

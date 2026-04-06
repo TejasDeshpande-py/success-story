@@ -91,7 +91,10 @@ class TeamResponse(BaseModel):
 class StoryCreate(BaseModel):
     title: str
     designation: str = Field("", max_length=100)
-    body: str
+    background: str
+    challenge: str
+    action_taken: str
+    outcome: str
     ai_body: str
     extra: Optional[str] = None
     story_picture: Optional[str] = None
@@ -102,11 +105,17 @@ class StoryCreate(BaseModel):
 
 
 class EmployeeStoryUpdate(BaseModel):
-    body: str
+    background: Optional[str] = None
+    challenge: Optional[str] = None
+    action_taken: Optional[str] = None
+    outcome: Optional[str] = None
 
 
 class HRStoryUpdate(BaseModel):
-    body: Optional[str] = None
+    background: Optional[str] = None
+    challenge: Optional[str] = None
+    action_taken: Optional[str] = None
+    outcome: Optional[str] = None
     title: Optional[str] = None
     designation: Optional[str] = None
     ai_body: Optional[str] = None
@@ -147,7 +156,10 @@ class StoryResponse(BaseModel):
     story_id: int
     title: str
     designation: str
-    body: str
+    background: str
+    challenge: str
+    action_taken: str
+    outcome: str
     ai_body: str
     selected_body: Optional[bool]
     status: str
