@@ -55,54 +55,94 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
 
     if story_type == "someone":
         system_prompt = (
-            "You are a senior communications writer at a top tech company. "
-            "Your job is to rewrite peer recognition stories for internal awards. "
-            "Rewrite in third person (he/she/they or the person's name if mentioned).\n\n"
-            "The story must:\n"
-            "- Open with who did what and the scale of the achievement\n"
-            "- Explain briefly how they approached it — skill, ownership, initiative\n"
-            "- End with the concrete impact on the team or business\n"
-            "- Be 3 to 4 sentences, warm but grounded in facts\n"
-            "- Sound like a manager nominating someone for an award\n"
-            "- Use active voice throughout\n"
-            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
-            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
-            "- Do not invent facts not present in the original\n"
-            "- Return only the rewritten story, no preamble or explanation"
+            "You are an internal communications expert and professional editor "
+            "specializing in employee storytelling.\n\n"
+            "Your task is to transform the given raw input into a polished, engaging "
+            "peer recognition story suitable for internal newsletters or company blogs.\n\n"
+            "Editorial Standards:\n"
+            "- Correct all grammar, spelling, and punctuation mistakes\n"
+            "- Enhance clarity, flow, and readability\n"
+            "- Strictly preserve the original meaning, facts, and voice\n"
+            "- Do not add new information or remove key details\n"
+            "- Do not make it sound robotic or overly formal\n\n"
+            "Storytelling Guidelines:\n"
+            "- Write in third person (use the person's name if mentioned, else he/she/they)\n"
+            "- Past tense throughout\n"
+            "- Keep the tone professional, warm, and appreciative — not dramatic\n"
+            "- Avoid exaggeration or adding information not in the input\n"
+            "- If the input lacks detail for a section, omit that section rather than inventing\n"
+            "- Assume the reader is a fellow employee who may not know this person's role\n"
+            "- Keep it concise — 80 to 150 words\n\n"
+            "Structure:\n"
+            "1. Strong opening — who this person is and what they did\n"
+            "2. How they approached it — skills, ownership, initiative\n"
+            "3. Concrete impact on the team, client, or business\n"
+            "4. Optional: a closing line of appreciation if present in the original\n\n"
+            "Strictly avoid: 'exceptional', 'outstanding', 'valuable asset', "
+            "'innovative approach', 'set a new standard', 'greatly improved', "
+            "'instrumental', 'significant impact', 'testament to', 'thrilled', 'honored'\n\n"
+            "Return only the final polished story. No headings, no commentary."
         )
     elif story_type == "team":
         system_prompt = (
-            "You are a senior communications writer at a top tech company. "
-            "Your job is to rewrite team achievement stories for internal recognition. "
-            "Rewrite using 'we', 'our team', 'the team'.\n\n"
-            "The story must:\n"
-            "- Open with what the team achieved and why it mattered\n"
-            "- Explain how the team collaborated or what approach they took\n"
-            "- End with the concrete outcome — delivery, savings, efficiency, or impact\n"
-            "- Be 3 to 4 sentences, confident and specific\n"
-            "- Sound like a team lead announcing a win to the company\n"
-            "- Use active voice throughout\n"
-            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
-            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
-            "- Do not invent facts not present in the original\n"
-            "- Return only the rewritten story, no preamble or explanation"
+            "You are an internal communications expert and professional editor "
+            "specializing in employee storytelling.\n\n"
+            "Your task is to transform the given raw input into a polished, engaging "
+            "team achievement story suitable for internal newsletters or company blogs.\n\n"
+            "Editorial Standards:\n"
+            "- Correct all grammar, spelling, and punctuation mistakes\n"
+            "- Enhance clarity, flow, and readability\n"
+            "- Strictly preserve the original meaning, facts, and voice\n"
+            "- Do not add new information or remove key details\n"
+            "- Do not make it sound robotic or overly formal\n\n"
+            "Storytelling Guidelines:\n"
+            "- Write using 'we', 'our team', or 'the team'\n"
+            "- Past tense throughout\n"
+            "- Keep the tone professional, confident, and inspiring — not dramatic\n"
+            "- Avoid exaggeration or adding information not in the input\n"
+            "- If the input lacks detail for a section, omit that section rather than inventing\n"
+            "- Assume the reader is a fellow employee who may not know this team\n"
+            "- Keep it concise — 80 to 150 words\n\n"
+            "Structure:\n"
+            "1. Strong opening — what the team achieved and why it mattered\n"
+            "2. How the team approached it — collaboration, tools, method\n"
+            "3. Concrete outcome — delivery, time saved, client impact\n"
+            "4. Optional: a reflection or takeaway if present in the original\n\n"
+            "Strictly avoid: 'exceptional', 'outstanding', 'valuable asset', "
+            "'innovative approach', 'set a new standard', 'greatly improved', "
+            "'instrumental', 'significant impact', 'testament to', 'thrilled', 'honored'\n\n"
+            "Return only the final polished story. No headings, no commentary."
         )
     else:
         system_prompt = (
-            "You are a senior communications writer at a top tech company. "
-            "Your job is to rewrite employee success stories for internal recognition. "
-            "Rewrite in first person (I, my, me).\n\n"
-            "The story must:\n"
-            "- Open with the specific achievement and its scale or impact\n"
-            "- Explain briefly how it was done (tools, approach, ownership)\n"
-            "- End with the concrete outcome — time saved, efficiency gained, or business value\n"
-            "- Be 3 to 4 sentences, tight and confident\n"
-            "- Sound like a high-performer writing their own award citation\n"
-            "- Use active voice throughout\n"
-            "- Avoid clichés: no 'thrilled', 'honored', 'testament to', 'journey', "
-            "'passionate', 'incredible', 'revolutionary', 'truly impactful'\n"
-            "- Do not invent facts not present in the original\n"
-            "- Return only the rewritten story, no preamble or explanation"
+            "You are an internal communications expert and professional editor "
+            "specializing in employee storytelling.\n\n"
+            "Your task is to transform the given raw input into a polished, engaging "
+            "employee story suitable for internal newsletters or company blogs.\n\n"
+            "Editorial Standards:\n"
+            "- Correct all grammar, spelling, and punctuation mistakes\n"
+            "- Enhance clarity, flow, and readability\n"
+            "- Strictly preserve the original meaning, facts, and the author's personal voice\n"
+            "- Do not add new information or remove key details\n"
+            "- Do not make it sound robotic or overly formal — the result should feel like "
+            "the same person wrote it, just at their best\n\n"
+            "Storytelling Guidelines:\n"
+            "- Write in first person (I, my, me), past tense\n"
+            "- Keep the tone professional, warm, and inspiring — not overly dramatic\n"
+            "- Avoid exaggeration or adding information not present in the input\n"
+            "- If the input lacks enough detail to complete a section, omit that section "
+            "rather than inventing content\n"
+            "- Assume the reader is a fellow employee who may not know the author's team or role\n"
+            "- Keep the story concise — 150 to 300 words\n\n"
+            "Structure:\n"
+            "1. Strong opening — a hook or context that draws the reader in\n"
+            "2. Journey — challenges, growth, and key experiences\n"
+            "3. Achievements or turning points\n"
+            "4. Reflection or takeaway\n\n"
+            "Strictly avoid: 'exceptional', 'outstanding', 'valuable asset', "
+            "'innovative approach', 'set a new standard', 'greatly improved', "
+            "'instrumental', 'significant impact', 'testament to', 'thrilled', 'honored'\n\n"
+            "Return only the final polished story. No headings, no commentary."
         )
 
     groq_key = os.getenv("GROQ_API_KEY")
@@ -124,4 +164,21 @@ async def rephrase_story(payload: dict, current_user=Depends(get_current_user)):
         d = r.json()
     if "choices" not in d:
         raise HTTPException(status_code=500, detail=f"Groq error: {d}")
-    return {"rephrased_body": d["choices"][0]["message"]["content"]}
+    bad_phrases = [
+        "significant impact", "instrumental", "exceptional", "valuable asset",
+        "driving success", "overall performance", "testament to", "thrilled",
+        "honored", "passionate", "incredible", "revolutionary", "truly impactful",
+        "outstanding", "set a new standard", "innovative approach", "greatly improved"
+    ]
+
+    def is_bad_output(text: str):
+        t = text.lower()
+        for phrase in bad_phrases:
+            if phrase in t:
+                return True
+        return False
+
+    result = d["choices"][0]["message"]["content"].strip()
+    if is_bad_output(result):
+        result = body
+    return {"rephrased_body": result}
