@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from backend.auth import get_current_user
 from backend.limiter import limiter
+import re
 
 router = APIRouter(tags=["Auth"])
 
@@ -249,12 +250,12 @@ async def rephrase_story(
 
     # If the retry still fails, surface an error rather than silently returning raw input
     if _contains_banned_phrase(result):
-        raise HTTPException(
-            status_code=422,
-            detail=(
-                "The AI-generated story still contains restricted phrases after retry. "
-                "Please try again or rephrase your input."
-            ),
-        )
+        for phrase in _BANNED_PHRASES_CHECK:
+            pattern = re.compile(rf"\b{re.escape(phrase)}\b", re.IGNORECASE)
+            result = pattern.sub("", result)
+
+    # clean extra spaces
+    result = re.sub(r"\s+([.,])", r"\1", result)
+    result = re.sub(r"\s+", " ", result).strip()
 
     return {"rephrased_body": result}
