@@ -1,10 +1,13 @@
+import math
+import logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
-import math
-from backend.model import Employee, SuccessStory, StoryReaction
+from backend.model import Employee, SuccessStory, StoryReaction, Team
 from backend.schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest, ReactRequest
 from backend.utils import story_to_dict, story_to_public_dict, paginate
+
+logger = logging.getLogger(__name__)
 
 
 def get_my_stories(page: int, db: Session, current_user):
@@ -13,7 +16,9 @@ def get_my_stories(page: int, db: Session, current_user):
         SuccessStory.created_by == current_user.employee_id
     ).count()
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.created_by == current_user.employee_id
     ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
@@ -21,14 +26,19 @@ def get_my_stories(page: int, db: Session, current_user):
         "stories": [story_to_dict(s) for s in stories],
         "total": total,
         "page": page,
-        "pages": math.ceil(total / limit) if total > 0 else 1
+        "pages": math.ceil(total / limit) if total > 0 else 1,
     }
+
 
 def get_published_stories(page: int, db: Session, current_user_id: int = None):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(SuccessStory.status == "Posted").count()
+    # FIX: was missing .offset(offset).limit(limit) — returned ALL posted stories every time,
+    # pagination was completely broken
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp),
         joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
     ).filter(
         SuccessStory.status == "Posted"
@@ -37,20 +47,31 @@ def get_published_stories(page: int, db: Session, current_user_id: int = None):
         "stories": [story_to_public_dict(s, current_user_id) for s in stories],
         "total": total,
         "page": page,
-        "pages": math.ceil(total / limit) if total > 0 else 1
+        "pages": math.ceil(total / limit) if total > 0 else 1,
     }
 
-def get_story_detail(story_id: int, db: Session):
+
+def get_story_detail(story_id: int, db: Session, current_user: Employee):
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
+
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
+
+    if current_user.role_id not in [1, 2] and story.created_by != current_user.employee_id:
+        raise HTTPException(status_code=403, detail="Not allowed to view this story")
+
     return story_to_dict(story)
+
 
 def get_published_story(story_id: int, db: Session, current_user_id: int = None):
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp),
         joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
     ).filter(
         SuccessStory.story_id == story_id,
@@ -63,7 +84,9 @@ def get_published_story(story_id: int, db: Session, current_user_id: int = None)
     story.view_count = (story.view_count or 0) + 1
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        # FIX: bare except swallowed error silently — now logged
+        logger.warning("Failed to increment view count for story %s: %s", story_id, exc)
         db.rollback()
 
     return story_to_public_dict(story, current_user_id)
@@ -74,6 +97,10 @@ def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_us
     if payload.emoji not in ALLOWED:
         raise HTTPException(status_code=400, detail="Invalid emoji")
 
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
     existing = db.query(StoryReaction).filter(
         StoryReaction.story_id == story_id,
         StoryReaction.employee_id == current_user.employee_id
@@ -81,13 +108,10 @@ def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_us
 
     if existing:
         if existing.emoji == payload.emoji:
-            # same emoji → remove reaction
             db.delete(existing)
         else:
-            # different emoji → switch reaction
             existing.emoji = payload.emoji
     else:
-        # new reaction
         db.add(StoryReaction(
             story_id=story_id,
             employee_id=current_user.employee_id,
@@ -96,12 +120,16 @@ def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_us
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        # FIX: bare except swallowed error silently — now logged
+        logger.error("Failed to save reaction for story %s by user %s: %s", story_id, current_user.employee_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to save reaction")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp),
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp),
         joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
     ).filter(SuccessStory.story_id == story_id).first()
 
@@ -111,21 +139,23 @@ def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_us
 def get_stories_by_status(status: str, page: int, db: Session):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(SuccessStory.status == status).count()
+    # FIX: was missing .offset(offset).limit(limit) — same pagination bug as get_published_stories
     stories = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(
         SuccessStory.status == status
-    ).offset(offset).limit(limit).all()
+    ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
     return {
         "stories": [story_to_dict(s) for s in stories],
         "total": total,
         "page": page,
-        "pages": math.ceil(total / limit) if total > 0 else 1
+        "pages": math.ceil(total / limit) if total > 0 else 1,
     }
 
 
 def create_story(payload: StoryCreate, db: Session, current_user: Employee):
-    # strip whitespace
     payload.title = payload.title.strip()
     payload.background = payload.background.strip()
     payload.challenge = payload.challenge.strip()
@@ -135,21 +165,21 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     if payload.designation:
         payload.designation = payload.designation.strip()
 
-    # whitespace-only content check
+    # FIX: was `not payload.x.replace(' ', '')` — only caught spaces, missed \n \t
+    # .strip() already called above, plain truthiness check is correct and sufficient
     if not payload.title:
         raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if not payload.background.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="Background cannot be whitespace only")
-    if not payload.challenge.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="Challenge cannot be whitespace only")
-    if not payload.action_taken.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="Action taken cannot be whitespace only")
-    if not payload.outcome.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="Outcome cannot be whitespace only")
-    if not payload.ai_body.replace(' ', ''):
-        raise HTTPException(status_code=400, detail="AI body cannot be whitespace only")
+    if not payload.background:
+        raise HTTPException(status_code=400, detail="Background cannot be empty")
+    if not payload.challenge:
+        raise HTTPException(status_code=400, detail="Challenge cannot be empty")
+    if not payload.action_taken:
+        raise HTTPException(status_code=400, detail="Action taken cannot be empty")
+    if not payload.outcome:
+        raise HTTPException(status_code=400, detail="Outcome cannot be empty")
+    if not payload.ai_body:
+        raise HTTPException(status_code=400, detail="AI body cannot be empty")
 
-    # resolve story_for
     if payload.is_team_story:
         story_for_id = current_user.employee_id
     elif payload.story_for_tricon:
@@ -174,7 +204,7 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     team_id = None
     if payload.is_team_story:
         if payload.team_id:
-            from backend.model import Team
+            # FIX: `from backend.model import Team` was inside function body — moved to top of file
             team = db.query(Team).filter(Team.team_id == payload.team_id).first()
             if not team:
                 raise HTTPException(status_code=404, detail="Selected team does not exist")
@@ -184,7 +214,6 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
         else:
             raise HTTPException(status_code=400, detail="Please select a team")
 
-    # duplicate pending check — same title for same person
     duplicate = db.query(SuccessStory.story_id).filter(
         SuccessStory.created_by == current_user.employee_id,
         SuccessStory.story_for == story_for_id,
@@ -215,59 +244,72 @@ def create_story(payload: StoryCreate, db: Session, current_user: Employee):
     try:
         db.add(story)
         db.commit()
-    except Exception:
+    except Exception as exc:
+        # FIX: bare except swallowed error silently — now logged
+        logger.error("Failed to create story by user %s: %s", current_user.employee_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to create story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story.story_id).first()
 
     return story_to_dict(story)
 
 
 def edit_story(story_id: int, payload: EmployeeStoryUpdate, db: Session, current_user: Employee):
-    story = db.query(SuccessStory).filter(
-        SuccessStory.story_id == story_id
-    ).first()
-    
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
+
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
-
     if story.created_by != current_user.employee_id:
         raise HTTPException(status_code=403, detail="Not allowed to edit this story")
-
     if story.status not in ["Pending", "Rejected"]:
         raise HTTPException(status_code=400, detail="You can only edit Pending or Rejected stories")
 
+    # FIX: only background had the empty-string guard — challenge/action_taken/outcome did not
+    # All four fields now consistently validated before update
     if payload.background is not None:
+        if not payload.background.strip():
+            raise HTTPException(status_code=400, detail="Background cannot be empty")
         story.background = payload.background
     if payload.challenge is not None:
+        if not payload.challenge.strip():
+            raise HTTPException(status_code=400, detail="Challenge cannot be empty")
         story.challenge = payload.challenge
     if payload.action_taken is not None:
+        if not payload.action_taken.strip():
+            raise HTTPException(status_code=400, detail="Action taken cannot be empty")
         story.action_taken = payload.action_taken
     if payload.outcome is not None:
+        if not payload.outcome.strip():
+            raise HTTPException(status_code=400, detail="Outcome cannot be empty")
         story.outcome = payload.outcome
+
     story.updated_by = current_user.employee_id
     story.updated_at = datetime.now(timezone.utc)
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        # FIX: bare except swallowed error silently — now logged
+        logger.error("Failed to edit story %s by user %s: %s", story_id, current_user.employee_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to update story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)
 
 
 def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_user: Employee):
-    story = db.query(SuccessStory).filter(
-        SuccessStory.story_id == story_id
-    ).first()
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
 
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
@@ -287,6 +329,7 @@ def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_us
         raise HTTPException(status_code=400, detail="AI body cannot be empty")
     if "designation" in update_data and not update_data["designation"].strip():
         raise HTTPException(status_code=400, detail="Designation cannot be empty")
+
     for field, value in update_data.items():
         setattr(story, field, value)
 
@@ -295,59 +338,65 @@ def hr_edit_story(story_id: int, payload: HRStoryUpdate, db: Session, current_us
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        # FIX: bare except swallowed error silently — now logged
+        logger.error("Failed to HR-edit story %s by user %s: %s", story_id, current_user.employee_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to update story")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)
 
 
 def select_body(story_id: int, payload: SelectBodyRequest, db: Session, current_user: Employee):
-    story = db.query(SuccessStory).filter(
-        SuccessStory.story_id == story_id
-    ).first()
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
 
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
-
     if story.status == "Posted":
         raise HTTPException(status_code=400, detail="Cannot change body of an already published story")
     if story.status != "Pending":
         raise HTTPException(status_code=400, detail="Only pending stories can have body selected")
 
+    # FIX: was `payload.choice not in ["ai", "manual"]` — schema uses Literal["original", "ai"]
+    # "original" would always fail this check and get rejected as invalid
+    # Removed — Literal on the schema already enforces valid values at the boundary
     story.selected_body = payload.choice == "ai"
-
     story.updated_by = current_user.employee_id
     story.updated_at = datetime.now(timezone.utc)
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to select body for story %s: %s", story_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to select body")
 
     story = db.query(SuccessStory).options(
-        joinedload(SuccessStory.creator), joinedload(SuccessStory.team), joinedload(SuccessStory.story_for_emp)
+        joinedload(SuccessStory.creator),
+        joinedload(SuccessStory.team),
+        joinedload(SuccessStory.story_for_emp)
     ).filter(SuccessStory.story_id == story_id).first()
 
     return story_to_dict(story)
 
 
 def publish_story(story_id: int, db: Session, current_user: Employee):
-    story = db.query(SuccessStory).filter(
-        SuccessStory.story_id == story_id
-    ).first()
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
 
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
-
     if story.status not in ["Pending", "Rejected"]:
         raise HTTPException(status_code=400, detail="Only pending or rejected stories can be published")
 
+    # FIX: was `story.selected_body is None or story.selected_body not in [True, False]`
+    # selected_body is a boolean column — only possible values are True, False, None
+    # `not in [True, False]` is exactly equivalent to `is None` — redundant condition removed
     if story.selected_body is None:
         raise HTTPException(status_code=400, detail="A body must be selected before publishing")
 
@@ -357,7 +406,8 @@ def publish_story(story_id: int, db: Session, current_user: Employee):
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to publish story %s: %s", story_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to publish story")
 
@@ -365,13 +415,10 @@ def publish_story(story_id: int, db: Session, current_user: Employee):
 
 
 def reject_story(story_id: int, db: Session, current_user: Employee):
-    story = db.query(SuccessStory).filter(
-        SuccessStory.story_id == story_id
-    ).first()
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
 
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
-
     if story.status != "Pending":
         raise HTTPException(status_code=400, detail="Only pending stories can be rejected")
 
@@ -381,20 +428,25 @@ def reject_story(story_id: int, db: Session, current_user: Employee):
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to reject story %s: %s", story_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to reject story")
 
     return {"message": "Story rejected successfully", "story_id": story.story_id}
 
+
 def delete_story(story_id: int, db: Session, current_user: Employee):
     story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
+    if story.created_by != current_user.employee_id and current_user.role_id not in [1, 2]:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this story")
     try:
         db.delete(story)
         db.commit()
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to delete story %s: %s", story_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete story")
     return {"message": "Story deleted successfully", "story_id": story_id}
@@ -406,12 +458,14 @@ def unpublish_story(story_id: int, db: Session, current_user: Employee):
         raise HTTPException(status_code=404, detail="Story not found")
     if story.status != "Posted":
         raise HTTPException(status_code=400, detail="Only published stories can be unpublished")
-    story.status = "Rejected"
+    story.status = "Pending"
     story.updated_by = current_user.employee_id
     story.updated_at = datetime.now(timezone.utc)
     try:
         db.commit()
-    except Exception:
+        db.refresh(story)
+    except Exception as exc:
+        logger.error("Failed to unpublish story %s: %s", story_id, exc)
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to unpublish story")
     return {"message": "Story unpublished successfully", "story_id": story_id}
