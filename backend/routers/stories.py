@@ -38,8 +38,8 @@ def get_pending_stories(page: int = 1, db: Session = Depends(get_db), current_us
     return stories_controller.get_stories_by_status("Pending", page, db)
 
 @router.get("/detail/{story_id}", response_model=StoryResponse)
-def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
-    return stories_controller.get_story_detail(story_id, db)
+def get_story_detail(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return stories_controller.get_story_detail(story_id, db, current_user)
 
 @router.get("/rejected")
 def get_rejected_stories(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
