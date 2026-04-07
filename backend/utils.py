@@ -66,3 +66,7 @@ def story_to_dict(s: SuccessStory):
         "name": s.team.team_name if s.is_team_story and s.team else (s.story_for_emp.name if s.story_for_emp else None),
         "picture": s.team.team_picture if s.is_team_story and s.team else (s.story_for_emp.picture if s.story_for_emp else None),
     }
+
+def pages(total: int, limit: int) -> int:
+    import math
+    return math.ceil(total / limit) if total > 0 else 1

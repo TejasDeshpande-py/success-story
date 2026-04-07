@@ -1,12 +1,13 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
+import math
 from backend.model import Employee, SuccessStory, StoryReaction
 from backend.schemas import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest, ReactRequest
-from backend.utils import story_to_dict, story_to_public_dict
+from backend.utils import story_to_dict, story_to_public_dict, paginate
 
-def get_my_stories(page: int, db: Session, paginate, current_user):
-    import math
+
+def get_my_stories(page: int, db: Session, current_user):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(
         SuccessStory.created_by == current_user.employee_id
@@ -23,7 +24,7 @@ def get_my_stories(page: int, db: Session, paginate, current_user):
         "pages": math.ceil(total / limit) if total > 0 else 1
     }
 
-def get_published_stories(page: int, db: Session, paginate, current_user_id: int = None):
+def get_published_stories(page: int, db: Session, current_user_id: int = None):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(SuccessStory.status == "Posted").count()
     stories = db.query(SuccessStory).options(
@@ -32,7 +33,6 @@ def get_published_stories(page: int, db: Session, paginate, current_user_id: int
     ).filter(
         SuccessStory.status == "Posted"
     ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
-    import math
     return {
         "stories": [story_to_public_dict(s, current_user_id) for s in stories],
         "total": total,
@@ -108,8 +108,7 @@ def react_to_story(story_id: int, payload: ReactRequest, db: Session, current_us
     return story_to_public_dict(story, current_user.employee_id)
 
 
-def get_stories_by_status(status: str, page: int, db: Session, paginate):
-    import math
+def get_stories_by_status(status: str, page: int, db: Session):
     limit, offset = paginate(page)
     total = db.query(SuccessStory).filter(SuccessStory.status == status).count()
     stories = db.query(SuccessStory).options(
