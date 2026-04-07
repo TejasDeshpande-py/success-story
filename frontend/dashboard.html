@@ -1050,10 +1050,12 @@ async function saveHREdit(){
   };
   try{
     const r=await fetch(`${API}/stories/${id}/edit`,{method:'PATCH',headers:hdr(),body:JSON.stringify(payload)});
-    const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
+    let d;try{d=await r.json();}catch{d={};}
+    if(!r.ok)throw new Error(d.detail||`Server error ${r.status}`);
     closeOv('ov-hredit');toast('Story updated!');
-    loadPendingStories(psPg);loadRejectedStories(rsPg);
-  }catch(e){showAl('hre-err',e.message);}
+    if(document.getElementById('sec-pendingstories').classList.contains('active'))loadPendingStories(psPg);
+    if(document.getElementById('sec-rejectedstories').classList.contains('active'))loadRejectedStories(rsPg);
+  }catch(e){showAl('hre-err',e.message||'Unknown error — check if /stories/{id}/edit endpoint exists on backend');}
 }
 let pubPg=1;
 async function loadPublishedStories(p=1){
@@ -1095,6 +1097,8 @@ async function directPublish(id){
   if(!confirm('Publish this story directly?'))return;
   try{
     await fetch(`${API}/stories/${id}/select-body`,{method:'PATCH',headers:hdr(),body:JSON.stringify({choice:'original'})});
+  }catch{}
+  try{
     const r=await fetch(`${API}/stories/${id}/publish`,{method:'PATCH',headers:hdr()});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Publish failed');
     toast('Story published!');loadRejectedStories(rsPg);loadOverviewStats();

@@ -28,7 +28,7 @@ def story_to_public_dict(s: SuccessStory, current_user_id: int = None):
         "story_id": s.story_id,
         "title": s.title,
         "designation": s.designation,
-        "content": s.ai_body if s.selected_body == True else s.background,
+        "content": s.ai_body if s.selected_body else (f"{s.background}\n\n{s.challenge}\n\n{s.action_taken}\n\n{s.outcome}"),
         "extra": s.extra,
         "is_team_story": s.is_team_story,
         "team_id": s.team_id,
