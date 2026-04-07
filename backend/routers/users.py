@@ -1,31 +1,56 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel, field_validator
 from backend.database import get_db
 from backend.model import Employee
 from backend.schemas import UserResponse, ApproveUserRequest
-from backend.utils import paginate
 import backend.controllers.users as users_controller
 from backend.auth import require_hr_or_admin, get_current_user
+
+class UpdateMeRequest(BaseModel):
+    picture: Optional[str] = None
+    old_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+    @field_validator("new_password")
+    def password_rules(cls, v):
+        if v is None:
+            return v
+        if len(v) < 8:
+            raise ValueError("New password must be at least 8 characters")
+        if not any(c.isupper() for c in v):
+            raise ValueError("New password must contain an uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("New password must contain a number")
+        return v
+
+class UpdateTeamRequest(BaseModel):
+    team_id: Optional[int] = None
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/")
 def get_all_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
-    return users_controller.get_active_users(page, db, paginate)
+    return users_controller.get_active_users(page, db)
 
 @router.get("/me", response_model=UserResponse)
 def get_me(db=Depends(get_db), current_user=Depends(get_current_user)):
     return current_user
 
 @router.patch("/me", response_model=UserResponse)
-def update_me(payload: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def update_me(
+    payload: UpdateMeRequest,
+    db: Session = Depends(get_db),
+    current_user: Employee = Depends(get_current_user),
+):
     return users_controller.update_me(payload, db, current_user)
+
 
 @router.get("/pending")
 def get_pending_users(page: int = 1, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
-    return users_controller.get_pending_users(page, db, paginate)
+    return users_controller.get_pending_users(page, db)
 
 @router.get("/all", response_model=List[UserResponse])
 def get_all_users_list(db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
@@ -45,5 +70,5 @@ def delete_user(employee_id: int, db: Session = Depends(get_db), current_user: E
     return users_controller.delete_user(employee_id, db, current_user)
 
 @router.patch("/{employee_id}/team")
-def update_employee_team(employee_id: int, payload: dict, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
-    return users_controller.update_employee_team(employee_id, payload, db, current_user)
+def update_employee_team(employee_id: int, payload: UpdateTeamRequest, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
+    return users_controller.update_employee_team(employee_id, payload.team_id, db, current_user)
