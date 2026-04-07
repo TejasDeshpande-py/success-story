@@ -288,11 +288,11 @@ pg=d.page;
     const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     g.innerHTML=d.stories.map((s,i)=>{const inits=ini(s.name);return `
       <div class="card" style="animation-delay:${i*.06}s" onclick="openM(${s.story_id})">
-        <div class="cpic">${cardPicHTML(s.picture,inits)}</div>
+        <div class="cpic">${cardPicHTML(s.story_picture||s.picture,inits)}</div>
         <div class="cc">
           <div class="ct">${esc(s.title)}</div>
           <div class="cmeta">${smAvHTML(s.picture,inits)}<div><div class="cname">${esc(s.name)}</div><div class="crole">${esc(s.designation)}</div><div class="crole">${fmtDate(s.created_at)}</div></div></div>
-          <div class="cpreview">${s.content.replace(/<[^>]*>/g,'')}</div>
+          <div class="cpreview">${(()=>{const d=document.createElement('div');d.innerHTML=s.content||'';return d.textContent||d.innerText||'';})()}</div>
           <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-bottom:6px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             ${s.view_count||0}
@@ -303,7 +303,7 @@ pg=d.page;
             <div style="display:flex;gap:6px;align-items:center;" onclick="event.stopPropagation()">
               <div class="react-wrap">
                 <button class="react-btn ${s.my_reaction?'reacted':''}" onclick="togglePicker(event,'rp-${s.story_id}')">${s.my_reaction||'😊'} React</button>
-                <div class="react-picker open-up" id="rp-${s.story_id}">
+                <div class="react-picker" id="rp-${s.story_id}">
                   ${EMOJIS.map(e=>`<button class="react-emoji ${s.my_reaction===e?'mine':''}" onclick="doReact(event,${s.story_id},'${e}','card')">${e}</button>`).join('')}
                 </div>
               </div>
