@@ -30,18 +30,20 @@ def get_my_stories(page: int, db: Session, current_user):
     }
 
 
-def get_published_stories(page: int, db: Session, current_user_id: int = None):
+def get_published_stories(page: int, db: Session, current_user_id: int = None, search: str = None):
     limit, offset = paginate(page)
-    total = db.query(SuccessStory).filter(SuccessStory.status == "Posted").count()
-    # FIX: was missing .offset(offset).limit(limit) — returned ALL posted stories every time,
-    # pagination was completely broken
-    stories = db.query(SuccessStory).options(
+    query = db.query(SuccessStory).filter(SuccessStory.status == "Posted")
+    if search:
+        term = f"%{search.strip()}%"
+        query = query.join(SuccessStory.story_for_emp).filter(
+            Employee.name.ilike(term)
+        )
+    total = query.count()
+    stories = query.options(
         joinedload(SuccessStory.creator),
         joinedload(SuccessStory.team),
         joinedload(SuccessStory.story_for_emp),
         joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
-    ).filter(
-        SuccessStory.status == "Posted"
     ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
     return {
         "stories": [story_to_public_dict(s, current_user_id) for s in stories],
@@ -49,7 +51,6 @@ def get_published_stories(page: int, db: Session, current_user_id: int = None):
         "page": page,
         "pages": math.ceil(total / limit) if total > 0 else 1,
     }
-
 
 def get_story_detail(story_id: int, db: Session, current_user: Employee):
     story = db.query(SuccessStory).options(

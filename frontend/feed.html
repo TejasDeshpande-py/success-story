@@ -155,6 +155,13 @@
 
 <div class="section-sep"><hr/><span>Latest Stories</span><hr/></div>
 
+<div style="max-width:1160px;margin:0 auto 24px;padding:0 24px;">
+  <div style="position:relative;max-width:400px;">
+    <input type="text" id="search-input" placeholder="Search by employee name..." oninput="onSearch()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:white;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 38px 10px 14px;outline:none;transition:border-color .18s,box-shadow .18s;" onfocus="this.style.borderColor='var(--brown)';this.style.boxShadow='0 0 0 3px rgba(124,74,45,.09)'" onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"/>
+    <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="grid" id="grid"><div class="msg"><div class="i">⏳</div>Loading stories...</div></div>
   <div class="pag" id="pag"></div>
@@ -254,7 +261,15 @@ async function doReact(e,storyId,emoji,context){
 
 const _t=localStorage.getItem('token');
 if(_t){try{const _p=JSON.parse(atob(_t.split('.')[1]));if(_p.exp*1000>Date.now()){document.getElementById('nav-register').textContent='Dashboard';document.getElementById('nav-register').href='/dashboard';document.getElementById('nav-login').style.display='none';}}catch(e){}}
-const PER=9;let pg=1,tot=1;
+const PER=9;let pg=1,tot=1,searchTerm='';
+let searchTimer=null;
+function onSearch(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    searchTerm=document.getElementById('search-input').value.trim();
+    pg=1;load(1);
+  },350);
+}
 const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
 const validPic = (u) => {
@@ -274,11 +289,12 @@ async function load(p){
   const g=document.getElementById('grid');
   g.innerHTML='<div class="msg"><div class="i">⏳</div>Loading...</div>';
   try{
-    const r=await fetch(`${API}/stories/?page=${p}`);if(!r.ok)throw 0;
+    const q=searchTerm?`&search=${encodeURIComponent(searchTerm)}`:'';
+    const r=await fetch(`${API}/stories/?page=${p}${q}`);if(!r.ok)throw 0;
     const d=await r.json();
     console.log("API response:", d);
     if(!d.stories.length){
-    g.innerHTML='<div class="msg"><div class="i">📭</div>No stories published yet.</div>';
+    g.innerHTML=`<div class="msg"><div class="i">📭</div>${searchTerm?'No stories found for "'+searchTerm+'"':'No stories published yet.'}</div>`;
     document.getElementById('pag').innerHTML='';
     return;
 }

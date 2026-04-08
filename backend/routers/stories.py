@@ -53,9 +53,9 @@ def create_story(payload: StoryCreate, db: Session = Depends(get_db), current_us
 
 
 @router.get("/")
-def get_stories(page: int = 1, db: Session = Depends(get_db), current_user: Optional[Employee] = Depends(get_optional_user)):
+def get_stories(page: int = 1, search: Optional[str] = None, db: Session = Depends(get_db), current_user: Optional[Employee] = Depends(get_optional_user)):
     uid = current_user.employee_id if current_user else None
-    return stories_controller.get_published_stories(page, db, uid)
+    return stories_controller.get_published_stories(page, db, uid, search)
 
 @router.get("/{story_id}", response_model=StoryPublicResponse)
 def get_story(story_id: int, db: Session = Depends(get_db), current_user: Optional[Employee] = Depends(get_optional_user)):
