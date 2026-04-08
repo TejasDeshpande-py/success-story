@@ -197,7 +197,6 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
 @router.post("/upload-picture")
 def upload_picture(
     file: UploadFile = File(...),
-    current_user=Depends(get_current_user),   # FIX: require authentication
 ):
     allowed = {".jpg", ".jpeg", ".png", ".webp"}
     ext = os.path.splitext(file.filename)[1].lower()
