@@ -774,7 +774,8 @@ async function rephraseStory(){
   const btn=document.getElementById('rephrase-btn');
   btn.textContent='✨ Rephrasing...';btn.disabled=true;
   try{
-    const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome})});
+    const storyType=document.querySelector('input[name="story-type"]:checked').value;
+    const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome,story_type:storyType})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Rephrase failed');
     document.getElementById('w-ai').value=d.rephrased_body;
     cc('w-ai','w-ac',5000);
