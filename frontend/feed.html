@@ -733,7 +733,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div style="min-width:100%;height:420px;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;"><img src="${b.image_url}" style="max-width:100%;max-height:420px;width:auto;height:auto;object-fit:contain;display:block;" alt="Banner"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div id="bslide-wrap-${b.id||b.banner_id||Math.random()}" style="min-width:100%;flex-shrink:0;background:#111111;overflow:hidden;"><img src="${b.image_url}" alt="Banner" onload="fitBanner(this)" style="display:block;"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     _bannerTimer=setInterval(bannerNext,4000);
@@ -748,6 +748,61 @@ function bannerGo(i){
 }
 function bannerNext(){bannerGo((_bannerIdx+1)%_bannerTotal);}
 function bannerPrev(){bannerGo((_bannerIdx-1+_bannerTotal)%_bannerTotal);}
+
+function fitBanner(img){
+  const wrap=img.parentElement;
+  const vw=window.innerWidth;
+  const nw=img.naturalWidth;
+  const nh=img.naturalHeight;
+  const ratio=nw/nh;
+
+  // Detect format by aspect ratio
+  // Portrait: 9:16, 3:4, 2:3 — ratio < 1
+  // Square: 1:1 — ratio ~1
+  // Landscape: 16:9, 3:2, 3:1 — ratio > 1.2
+
+  wrap.style.overflow='hidden';
+  wrap.style.background='#111111';
+  wrap.style.display='flex';
+  wrap.style.alignItems='center';
+  wrap.style.justifyContent='center';
+  img.style.display='block';
+
+  if(ratio<0.85){
+    // PORTRAIT (phone photo, 9:16, 3:4)
+    // Fix height, let width be natural — don't stretch it wide
+    const fixedH=Math.min(Math.max(Math.round(vw*0.55),280),480);
+    wrap.style.height=fixedH+'px';
+    img.style.height='100%';
+    img.style.width='auto';
+    img.style.maxWidth='100%';
+    img.style.objectFit='contain';
+  } else if(ratio<=1.2){
+    // SQUARE (1:1, slight rect)
+    const fixedH=Math.min(Math.max(Math.round(vw*0.4),260),440);
+    wrap.style.height=fixedH+'px';
+    img.style.height='100%';
+    img.style.width='auto';
+    img.style.maxWidth='100%';
+    img.style.objectFit='contain';
+  } else {
+    // LANDSCAPE (16:9, 3:2, 3:1 — most banner-like)
+    const fixedH=Math.min(Math.max(Math.round(vw/3),200),420);
+    wrap.style.height=fixedH+'px';
+    // Only cover if image is large enough — no upscale blur
+    if(nw>=vw*0.7){
+      img.style.width='100%';
+      img.style.height='100%';
+      img.style.objectFit='cover';
+      img.style.objectPosition='center top';
+    } else {
+      img.style.width='auto';
+      img.style.height='100%';
+      img.style.maxWidth='100%';
+      img.style.objectFit='scale-down';
+    }
+  }
+}
 
 loadBannerSlider();
 
