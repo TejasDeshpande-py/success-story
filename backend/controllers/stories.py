@@ -30,7 +30,9 @@ def get_my_stories(page: int, db: Session, current_user):
     }
 
 
-def get_published_stories(page: int, db: Session, current_user_id: int = None, search: str = None):
+def get_published_stories(page: int, db: Session, current_user_id: int = None, search: str = None, sort_by: str = "recent"):
+    from backend.model import StoryComment
+    from sqlalchemy import func, desc, asc
     limit, offset = paginate(page)
     query = db.query(SuccessStory).filter(SuccessStory.status == "Posted")
     if search:
@@ -38,13 +40,36 @@ def get_published_stories(page: int, db: Session, current_user_id: int = None, s
         query = query.join(SuccessStory.story_for_emp).filter(
             Employee.name.ilike(term)
         )
+    # sorting
+    if sort_by == "recent":
+        query = query.order_by(SuccessStory.created_at.desc())
+    elif sort_by == "oldest":
+        query = query.order_by(SuccessStory.created_at.asc())
+    elif sort_by in ("views", "views-asc"):
+        query = query.order_by(
+            SuccessStory.view_count.desc() if sort_by == "views" else SuccessStory.view_count.asc()
+        )
+    elif sort_by in ("comments", "comments-asc"):
+        comment_count = (
+            db.query(StoryComment.story_id, func.count(StoryComment.comment_id).label("cnt"))
+            .group_by(StoryComment.story_id)
+            .subquery()
+        )
+        query = query.outerjoin(comment_count, SuccessStory.story_id == comment_count.c.story_id)
+        query = query.order_by(
+            desc(func.coalesce(comment_count.c.cnt, 0)) if sort_by == "comments"
+            else asc(func.coalesce(comment_count.c.cnt, 0))
+        )
+    else:
+        query = query.order_by(SuccessStory.created_at.desc())
+
     total = query.count()
     stories = query.options(
         joinedload(SuccessStory.creator),
         joinedload(SuccessStory.team),
         joinedload(SuccessStory.story_for_emp),
         joinedload(SuccessStory.reactions).joinedload(StoryReaction.employee)
-    ).order_by(SuccessStory.created_at.desc()).offset(offset).limit(limit).all()
+    ).offset(offset).limit(limit).all()
     return {
         "stories": [story_to_public_dict(s, current_user_id) for s in stories],
         "total": total,
