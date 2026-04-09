@@ -135,6 +135,51 @@
   .react-list-title{font-weight:600;font-size:14px;margin-bottom:12px;color:var(--text);}
   .react-person{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:var(--sub);border-bottom:1px solid var(--border);}
   .react-person:last-child{border-bottom:none;}
+
+  /* COMMENTS */
+  .comments-section{border-top:1px solid var(--border);margin-top:8px;}
+  .comments-tab{display:flex;align-items:center;gap:8px;padding:12px 26px;cursor:pointer;font-size:13px;font-weight:600;color:var(--sub);transition:color .18s;user-select:none;}
+  .comments-tab:hover{color:var(--brown);}
+  .comments-tab svg{transition:transform .22s;}
+  .comments-tab.open svg{transform:rotate(180deg);}
+  .comments-body{display:none;padding:0 26px 20px;}
+  .comments-body.open{display:block;}
+  .comment-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(226,207,194,.4);}
+  .comment-item:last-child{border-bottom:none;}
+  .comment-av{width:32px;height:32px;border-radius:50%;overflow:hidden;border:1.5px solid var(--rose);flex-shrink:0;}
+  .comment-av img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .comment-av-fb{width:32px;height:32px;border-radius:50%;background:var(--rosebg);border:1.5px solid var(--rose);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:10px;font-weight:700;color:var(--brown);flex-shrink:0;}
+  .comment-bubble{flex:1;min-width:0;}
+  .comment-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;}
+  .comment-text{font-size:13px;color:var(--sub);line-height:1.6;word-break:break-word;}
+  .comment-text p{margin:0;}
+  .comment-meta{display:flex;align-items:center;gap:10px;margin-top:4px;}
+  .comment-time{font-size:11px;color:var(--muted);}
+  .comment-del{font-size:11px;color:var(--red);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0;opacity:.7;transition:opacity .15s;}
+  .comment-del:hover{opacity:1;}
+  .comment-editor-wrap{margin-top:14px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;background:white;transition:border-color .18s;}
+  .comment-editor-wrap:focus-within{border-color:var(--brown);box-shadow:0 0 0 3px rgba(124,74,45,.09);}
+  .comment-toolbar{display:flex;align-items:center;gap:2px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg);}
+  .ctb-btn{width:28px;height:28px;border-radius:5px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub);transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;}
+  .ctb-btn:hover{background:var(--rosebg);color:var(--brown);}
+  .ctb-btn.active{background:var(--rosebg);color:var(--brown);}
+  .ctb-sep{width:1px;height:18px;background:var(--border);margin:0 4px;}
+  .comment-input{min-height:70px;max-height:160px;overflow-y:auto;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.6;outline:none;font-family:'DM Sans',sans-serif;}
+  .comment-input:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
+  .comment-input b,.comment-input strong{font-weight:700;}
+  .comment-input i,.comment-input em{font-style:italic;}
+  .comment-input u{text-decoration:underline;}
+  .comment-actions{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-top:1px solid var(--border);}
+  .emoji-pick-wrap{position:relative;}
+  .emoji-grid{position:absolute;bottom:36px;left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:9999;width:260px;flex-wrap:wrap;gap:4px;}
+  .emoji-grid.open{display:flex;}
+  .emoji-item{font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px;border:none;background:none;line-height:1;transition:background .15s;}
+  .emoji-item:hover{background:var(--rosebg);transform:scale(1.2);}
+  .submit-comment-btn{height:32px;padding:0 16px;border-radius:6px;background:var(--brown);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;}
+  .submit-comment-btn:hover:not(:disabled){background:var(--brown2);}
+  .submit-comment-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .no-comments{text-align:center;padding:20px;color:var(--muted);font-size:13px;}
+  .comment-count-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -189,6 +234,19 @@
     </div>
     <div class="reactions-strip" id="rs-modal" style="padding:0 26px 10px;"></div>
     <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
+
+    <!-- COMMENTS SECTION -->
+    <div class="comments-section">
+      <div class="comments-tab" id="comments-tab" onclick="toggleComments()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span id="comments-tab-label">Comments</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="comments-body" id="comments-body">
+        <div id="comments-list"></div>
+        <div id="comment-editor-area"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -314,7 +372,13 @@ pg=d.page;
             ${s.view_count||0}
           </div>
           <div class="reactions-strip" id="rs-${s.story_id}">${renderReactionStrip(s.reactions||[],s.my_reaction,s.story_id)}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;margin-top:4px;">
+            <span class="comment-count-badge" id="cc-${s.story_id}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              ${s.comment_count||0}
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
             <button class="cread">Read Story →</button>
             <div style="display:flex;gap:6px;align-items:center;" onclick="event.stopPropagation()">
               <div class="react-wrap">
@@ -415,7 +479,196 @@ function shareLinkedIn(e,id,title){
 document.addEventListener('click',()=>{
   document.querySelectorAll('.share-drop').forEach(d=>d.classList.remove('open'));
   document.querySelectorAll('.react-picker').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.emoji-grid').forEach(d=>d.classList.remove('open'));
 });
+
+// ==================== COMMENTS ====================
+const COMMENT_EMOJIS=["😊","😂","👍","❤️","🔥","🎉","👏","🙏","💯","😮","😢","💪","🤝","⭐","😎","🤔","💡","✅","🚀","😅"];
+let currentStoryId=null;
+let commentsLoaded=false;
+let commentsOpen=false;
+let currentUserId=null;
+let currentUserRole=null;
+
+try{
+  const t=localStorage.getItem('token');
+  if(t){const p=JSON.parse(atob(t.split('.')[1]));if(p.exp*1000>Date.now()){currentUserId=p.user_id;currentUserRole=p.role_id??0;}}
+}catch(e){}
+
+function toggleComments(){
+  const tab=document.getElementById('comments-tab');
+  const body=document.getElementById('comments-body');
+  commentsOpen=!commentsOpen;
+  tab.classList.toggle('open',commentsOpen);
+  body.classList.toggle('open',commentsOpen);
+  if(commentsOpen&&!commentsLoaded){
+    loadComments(currentStoryId);
+  }
+}
+
+async function loadComments(storyId){
+  const list=document.getElementById('comments-list');
+  list.innerHTML='<div class="no-comments">Loading...</div>';
+  try{
+    const r=await fetch(`${API}/stories/${storyId}/comments`);
+    const comments=await r.json();
+    renderComments(comments,storyId);
+    commentsLoaded=true;
+    updateCommentTab(comments.length);
+  }catch{
+    list.innerHTML='<div class="no-comments">Failed to load comments.</div>';
+  }
+}
+
+function updateCommentTab(count){
+  const lbl=document.getElementById('comments-tab-label');
+  if(lbl)lbl.textContent=`Comments (${count})`;
+  // update card badge too
+  const badge=document.getElementById(`cc-${currentStoryId}`);
+  if(badge)badge.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${count}`;
+}
+
+function fmtAgo(dateStr){
+  if(!dateStr)return '';
+  const diff=Date.now()-new Date(dateStr).getTime();
+  const m=Math.floor(diff/60000);
+  if(m<1)return 'just now';
+  if(m<60)return `${m}m ago`;
+  const h=Math.floor(m/60);
+  if(h<24)return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+function renderComments(comments,storyId){
+  const list=document.getElementById('comments-list');
+  const editorArea=document.getElementById('comment-editor-area');
+  if(!comments.length){
+    list.innerHTML='<div class="no-comments">No comments yet. Be the first!</div>';
+  } else {
+    list.innerHTML=comments.map(c=>{
+      const inits=ini(c.name);
+      const avHTML=validPic(c.picture)
+        ?`<div class="comment-av"><img src="${c.picture}" onerror="this.parentElement.outerHTML='<div class=comment-av-fb>${inits}</div>'"></div>`
+        :`<div class="comment-av-fb">${inits}</div>`;
+      const canDel=(currentUserId&&(c.employee_id===currentUserId||currentUserRole>=1));
+      return `<div class="comment-item" id="citem-${c.comment_id}">
+        ${avHTML}
+        <div class="comment-bubble">
+          <div class="comment-name">${c.name||'Unknown'}</div>
+          <div class="comment-text">${c.body}</div>
+          <div class="comment-meta">
+            <span class="comment-time">${fmtAgo(c.created_at)}</span>
+            ${canDel?`<button class="comment-del" onclick="deleteComment(${storyId},${c.comment_id})">Delete</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  // render editor only if logged in
+  if(isLoggedIn()){
+    editorArea.innerHTML=`
+      <div class="comment-editor-wrap" id="ceditor-wrap">
+        <div class="comment-toolbar">
+          <button class="ctb-btn" id="ctb-b" title="Bold" onclick="fmtCmd('bold')"><b>B</b></button>
+          <button class="ctb-btn" id="ctb-i" title="Italic" onclick="fmtCmd('italic')"><i>I</i></button>
+          <button class="ctb-btn" id="ctb-u" title="Underline" onclick="fmtCmd('underline')"><u>U</u></button>
+          <div class="ctb-sep"></div>
+          <div class="emoji-pick-wrap">
+            <button class="ctb-btn" title="Emoji" onclick="toggleEmojiGrid(event)">😊</button>
+            <div class="emoji-grid" id="comment-emoji-grid">
+              ${COMMENT_EMOJIS.map(e=>`<button class="emoji-item" onmousedown="insertEmoji(event,'${e}')">${e}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="comment-input" id="comment-input" contenteditable="true" data-placeholder="Write a comment..." oninput="syncToolbarState()" onkeydown="commentKeydown(event)"></div>
+        <div class="comment-actions">
+          <span style="font-size:11px;color:var(--muted);" id="comment-char-count">0 / 2000</span>
+          <button class="submit-comment-btn" id="submit-comment-btn" onclick="submitComment(${storyId})">Post</button>
+        </div>
+      </div>`;
+    document.getElementById('comment-input').addEventListener('input',()=>{
+      const len=document.getElementById('comment-input').innerText.length;
+      document.getElementById('comment-char-count').textContent=`${len} / 2000`;
+    });
+  } else {
+    editorArea.innerHTML=`<div class="no-comments" style="padding:14px 0;">
+      <a href="/login" style="color:var(--brown);font-weight:600;text-decoration:none;">Login</a> to leave a comment.
+    </div>`;
+  }
+}
+
+function fmtCmd(cmd){
+  document.getElementById('comment-input').focus();
+  document.execCommand(cmd,false,null);
+  syncToolbarState();
+}
+
+function syncToolbarState(){
+  ['bold','italic','underline'].forEach(cmd=>{
+    const id={'bold':'ctb-b','italic':'ctb-i','underline':'ctb-u'}[cmd];
+    const el=document.getElementById(id);
+    if(el)el.classList.toggle('active',document.queryCommandState(cmd));
+  });
+}
+
+function toggleEmojiGrid(e){
+  e.stopPropagation();
+  document.getElementById('comment-emoji-grid').classList.toggle('open');
+}
+
+function insertEmoji(e,emoji){
+  e.preventDefault();
+  const input=document.getElementById('comment-input');
+  input.focus();
+  document.execCommand('insertText',false,emoji);
+  document.getElementById('comment-emoji-grid').classList.remove('open');
+}
+
+function commentKeydown(e){
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
+    e.preventDefault();
+    const sid=currentStoryId;
+    if(sid)submitComment(sid);
+  }
+}
+
+async function submitComment(storyId){
+  const input=document.getElementById('comment-input');
+  const btn=document.getElementById('submit-comment-btn');
+  const body=input.innerHTML.trim();
+  const textLen=input.innerText.trim().length;
+  if(!textLen)return;
+  if(textLen>2000)return alert('Comment too long (max 2000 chars).');
+  btn.disabled=true;btn.textContent='Posting...';
+  try{
+    const r=await fetch(`${API}/stories/${storyId}/comments`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',...authHeader()},
+      body:JSON.stringify({body})
+    });
+    if(!r.ok)throw 0;
+    input.innerHTML='';
+    document.getElementById('comment-char-count').textContent='0 / 2000';
+    await loadComments(storyId);
+  }catch{alert('Failed to post comment.');}
+  finally{btn.disabled=false;btn.textContent='Post';}
+}
+
+async function deleteComment(storyId,commentId){
+  if(!confirm('Delete this comment?'))return;
+  try{
+    const r=await fetch(`${API}/stories/${storyId}/comments/${commentId}`,{
+      method:'DELETE',
+      headers:authHeader()
+    });
+    if(!r.ok)throw 0;
+    document.getElementById(`citem-${commentId}`)?.remove();
+    const remaining=document.querySelectorAll('.comment-item').length;
+    updateCommentTab(remaining);
+    if(!remaining)document.getElementById('comments-list').innerHTML='<div class="no-comments">No comments yet. Be the first!</div>';
+  }catch{alert('Failed to delete comment.');}
+}
+
 load(1).then(()=>{
   const params=new URLSearchParams(window.location.search);
   const storyId=params.get('story');

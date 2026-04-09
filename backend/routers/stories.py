@@ -5,7 +5,8 @@ from backend.model import Employee
 from backend.schemas import (
     StoryCreate, StoryResponse, StoryPublicResponse,
     PublishResponse, RejectResponse, SelectBodyRequest,
-    EmployeeStoryUpdate, HRStoryUpdate, ReactRequest
+    EmployeeStoryUpdate, HRStoryUpdate, ReactRequest,
+    CommentCreate, CommentResponse
 )
 from backend.auth import get_current_user, require_hr_or_admin
 from typing import Optional
@@ -98,3 +99,18 @@ def delete_story(story_id: int, db: Session = Depends(get_db), current_user: Emp
 @router.patch("/{story_id}/unpublish")
 def unpublish_story(story_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(require_hr_or_admin)):
     return stories_controller.unpublish_story(story_id, db, current_user)
+
+
+@router.get("/{story_id}/comments")
+def get_comments(story_id: int, db: Session = Depends(get_db)):
+    return stories_controller.get_comments(story_id, db)
+
+
+@router.post("/{story_id}/comments")
+def add_comment(story_id: int, payload: CommentCreate, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return stories_controller.add_comment(story_id, payload.body, db, current_user)
+
+
+@router.delete("/{story_id}/comments/{comment_id}")
+def delete_comment(story_id: int, comment_id: int, db: Session = Depends(get_db), current_user: Employee = Depends(get_current_user)):
+    return stories_controller.delete_comment(story_id, comment_id, db, current_user)
