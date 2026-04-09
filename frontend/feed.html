@@ -733,7 +733,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div style="min-width:100vw;flex-shrink:0;background:#111111;overflow:hidden;display:flex;align-items:center;justify-content:center;height:360px;"><img src="${b.image_url}" alt="Banner" style="display:block;" onload="fitBanner(this)"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div style="min-width:100vw;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;padding:12px 0;"><img src="${b.image_url}" alt="Banner" style="display:block;max-width:100%;max-height:420px;width:auto;height:auto;object-fit:scale-down;"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     _bannerTimer=setInterval(bannerNext,4000);
@@ -749,44 +749,7 @@ function bannerGo(i){
 function bannerNext(){bannerGo((_bannerIdx+1)%_bannerTotal);}
 function bannerPrev(){bannerGo((_bannerIdx-1+_bannerTotal)%_bannerTotal);}
 
-function fitBanner(img){
-  const wrap=img.parentElement;
-  const nw=img.naturalWidth;
-  const nh=img.naturalHeight;
-  if(!nw||!nh){setTimeout(()=>fitBanner(img),100);return;}
-  const vw=window.innerWidth||document.documentElement.clientWidth;
-  const ratio=nw/nh;
-  wrap.style.overflow='hidden';
-  wrap.style.background='#111111';
-  wrap.style.display='flex';
-  wrap.style.alignItems='center';
-  wrap.style.justifyContent='center';
-  img.style.display='block';
-  img.style.maxWidth='100%';
-  if(ratio<0.85){
-    const fixedH=Math.min(Math.max(Math.round(vw*0.55),280),480);
-    wrap.style.height=fixedH+'px';
-    img.style.width='auto';
-    img.style.height=fixedH+'px';
-    img.style.objectFit='contain';
-  } else if(ratio<=1.2){
-    const fixedH=Math.min(Math.max(Math.round(vw*0.4),260),440);
-    wrap.style.height=fixedH+'px';
-    img.style.width='auto';
-    img.style.height=fixedH+'px';
-    img.style.objectFit='contain';
-  } else {
-    const fixedH=Math.min(Math.max(Math.round(vw/3),200),420);
-    wrap.style.height=fixedH+'px';
-    img.style.width='auto';
-    img.style.height='auto';
-    img.style.maxWidth='100%';
-    img.style.maxHeight=fixedH+'px';
-    img.style.objectFit='scale-down';
-  }
-  const slider=document.getElementById('banner-slider');
-  if(slider)slider.style.height=wrap.style.height;
-}
+
 
 loadBannerSlider();
 
