@@ -342,7 +342,6 @@ const _t=localStorage.getItem('token');
 if(_t){try{const _p=JSON.parse(atob(_t.split('.')[1]));if(_p.exp*1000>Date.now()){document.getElementById('nav-register').textContent='Dashboard';document.getElementById('nav-register').href='/dashboard';document.getElementById('nav-login').style.display='none';}}catch(e){}}
 const PER=9;let pg=1,tot=1,searchTerm='',sortBy='recent';
 let searchTimer=null;
-let allStories=[];
 
 function onSearch(){
   clearTimeout(searchTimer);
@@ -356,18 +355,7 @@ function setSort(s){
   sortBy=s;
   document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`sort-${s}`).classList.add('active');
-  sortAndRender();
-}
-
-function sortAndRender(){
-  let sorted=[...allStories];
-  if(sortBy==='recent')sorted.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  else if(sortBy==='oldest')sorted.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  else if(sortBy==='views')sorted.sort((a,b)=>(b.view_count||0)-(a.view_count||0));
-  else if(sortBy==='views-asc')sorted.sort((a,b)=>(a.view_count||0)-(b.view_count||0));
-  else if(sortBy==='comments')sorted.sort((a,b)=>(b.comment_count||0)-(a.comment_count||0));
-  else if(sortBy==='comments-asc')sorted.sort((a,b)=>(a.comment_count||0)-(b.comment_count||0));
-  renderCards(sorted);
+  pg=1;load(1);
 }
 const ini=n=>(n||'?').split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
@@ -389,7 +377,7 @@ async function load(p){
   g.innerHTML='<div class="msg"><div class="i">⏳</div>Loading...</div>';
   try{
     const q=searchTerm?`&search=${encodeURIComponent(searchTerm)}`:'';
-    const r=await fetch(`${API}/stories/?page=${p}${q}`);if(!r.ok)throw 0;
+    const r=await fetch(`${API}/stories/?page=${p}${q}&sort_by=${sortBy}`);if(!r.ok)throw 0;
     const d=await r.json();
     if(!d.stories.length){
       g.innerHTML=`<div class="msg"><div class="i">📭</div>${searchTerm?'No stories found for "'+searchTerm+'"':'No stories published yet.'}</div>`;
@@ -398,8 +386,7 @@ async function load(p){
     }
     tot=d.pages;
     pg=d.page;
-    allStories=d.stories;
-    sortAndRender();
+    renderCards(d.stories);
     buildPag();
   }catch(e){console.error(e);g.innerHTML='<div class="msg"><div class="i">⚠️</div>Could not load stories. Is your backend running?</div>';}
 }
