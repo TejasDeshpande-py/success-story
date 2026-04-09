@@ -2,7 +2,7 @@ from backend.model import SuccessStory
 
 
 def paginate(page: int):
-    limit = 10
+    limit = 12
     offset = (page - 1) * limit
     return limit, offset
 
@@ -40,6 +40,7 @@ def story_to_public_dict(s: SuccessStory, current_user_id: int = None):
         "created_at": s.created_at,
         "reactions": list(reaction_map.values()),
         "my_reaction": my_reaction,
+        "comment_count": len(s.comments) if hasattr(s, 'comments') and s.comments else 0,
     }
 
 

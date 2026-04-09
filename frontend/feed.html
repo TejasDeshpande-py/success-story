@@ -340,7 +340,7 @@ async function doReact(e,storyId,emoji,context){
 
 const _t=localStorage.getItem('token');
 if(_t){try{const _p=JSON.parse(atob(_t.split('.')[1]));if(_p.exp*1000>Date.now()){document.getElementById('nav-register').textContent='Dashboard';document.getElementById('nav-register').href='/dashboard';document.getElementById('nav-login').style.display='none';}}catch(e){}}
-const PER=9;let pg=1,tot=1,searchTerm='',sortBy='recent';
+const PER=12;let pg=1,tot=1,searchTerm='',sortBy='recent';
 let searchTimer=null;
 
 function onSearch(){
