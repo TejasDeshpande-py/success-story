@@ -733,7 +733,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div style="min-width:100vw;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;padding:12px 0;"><img src="${b.image_url}" alt="Banner" style="display:block;max-width:100%;max-height:420px;width:auto;height:auto;object-fit:scale-down;"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div style="min-width:100vw;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;"><img src="${b.image_url}" alt="Banner" style="display:block;width:100%;height:auto;max-height:500px;object-fit:contain;"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     _bannerTimer=setInterval(bannerNext,4000);
