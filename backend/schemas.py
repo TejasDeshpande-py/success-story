@@ -143,6 +143,7 @@ class StoryPublicResponse(BaseModel):
     created_at: Optional[datetime]
     reactions: list[ReactionSummary] = []
     my_reaction: Optional[str] = None
+    comment_count: int = 0
 
     class Config:
         from_attributes = True

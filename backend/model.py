@@ -67,6 +67,7 @@ class SuccessStory(Base):
     story_for_emp = relationship("Employee", foreign_keys=[story_for])
     team          = relationship("Team", back_populates="stories", foreign_keys=[team_id])
     reactions     = relationship("StoryReaction", back_populates="story", cascade="all, delete-orphan")
+    comments      = relationship("StoryComment", back_populates="story", cascade="all, delete-orphan")
 
 
 class StoryComment(Base):
