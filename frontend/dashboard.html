@@ -171,6 +171,26 @@ tr:hover td{background:rgba(247,228,216,.35);}
 
 /* TRICONID BADGE */
 .tid-chip{font-size:11px;font-weight:600;background:rgba(124,74,45,.08);color:var(--brownlt);border:1px solid rgba(124,74,45,.2);border-radius:100px;padding:2px 9px;}
+
+/* RICH EDITOR */
+.rich-wrap{border:1.5px solid var(--border);border-radius:8px;background:white;overflow:hidden;transition:border-color .18s,box-shadow .18s;}
+.rich-wrap:focus-within{border-color:var(--brown);box-shadow:0 0 0 3px rgba(124,74,45,.09);}
+.rich-toolbar{display:flex;align-items:center;gap:2px;padding:5px 8px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap;}
+.rtb-btn{width:26px;height:26px;border-radius:5px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--sub);transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:700;}
+.rtb-btn:hover{background:var(--rosebg);color:var(--brown);}
+.rtb-btn.active{background:var(--rosebg);color:var(--brown);}
+.rtb-sep{width:1px;height:16px;background:var(--border);margin:0 3px;}
+.rich-input{min-height:90px;max-height:220px;overflow-y:auto;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.6;outline:none;font-family:'DM Sans',sans-serif;}
+.rich-input.tall{min-height:130px;}
+.rich-input:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
+.rich-input b,.rich-input strong{font-weight:700;}
+.rich-input i,.rich-input em{font-style:italic;}
+.rich-input u{text-decoration:underline;}
+.rich-footer{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--bg);border-top:1px solid var(--border);}
+.rich-emoji-grid{position:fixed;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:99999;width:260px;flex-wrap:wrap;gap:4px;}
+.rich-emoji-grid.open{display:flex;}
+.rich-emoji-item{font-size:18px;cursor:pointer;padding:3px 5px;border-radius:6px;border:none;background:none;line-height:1;transition:background .15s;}
+.rich-emoji-item:hover{background:var(--rosebg);}
 </style>
 <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
@@ -213,11 +233,71 @@ tr:hover td{background:rgba(247,228,216,.35);}
 
           <div class="fl fl-full"><label>Story Title</label><input type="text" id="w-title" placeholder="e.g. Successfully delivered project ahead of schedule / Your Quote" oninput="cc('w-title','w-tc',200)"/><div class="cc" id="w-tc">0 / 200</div></div>
           <div class="fl"><label>Your Designation</label><input type="text" id="w-desig" placeholder="e.g. Senior Developer, Team Lead" /></div>
-          <div class="fl fl-full"><label>Background <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the context or situation?</span></label><textarea id="w-background" rows="3" placeholder="e.g. Our client needed a critical module delivered in 2 weeks..." oninput="cc('w-background','w-bgc',2000)"></textarea><div class="cc" id="w-bgc">0 / 2000</div></div>
-          <div class="fl fl-full"><label>Challenge <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What problem or obstacle was faced?</span></label><textarea id="w-challenge" rows="3" placeholder="e.g. The codebase was undocumented and the team was short-staffed..." oninput="cc('w-challenge','w-chc',2000)"></textarea><div class="cc" id="w-chc">0 / 2000</div></div>
-          <div class="fl fl-full"><label>Action Taken <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What did you/the team do?</span></label><textarea id="w-action" rows="3" placeholder="e.g. I mapped the entire flow, set up daily syncs and built the module from scratch..." oninput="cc('w-action','w-acc',2000)"></textarea><div class="cc" id="w-acc">0 / 2000</div></div>
-          <div class="fl fl-full"><label>Outcome <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the result?</span></label><textarea id="w-outcome" rows="3" placeholder="e.g. Delivered on time, client renewed contract for next quarter..." oninput="cc('w-outcome','w-occ',2000)"></textarea><div class="cc" id="w-occ">0 / 2000</div></div>
-          <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bp" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:12px;font-weight:600;">✨ Rephrase with AI</button></label><textarea id="w-ai" rows="5" placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="cc('w-ai','w-ac',5000)"></textarea><div class="cc" id="w-ac">0 / 5000</div></div>
+          <div class="fl fl-full"><label>Background <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the context or situation?</span></label>
+            <div class="rich-wrap">
+              <div class="rich-toolbar" data-for="w-background">
+                <button class="rtb-btn" title="Bold" onmousedown="event.preventDefault();richCmd('bold','w-background')"><b>B</b></button>
+                <button class="rtb-btn" title="Italic" onmousedown="event.preventDefault();richCmd('italic','w-background')"><i>I</i></button>
+                <button class="rtb-btn" title="Underline" onmousedown="event.preventDefault();richCmd('underline','w-background')"><u>U</u></button>
+                <div class="rtb-sep"></div>
+                <button class="rtb-btn" title="Emoji" onmousedown="event.preventDefault();toggleRichEmoji(event,'w-background')">😊</button>
+              </div>
+              <div class="rich-input" id="w-background" contenteditable="true" data-placeholder="e.g. Our client needed a critical module delivered in 2 weeks..." oninput="richCC(this,'w-bgc',2000)"></div>
+              <div class="rich-footer"><span class="cc" id="w-bgc" style="margin:0">0 / 2000</span></div>
+            </div>
+          </div>
+          <div class="fl fl-full"><label>Challenge <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What problem or obstacle was faced?</span></label>
+            <div class="rich-wrap">
+              <div class="rich-toolbar" data-for="w-challenge">
+                <button class="rtb-btn" title="Bold" onmousedown="event.preventDefault();richCmd('bold','w-challenge')"><b>B</b></button>
+                <button class="rtb-btn" title="Italic" onmousedown="event.preventDefault();richCmd('italic','w-challenge')"><i>I</i></button>
+                <button class="rtb-btn" title="Underline" onmousedown="event.preventDefault();richCmd('underline','w-challenge')"><u>U</u></button>
+                <div class="rtb-sep"></div>
+                <button class="rtb-btn" title="Emoji" onmousedown="event.preventDefault();toggleRichEmoji(event,'w-challenge')">😊</button>
+              </div>
+              <div class="rich-input" id="w-challenge" contenteditable="true" data-placeholder="e.g. The codebase was undocumented and the team was short-staffed..." oninput="richCC(this,'w-chc',2000)"></div>
+              <div class="rich-footer"><span class="cc" id="w-chc" style="margin:0">0 / 2000</span></div>
+            </div>
+          </div>
+          <div class="fl fl-full"><label>Action Taken <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What did you/the team do?</span></label>
+            <div class="rich-wrap">
+              <div class="rich-toolbar" data-for="w-action">
+                <button class="rtb-btn" title="Bold" onmousedown="event.preventDefault();richCmd('bold','w-action')"><b>B</b></button>
+                <button class="rtb-btn" title="Italic" onmousedown="event.preventDefault();richCmd('italic','w-action')"><i>I</i></button>
+                <button class="rtb-btn" title="Underline" onmousedown="event.preventDefault();richCmd('underline','w-action')"><u>U</u></button>
+                <div class="rtb-sep"></div>
+                <button class="rtb-btn" title="Emoji" onmousedown="event.preventDefault();toggleRichEmoji(event,'w-action')">😊</button>
+              </div>
+              <div class="rich-input" id="w-action" contenteditable="true" data-placeholder="e.g. I mapped the entire flow, set up daily syncs and built the module from scratch..." oninput="richCC(this,'w-acc',2000)"></div>
+              <div class="rich-footer"><span class="cc" id="w-acc" style="margin:0">0 / 2000</span></div>
+            </div>
+          </div>
+          <div class="fl fl-full"><label>Outcome <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">What was the result?</span></label>
+            <div class="rich-wrap">
+              <div class="rich-toolbar" data-for="w-outcome">
+                <button class="rtb-btn" title="Bold" onmousedown="event.preventDefault();richCmd('bold','w-outcome')"><b>B</b></button>
+                <button class="rtb-btn" title="Italic" onmousedown="event.preventDefault();richCmd('italic','w-outcome')"><i>I</i></button>
+                <button class="rtb-btn" title="Underline" onmousedown="event.preventDefault();richCmd('underline','w-outcome')"><u>U</u></button>
+                <div class="rtb-sep"></div>
+                <button class="rtb-btn" title="Emoji" onmousedown="event.preventDefault();toggleRichEmoji(event,'w-outcome')">😊</button>
+              </div>
+              <div class="rich-input" id="w-outcome" contenteditable="true" data-placeholder="e.g. Delivered on time, client renewed contract for next quarter..." oninput="richCC(this,'w-occ',2000)"></div>
+              <div class="rich-footer"><span class="cc" id="w-occ" style="margin:0">0 / 2000</span></div>
+            </div>
+          </div>
+          <div class="fl fl-full"><label>AI-Enhanced Version <button class="btn btn-sm bp" id="rephrase-btn" onclick="rephraseStory()" style="margin-left:10px;font-size:12px;font-weight:600;">✨ Rephrase with AI</button></label>
+            <div class="rich-wrap">
+              <div class="rich-toolbar" data-for="w-ai">
+                <button class="rtb-btn" title="Bold" onmousedown="event.preventDefault();richCmd('bold','w-ai')"><b>B</b></button>
+                <button class="rtb-btn" title="Italic" onmousedown="event.preventDefault();richCmd('italic','w-ai')"><i>I</i></button>
+                <button class="rtb-btn" title="Underline" onmousedown="event.preventDefault();richCmd('underline','w-ai')"><u>U</u></button>
+                <div class="rtb-sep"></div>
+                <button class="rtb-btn" title="Emoji" onmousedown="event.preventDefault();toggleRichEmoji(event,'w-ai')">😊</button>
+              </div>
+              <div class="rich-input tall" id="w-ai" contenteditable="true" data-placeholder="Click 'Rephrase with AI' to auto-fill, or paste your own version..." oninput="richCC(this,'w-ac',5000)"></div>
+              <div class="rich-footer"><span class="cc" id="w-ac" style="margin:0">0 / 5000</span></div>
+            </div>
+          </div>
           <div class="fl fl-full"><label>Story Picture <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional — shown in detail view, Story picture must be under 10MB)</span></label><input type="file" id="w-story-pic" accept=".jpg,.jpeg,.png,.webp" /></div>
           <div class="fl"><label>Extra Info <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(optional)</span></label><textarea id="w-extra" rows="2" placeholder="e.g. Q2 2025, Project Apollo" oninput="cc('w-extra','w-ec',100)" style="resize:vertical;min-height:42px;"></textarea><div class="cc" id="w-ec">0 / 100</div></div>
         </div>
@@ -396,10 +476,18 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <input type="hidden" id="edit-id" />
       <div class="al ae" id="edit-err"></div>
       <div class="form-grid">
-        <div class="fl fl-full"><label>Background</label><textarea id="edit-background" rows="3" placeholder="What was the context or situation?"></textarea></div>
-        <div class="fl fl-full"><label>Challenge</label><textarea id="edit-challenge" rows="3" placeholder="What problem or obstacle was faced?"></textarea></div>
-        <div class="fl fl-full"><label>Action Taken</label><textarea id="edit-action" rows="3" placeholder="What did you/the team do?"></textarea></div>
-        <div class="fl fl-full"><label>Outcome</label><textarea id="edit-outcome" rows="3" placeholder="What was the result?"></textarea></div>
+        <div class="fl fl-full"><label>Background</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','edit-background')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','edit-background')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','edit-background')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'edit-background')">😊</button></div><div class="rich-input" id="edit-background" contenteditable="true" data-placeholder="What was the context or situation?"></div></div>
+        </div>
+        <div class="fl fl-full"><label>Challenge</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','edit-challenge')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','edit-challenge')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','edit-challenge')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'edit-challenge')">😊</button></div><div class="rich-input" id="edit-challenge" contenteditable="true" data-placeholder="What problem or obstacle was faced?"></div></div>
+        </div>
+        <div class="fl fl-full"><label>Action Taken</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','edit-action')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','edit-action')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','edit-action')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'edit-action')">😊</button></div><div class="rich-input" id="edit-action" contenteditable="true" data-placeholder="What did you/the team do?"></div></div>
+        </div>
+        <div class="fl fl-full"><label>Outcome</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','edit-outcome')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','edit-outcome')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','edit-outcome')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'edit-outcome')">😊</button></div><div class="rich-input" id="edit-outcome" contenteditable="true" data-placeholder="What was the result?"></div></div>
+        </div>
       </div>
     </div>
     <div class="mfoot">
@@ -451,11 +539,21 @@ tr:hover td{background:rgba(247,228,216,.35);}
         <div class="fl fl-full"><label>Title</label><input type="text" id="hre-title" /></div>
         <div class="fl"><label>Designation</label><input type="text" id="hre-desig" /></div>
         <div class="fl"><label>Extra Info</label><input type="text" id="hre-extra" /></div>
-        <div class="fl fl-full"><label>Background</label><textarea id="hre-background" rows="3"></textarea></div>
-        <div class="fl fl-full"><label>Challenge</label><textarea id="hre-challenge" rows="3"></textarea></div>
-        <div class="fl fl-full"><label>Action Taken</label><textarea id="hre-action" rows="3"></textarea></div>
-        <div class="fl fl-full"><label>Outcome</label><textarea id="hre-outcome" rows="3"></textarea></div>
-        <div class="fl fl-full"><label>AI Body</label><textarea id="hre-ai" rows="5"></textarea></div>
+        <div class="fl fl-full"><label>Background</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','hre-background')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','hre-background')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','hre-background')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'hre-background')">😊</button></div><div class="rich-input" id="hre-background" contenteditable="true" data-placeholder="Background..."></div></div>
+        </div>
+        <div class="fl fl-full"><label>Challenge</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','hre-challenge')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','hre-challenge')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','hre-challenge')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'hre-challenge')">😊</button></div><div class="rich-input" id="hre-challenge" contenteditable="true" data-placeholder="Challenge..."></div></div>
+        </div>
+        <div class="fl fl-full"><label>Action Taken</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','hre-action')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','hre-action')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','hre-action')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'hre-action')">😊</button></div><div class="rich-input" id="hre-action" contenteditable="true" data-placeholder="Action taken..."></div></div>
+        </div>
+        <div class="fl fl-full"><label>Outcome</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','hre-outcome')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','hre-outcome')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','hre-outcome')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'hre-outcome')">😊</button></div><div class="rich-input" id="hre-outcome" contenteditable="true" data-placeholder="Outcome..."></div></div>
+        </div>
+        <div class="fl fl-full"><label>AI Body</label>
+          <div class="rich-wrap"><div class="rich-toolbar"><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('bold','hre-ai')"><b>B</b></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('italic','hre-ai')"><i>I</i></button><button class="rtb-btn" onmousedown="event.preventDefault();richCmd('underline','hre-ai')"><u>U</u></button><div class="rtb-sep"></div><button class="rtb-btn" onmousedown="event.preventDefault();toggleRichEmoji(event,'hre-ai')">😊</button></div><div class="rich-input tall" id="hre-ai" contenteditable="true" data-placeholder="AI enhanced body..."></div></div>
+        </div>
       </div>
     </div>
     <div class="al ae" id="hre-err" style="margin:0 22px 14px;"></div>
@@ -516,6 +614,77 @@ const API="";
 let token=localStorage.getItem('token');
 let user=null;
 let selBody=null;
+
+// ==================== RICH EDITOR ====================
+const RICH_EMOJIS=["😊","😂","👍","❤️","🔥","🎉","👏","🙏","💯","😮","😢","💪","🤝","⭐","😎","🤔","💡","✅","🚀","😅","🏆","⚡","🌟","👀","🎯"];
+let _richEmojiGrid=null;
+let _richEmojiTarget=null;
+
+function _ensureEmojiGrid(){
+  if(!_richEmojiGrid){
+    _richEmojiGrid=document.createElement('div');
+    _richEmojiGrid.className='rich-emoji-grid';
+    _richEmojiGrid.innerHTML=RICH_EMOJIS.map(e=>`<button class="rich-emoji-item" onmousedown="event.preventDefault();_insertRichEmoji('${e}')">${e}</button>`).join('');
+    document.body.appendChild(_richEmojiGrid);
+  }
+}
+
+function toggleRichEmoji(e,targetId){
+  _ensureEmojiGrid();
+  _richEmojiTarget=targetId;
+  const rect=e.target.getBoundingClientRect();
+  if(_richEmojiGrid.classList.contains('open')&&_richEmojiGrid.dataset.for===targetId){
+    _richEmojiGrid.classList.remove('open');
+    return;
+  }
+  _richEmojiGrid.dataset.for=targetId;
+  _richEmojiGrid.style.left=rect.left+'px';
+  _richEmojiGrid.style.top=(rect.top-220)+'px';
+  _richEmojiGrid.classList.add('open');
+}
+
+function _insertRichEmoji(emoji){
+  if(!_richEmojiTarget)return;
+  const el=document.getElementById(_richEmojiTarget);
+  if(!el)return;
+  el.focus();
+  document.execCommand('insertText',false,emoji);
+  _richEmojiGrid.classList.remove('open');
+}
+
+function richCmd(cmd,targetId){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+  el.focus();
+  document.execCommand(cmd,false,null);
+}
+
+function richCC(el,lblId,max){
+  const len=el.innerText.length;
+  const lbl=document.getElementById(lblId);
+  if(lbl)lbl.textContent=`${len} / ${max}`;
+}
+
+function richGet(id){
+  const el=document.getElementById(id);
+  return el?el.innerHTML.trim():'';
+}
+function richText(id){
+  const el=document.getElementById(id);
+  return el?el.innerText.trim():'';
+}
+function richSet(id,html){
+  const el=document.getElementById(id);
+  if(el)el.innerHTML=html||'';
+}
+function richClear(id){
+  const el=document.getElementById(id);
+  if(el)el.innerHTML='';
+}
+
+document.addEventListener('click',()=>{
+  if(_richEmojiGrid)_richEmojiGrid.classList.remove('open');
+});
 
 async function checkMime(file){
   return new Promise((resolve)=>{
@@ -677,19 +846,19 @@ async function submitStory(){
   hideAl('w-err');hideAl('w-ok');
   const title=document.getElementById('w-title').value.trim();
   const designation=document.getElementById('w-desig').value.trim();
-  const background=document.getElementById('w-background').value.trim();
-  const challenge=document.getElementById('w-challenge').value.trim();
-  const action_taken=document.getElementById('w-action').value.trim();
-  const outcome=document.getElementById('w-outcome').value.trim();
-  const ai_body=document.getElementById('w-ai').value.trim();
+  const background=richGet('w-background');
+  const challenge=richGet('w-challenge');
+  const action_taken=richGet('w-action');
+  const outcome=richGet('w-outcome');
+  const ai_body=richGet('w-ai');
   const extra=document.getElementById('w-extra').value.trim()||null;
   const storyType=document.querySelector('input[name="story-type"]:checked').value;
   if(!title||(!designation&&storyType!=='team')||!background||!challenge||!action_taken||!outcome||!ai_body)return showAl('w-err','Please fill in all required fields including all 4 story sections.');
-  if(background.length<10)return showAl('w-err','Background must be at least 10 characters.');
-  if(challenge.length<10)return showAl('w-err','Challenge must be at least 10 characters.');
-  if(action_taken.length<10)return showAl('w-err','Action Taken must be at least 10 characters.');
-  if(outcome.length<10)return showAl('w-err','Outcome must be at least 10 characters.');
-  if(ai_body.length<50)return showAl('w-err','AI body must be at least 50 characters.');
+  if(richText('w-background').length<10)return showAl('w-err','Background must be at least 10 characters.');
+  if(richText('w-challenge').length<10)return showAl('w-err','Challenge must be at least 10 characters.');
+  if(richText('w-action').length<10)return showAl('w-err','Action Taken must be at least 10 characters.');
+  if(richText('w-outcome').length<10)return showAl('w-err','Outcome must be at least 10 characters.');
+  if(richText('w-ai').length<50)return showAl('w-err','AI body must be at least 50 characters.');
   if(designation.length>100)return showAl('w-err','Designation must be under 100 characters.');
   if(extra&&extra.length>100)return showAl('w-err','Extra info must be under 100 characters.');
   const is_team_story=storyType==='team';
@@ -714,7 +883,8 @@ async function submitStory(){
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Submission failed');
     showAl('w-ok','✅ Story submitted! Awaiting HR review.');toast('Story submitted!');
     setTimeout(()=>hideAl('w-ok'),5000);
-    ['w-title','w-desig','w-extra','w-background','w-challenge','w-action','w-outcome','w-ai'].forEach(id=>document.getElementById(id).value='');
+    ['w-title','w-desig','w-extra'].forEach(id=>document.getElementById(id).value='');
+    ['w-background','w-challenge','w-action','w-outcome','w-ai'].forEach(richClear);
     document.getElementById('w-story-pic').value='';
     document.querySelector('input[name="story-type"][value="mine"]').checked=true;
     switchStoryType('mine');
@@ -743,21 +913,21 @@ async function openEditStory(id){
     const r=await fetch(`${API}/stories/detail/${id}`,{headers:hdr()});
     if(!r.ok)throw 0;const s=await r.json();
     document.getElementById('edit-id').value=id;
-    document.getElementById('edit-background').value=s.background||'';
-    document.getElementById('edit-challenge').value=s.challenge||'';
-    document.getElementById('edit-action').value=s.action_taken||'';
-    document.getElementById('edit-outcome').value=s.outcome||'';
+    richSet('edit-background',s.background||'');
+    richSet('edit-challenge',s.challenge||'');
+    richSet('edit-action',s.action_taken||'');
+    richSet('edit-outcome',s.outcome||'');
     hideAl('edit-err');openOv('ov-edit');
   }catch{toast('Failed to load story.');}
 }
 async function saveEditStory(){
   hideAl('edit-err');
   const id=document.getElementById('edit-id').value;
-  const background=document.getElementById('edit-background').value.trim();
-  const challenge=document.getElementById('edit-challenge').value.trim();
-  const action_taken=document.getElementById('edit-action').value.trim();
-  const outcome=document.getElementById('edit-outcome').value.trim();
-  if(!background||!challenge||!action_taken||!outcome)return showAl('edit-err','All 4 fields are required.');
+  const background=richGet('edit-background');
+  const challenge=richGet('edit-challenge');
+  const action_taken=richGet('edit-action');
+  const outcome=richGet('edit-outcome');
+  if(!richText('edit-background')||!richText('edit-challenge')||!richText('edit-action')||!richText('edit-outcome'))return showAl('edit-err','All 4 fields are required.');
   try{
     const r=await fetch(`${API}/stories/${id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Update failed');
@@ -766,10 +936,10 @@ async function saveEditStory(){
 }
 
 async function rephraseStory(){
-  const background=document.getElementById('w-background').value.trim();
-  const challenge=document.getElementById('w-challenge').value.trim();
-  const action_taken=document.getElementById('w-action').value.trim();
-  const outcome=document.getElementById('w-outcome').value.trim();
+  const background=richText('w-background');
+  const challenge=richText('w-challenge');
+  const action_taken=richText('w-action');
+  const outcome=richText('w-outcome');
   if(!background||!challenge||!action_taken||!outcome)return showAl('w-err','Fill in all 4 sections before rephrasing.');
   const btn=document.getElementById('rephrase-btn');
   btn.textContent='✨ Rephrasing...';btn.disabled=true;
@@ -777,8 +947,8 @@ async function rephraseStory(){
     const storyType=document.querySelector('input[name="story-type"]:checked').value;
     const r=await fetch(`${API}/rephrase`,{method:'POST',headers:hdr(),body:JSON.stringify({background,challenge,action_taken,outcome,story_type:storyType})});
     const d=await r.json();if(!r.ok)throw new Error(d.detail||'Rephrase failed');
-    document.getElementById('w-ai').value=d.rephrased_body;
-    cc('w-ai','w-ac',5000);
+    richSet('w-ai',d.rephrased_body);
+    richCC(document.getElementById('w-ai'),'w-ac',5000);
     toast('AI version generated!');
   }catch(e){showAl('w-err',e.message);}
   finally{btn.textContent='✨ Rephrase with AI';btn.disabled=false;}
@@ -1017,11 +1187,11 @@ async function openHREdit(id){
     document.getElementById('hre-id').value=id;
     document.getElementById('hre-title').value=s.title;
     document.getElementById('hre-desig').value=s.designation;
-    document.getElementById('hre-background').value=s.background||'';
-    document.getElementById('hre-challenge').value=s.challenge||'';
-    document.getElementById('hre-action').value=s.action_taken||'';
-    document.getElementById('hre-outcome').value=s.outcome||'';
-    document.getElementById('hre-ai').value=s.ai_body||'';
+    richSet('hre-background',s.background||'');
+    richSet('hre-challenge',s.challenge||'');
+    richSet('hre-action',s.action_taken||'');
+    richSet('hre-outcome',s.outcome||'');
+    richSet('hre-ai',s.ai_body||'');
     document.getElementById('hre-extra').value=s.extra||'';
     hideAl('hre-err');openOv('ov-hredit');
   }catch(e){showAl('hre-err',e.message||'Unknown error');console.error('saveHREdit error:',e);}
@@ -1031,18 +1201,18 @@ async function saveHREdit(){
   const id=document.getElementById('hre-id').value;
   const title=document.getElementById('hre-title').value.trim();
   const desig=document.getElementById('hre-desig').value.trim();
-  const background=document.getElementById('hre-background').value.trim();
-  const challenge=document.getElementById('hre-challenge').value.trim();
-  const action_taken=document.getElementById('hre-action').value.trim();
-  const outcome=document.getElementById('hre-outcome').value.trim();
-  const ai=document.getElementById('hre-ai').value.trim();
+  const background=richGet('hre-background');
+  const challenge=richGet('hre-challenge');
+  const action_taken=richGet('hre-action');
+  const outcome=richGet('hre-outcome');
+  const ai=richGet('hre-ai');
   if(!title)return showAl('hre-err','Title cannot be empty.');
   if(!desig)return showAl('hre-err','Designation cannot be empty.');
-  if(!background)return showAl('hre-err','Background cannot be empty.');
-  if(!challenge)return showAl('hre-err','Challenge cannot be empty.');
-  if(!action_taken)return showAl('hre-err','Action Taken cannot be empty.');
-  if(!outcome)return showAl('hre-err','Outcome cannot be empty.');
-  if(!ai)return showAl('hre-err','AI body cannot be empty.');
+  if(!richText('hre-background'))return showAl('hre-err','Background cannot be empty.');
+  if(!richText('hre-challenge'))return showAl('hre-err','Challenge cannot be empty.');
+  if(!richText('hre-action'))return showAl('hre-err','Action Taken cannot be empty.');
+  if(!richText('hre-outcome'))return showAl('hre-err','Outcome cannot be empty.');
+  if(!richText('hre-ai'))return showAl('hre-err','AI body cannot be empty.');
   if(title.length>200)return showAl('hre-err','Title must be under 200 characters.');
   if(desig.length>100)return showAl('hre-err','Designation must be under 100 characters.');
   const payload={
