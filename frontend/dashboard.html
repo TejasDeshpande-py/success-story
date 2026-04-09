@@ -9,10 +9,10 @@
 <style>
 :root{
   --bg:#fdf4ee;--bg2:#ffffff;--bg3:#f5e6da;--border:#e2cfc2;
-  --brown:#7c4a2d;--brown2:#5c3520;--brownlt:#a0674a;
+  --brown:#ab001a;--brown2:#7a0012;--brownlt:#cc001f;
   --rose:#e8c4b0;--rosebg:#f7e4d8;
   --text:#2c1a10;--sub:#6b4535;--muted:#b09080;
-  --red:#b83225;--green:#3d7035;--yellow:#9a6c18;
+  --red:#ab001a;--green:#3d7035;--yellow:#9a6c18;
   --sidebar:220px;
   --shadow-sm:0 1px 4px rgba(90,45,15,.07);
   --shadow:0 4px 18px rgba(90,45,15,.10);
@@ -374,6 +374,18 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="stat stat-3"><div class="stat-n" id="ov-ps">—</div><div class="stat-l">Pending Stories</div></div>
       <div class="stat stat-4"><div class="stat-n" id="ov-po">—</div><div class="stat-l">Published Stories</div></div>
     </div>
+    <div class="panel" id="banner-panel" style="display:none;margin-bottom:24px;">
+      <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="panel-title">🖼️ Banner Images — HR/Admin Only</span>
+        <button class="btn btn-sm bp" onclick="addBannerSlot()">+ Add Slot</button>
+      </div>
+      <div style="padding:16px 20px;">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Upload images that appear in the homepage banner slider. Max 5 slots.</p>
+        <div id="banner-slots" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+        <div class="al ae" id="banner-err" style="margin-top:12px;display:none;"></div>
+      </div>
+    </div>
+
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Published Stories</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Published</th><th>Actions</th></tr></thead><tbody id="pub-tbody"></tbody></table></div>
@@ -766,7 +778,7 @@ function showSec(id){
   const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',publishedstories:'Published Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
   if(id==='profile'){loadProfile();}
-  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);}
+  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);loadBanners();}
   if(id==='mystories')loadMyStories(1);
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
@@ -1028,6 +1040,100 @@ async function updatePassword(){
   }catch(e){showAl('pw-err',e.message);}
 }
 // ==================== HR ====================
+
+// ==================== BANNERS ====================
+async function loadBanners(){
+  if((user?.role_id??0) < 1){
+    document.getElementById('banner-panel').style.display='none';
+    return;
+  }
+  document.getElementById('banner-panel').style.display='block';
+  try{
+    const r=await fetch(`${API}/banners/`);
+    const data=await r.json();
+    renderBannerSlots(data);
+  }catch{
+    document.getElementById('banner-slots').innerHTML='<span style="font-size:13px;color:var(--muted)">Failed to load banners.</span>';
+  }
+}
+
+function renderBannerSlots(banners){
+  const container=document.getElementById('banner-slots');
+  const filledSlots=banners.map(b=>b.slot);
+  const maxSlot=Math.max(5,...filledSlots);
+  let html='';
+  for(let i=1;i<=Math.min(maxSlot,5);i++){
+    const b=banners.find(x=>x.slot===i);
+    if(b){
+      html+=`<div style="width:160px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:white;">
+        <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;">
+          <img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+          <div style="position:absolute;top:4px;left:6px;font-size:10px;font-weight:600;background:rgba(0,0,0,.45);color:white;border-radius:4px;padding:2px 6px;">Slot ${i}</div>
+        </div>
+        <div style="padding:8px;display:flex;gap:6px;">
+          <label style="flex:1;cursor:pointer;">
+            <span class="btn btn-sm bgo" style="width:100%;display:block;text-align:center;">Replace</span>
+            <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
+          </label>
+          <button class="btn btn-sm bgr" onclick="removeBanner(${i})">Remove</button>
+        </div>
+      </div>`;
+    } else {
+      html+=`<div style="width:160px;border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;background:var(--bg);">
+        <div style="height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted);">
+          <span style="font-size:22px;">+</span>
+          <span style="font-size:11px;">Slot ${i} — empty</span>
+        </div>
+        <div style="padding:8px;">
+          <label style="cursor:pointer;width:100%;display:block;">
+            <span class="btn btn-sm bp" style="width:100%;display:block;text-align:center;">Upload</span>
+            <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
+          </label>
+        </div>
+      </div>`;
+    }
+  }
+  container.innerHTML=html;
+}
+
+function addBannerSlot(){
+  const container=document.getElementById('banner-slots');
+  const current=container.querySelectorAll('[data-slot]').length;
+  const filled=document.getElementById('banner-slots').innerHTML.match(/Slot \d/g)||[];
+  const count=filled.length;
+  if(count>=5)return toast('Maximum 5 banner slots allowed.');
+  loadBanners();
+}
+
+async function uploadBanner(event, slot){
+  const file=event.target.files[0];
+  if(!file)return;
+  hideAl('banner-err');
+  if(!await checkMime(file)){showAl('banner-err','Banner must be a real JPG, PNG, or WEBP image.');return;}
+  if(file.size>5*1024*1024){showAl('banner-err','Banner image must be under 5MB.');return;}
+  try{
+    const fd=new FormData();fd.append('file',file);
+    const ur=await fetch(`${API}/upload-picture`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
+    const ud=await ur.json();
+    if(!ur.ok)throw new Error(ud.detail||'Upload failed');
+    const r=await fetch(`${API}/banners/`,{method:'POST',headers:hdr(),body:JSON.stringify({slot,image_url:ud.url})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Failed to save banner');
+    toast(`Slot ${slot} updated!`);
+    loadBanners();
+  }catch(e){showAl('banner-err',e.message);}
+}
+
+async function removeBanner(slot){
+  if(!confirm(`Remove banner slot ${slot}?`))return;
+  try{
+    const r=await fetch(`${API}/banners/`,{method:'DELETE',headers:hdr(),body:JSON.stringify({slot})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Failed to remove banner');
+    toast(`Slot ${slot} removed.`);
+    loadBanners();
+  }catch(e){showAl('banner-err',e.message);}
+}
 
 async function loadOverviewStats(){
   try{
