@@ -257,13 +257,12 @@
     <div class="mextra" id="m-extra"><span>🏆</span><span id="m-xt"></span></div>
 
     <!-- COMMENTS SECTION -->
-    <div class="comments-section">
-      <div class="comments-tab" id="comments-tab" onclick="toggleComments()">
+    <div class="comments-section" id="comments-section">
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 26px 10px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span id="comments-tab-label">Comments</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto"><polyline points="6 9 12 15 18 9"/></svg>
+        <span id="comments-tab-label" style="font-size:13px;font-weight:600;color:var(--sub);">Comments</span>
       </div>
-      <div class="comments-body" id="comments-body">
+      <div style="padding:0 26px 24px;">
         <div id="comments-list"></div>
         <div id="comment-editor-area"></div>
       </div>
@@ -413,7 +412,8 @@ function renderCards(stories){
           </span>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
-          <button class="cread">Read Story →</button>
+          <button class="cread" onclick="event.stopPropagation();openM(${s.story_id},true)">Read Story →</button>
+          <button class="cread" style="color:var(--muted);" onclick="event.stopPropagation();openM(${s.story_id},true)">💬 Comment</button>
           <div style="display:flex;gap:6px;align-items:center;" onclick="event.stopPropagation()">
             <div class="react-wrap">
               <button class="react-btn ${s.my_reaction?'reacted':''}" onclick="togglePicker(event,'rp-${s.story_id}')">${s.my_reaction||'😊'} React</button>
@@ -441,12 +441,9 @@ function buildPag(){
   document.getElementById('pag').innerHTML=h;
 }
 function go(p){if(p<1||p>tot)return;pg=p;load(p);window.scrollTo({top:0,behavior:'smooth'});}
-async function openM(id){
+async function openM(id, scrollToComments=false){
   currentStoryId=id;
   commentsLoaded=false;
-  commentsOpen=false;
-  document.getElementById('comments-tab').classList.remove('open');
-  document.getElementById('comments-body').classList.remove('open');
   document.getElementById('comments-list').innerHTML='';
   document.getElementById('comment-editor-area').innerHTML='';
   document.getElementById('comments-tab-label').textContent='Comments';
@@ -478,6 +475,17 @@ async function openM(id){
     document.getElementById('rp-modal').innerHTML=EMOJIS.map(e=>`<button class="react-emoji" onclick="doReact(event,'modal','${e}','modal')">${e}</button>`).join('');
     document.getElementById('ov').classList.add('open');
     document.body.style.overflow='hidden';
+    // always load comments
+    loadComments(id).then(()=>{
+      if(scrollToComments){
+        setTimeout(()=>{
+          const sec=document.getElementById('comments-section');
+          if(sec)sec.scrollIntoView({behavior:'smooth'});
+          const inp=document.getElementById('comment-input');
+          if(inp)inp.focus();
+        },300);
+      }
+    });
   }catch(e){console.error(e);}
 }
 function closeM(){document.getElementById('ov').classList.remove('open');document.body.style.overflow='';}
@@ -527,7 +535,6 @@ document.addEventListener('click',()=>{
 const COMMENT_EMOJIS=["😊","😂","👍","❤️","🔥","🎉","👏","🙏","💯","😮","😢","💪","🤝","⭐","😎","🤔","💡","✅","🚀","😅"];
 let currentStoryId=null;
 let commentsLoaded=false;
-let commentsOpen=false;
 let currentUserId=null;
 let currentUserRole=null;
 
@@ -536,16 +543,7 @@ try{
   if(t){const p=JSON.parse(atob(t.split('.')[1]));if(p.exp*1000>Date.now()){currentUserId=p.user_id;currentUserRole=p.role_id??0;}}
 }catch(e){}
 
-function toggleComments(){
-  const tab=document.getElementById('comments-tab');
-  const body=document.getElementById('comments-body');
-  commentsOpen=!commentsOpen;
-  tab.classList.toggle('open',commentsOpen);
-  body.classList.toggle('open',commentsOpen);
-  if(commentsOpen&&!commentsLoaded){
-    loadComments(currentStoryId);
-  }
-}
+// comments always visible — no toggle needed
 
 async function loadComments(storyId){
   const list=document.getElementById('comments-list');
