@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from backend.routers import auth, stories, users, teams
+from backend.routers import auth, stories, users, teams, banners
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from backend.limiter import limiter
@@ -34,6 +34,7 @@ app.include_router(auth.router)
 app.include_router(stories.router)
 app.include_router(users.router)
 app.include_router(teams.router)
+app.include_router(banners.router)
 
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
