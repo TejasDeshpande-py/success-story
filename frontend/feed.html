@@ -12,16 +12,16 @@
     --bg2:#ffffff;
     --bg3:#f5e6da;
     --border:#e2cfc2;
-    --brown:#7c4a2d;
-    --brown2:#5c3520;
-    --brownlt:#a0674a;
+    --brown:#ab001a;
+    --brown2:#7a0012;
+    --brownlt:#cc001f;
     --rose:#e8c4b0;
     --rosebg:#f7e4d8;
     --text:#2c1a10;
     --sub:#6b4535;
     --muted:#b09080;
     --green:#3d7035;
-    --red:#b83225;
+    --red:#ab001a;
     --yellow:#9a6c18;
     --shadow-sm:0 1px 4px rgba(90,45,15,.07);
     --shadow:0 4px 18px rgba(90,45,15,.10);
@@ -199,6 +199,13 @@
     <a class="btn btn-p" id="nav-login" href="/login">Login</a>
   </div>
 </nav>
+
+<div id="banner-slider" style="display:none;position:relative;width:100%;overflow:hidden;background:#000;">
+  <div id="banner-track" style="display:flex;transition:transform .4s ease;"></div>
+  <button onclick="bannerPrev()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">‹</button>
+  <button onclick="bannerNext()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">›</button>
+  <div id="banner-dots" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;"></div>
+</div>
 
 <div class="hero">
   <div class="eyebrow"><span class="pulse"></span>Live Stories</div>
@@ -711,6 +718,38 @@ async function deleteComment(storyId,commentId){
     if(!remaining)document.getElementById('comments-list').innerHTML='<div class="no-comments">No comments yet. Be the first!</div>';
   }catch{alert('Failed to delete comment.');}
 }
+
+// ==================== BANNER SLIDER ====================
+let _bannerIdx=0;
+let _bannerTotal=0;
+let _bannerTimer=null;
+
+async function loadBannerSlider(){
+  try{
+    const r=await fetch(`${API}/banners/`);
+    const data=await r.json();
+    if(!data.length)return;
+    _bannerTotal=data.length;
+    const slider=document.getElementById('banner-slider');
+    const track=document.getElementById('banner-track');
+    const dots=document.getElementById('banner-dots');
+    track.innerHTML=data.map(b=>`<div style="min-width:100%;height:320px;flex-shrink:0;"><img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" alt="Banner"></div>`).join('');
+    dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
+    slider.style.display='block';
+    _bannerTimer=setInterval(bannerNext,4000);
+  }catch{}
+}
+
+function bannerGo(i){
+  _bannerIdx=i;
+  document.getElementById('banner-track').style.transform=`translateX(-${i*100}%)`;
+  document.querySelectorAll('[id^="bd-"]').forEach((d,j)=>d.style.background=j===i?'white':'rgba(255,255,255,.45)');
+  clearInterval(_bannerTimer);_bannerTimer=setInterval(bannerNext,4000);
+}
+function bannerNext(){bannerGo((_bannerIdx+1)%_bannerTotal);}
+function bannerPrev(){bannerGo((_bannerIdx-1+_bannerTotal)%_bannerTotal);}
+
+loadBannerSlider();
 
 load(1).then(()=>{
   const params=new URLSearchParams(window.location.search);
