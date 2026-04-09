@@ -470,3 +470,78 @@ def unpublish_story(story_id: int, db: Session, current_user: Employee):
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to unpublish story")
     return {"message": "Story unpublished successfully", "story_id": story_id}
+
+def get_comments(story_id: int, db: Session):
+    from backend.model import StoryComment
+    comments = db.query(StoryComment).options(
+        joinedload(StoryComment.employee)
+    ).filter(StoryComment.story_id == story_id).order_by(StoryComment.created_at.asc()).all()
+    return [
+        {
+            "comment_id": c.comment_id,
+            "story_id": c.story_id,
+            "employee_id": c.employee_id,
+            "body": c.body,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "name": c.employee.name if c.employee else None,
+            "picture": c.employee.picture if c.employee else None,
+        }
+        for c in comments
+    ]
+
+
+def add_comment(story_id: int, body: str, db: Session, current_user: Employee):
+    from backend.model import StoryComment
+    story = db.query(SuccessStory).filter(
+        SuccessStory.story_id == story_id,
+        SuccessStory.status == "Posted"
+    ).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+    if not body.strip():
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
+    comment = StoryComment(
+        story_id=story_id,
+        employee_id=current_user.employee_id,
+        body=body.strip()
+    )
+    db.add(comment)
+    try:
+        db.commit()
+        db.refresh(comment)
+    except Exception as exc:
+        logger.error("Failed to add comment: %s", exc)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to add comment")
+    comment = db.query(StoryComment).options(
+        joinedload(StoryComment.employee)
+    ).filter(StoryComment.comment_id == comment.comment_id).first()
+    return {
+        "comment_id": comment.comment_id,
+        "story_id": comment.story_id,
+        "employee_id": comment.employee_id,
+        "body": comment.body,
+        "created_at": comment.created_at.isoformat() if comment.created_at else None,
+        "name": comment.employee.name if comment.employee else None,
+        "picture": comment.employee.picture if comment.employee else None,
+    }
+
+
+def delete_comment(story_id: int, comment_id: int, db: Session, current_user: Employee):
+    from backend.model import StoryComment
+    comment = db.query(StoryComment).filter(
+        StoryComment.comment_id == comment_id,
+        StoryComment.story_id == story_id
+    ).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.employee_id != current_user.employee_id and current_user.role_id not in [1, 2]:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this comment")
+    try:
+        db.delete(comment)
+        db.commit()
+    except Exception as exc:
+        logger.error("Failed to delete comment %s: %s", comment_id, exc)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete comment")
+    return {"message": "Comment deleted", "comment_id": comment_id}

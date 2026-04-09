@@ -69,6 +69,19 @@ class SuccessStory(Base):
     reactions     = relationship("StoryReaction", back_populates="story", cascade="all, delete-orphan")
 
 
+class StoryComment(Base):
+    __tablename__ = "story_comments"
+
+    comment_id  = Column(Integer, primary_key=True, index=True)
+    story_id    = Column(Integer, ForeignKey("success_stories.story_id"), nullable=False)
+    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
+    body        = Column(Text, nullable=False)
+    created_at  = Column(DateTime, server_default=func.now())
+
+    story    = relationship("SuccessStory", back_populates="comments")
+    employee = relationship("Employee")
+
+
 class StoryReaction(Base):
     __tablename__ = "story_reactions"
 

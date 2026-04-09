@@ -179,6 +179,22 @@ class StoryResponse(BaseModel):
         from_attributes = True
 
 
+class CommentCreate(BaseModel):
+    body: str = Field(..., min_length=1, max_length=2000)
+
+class CommentResponse(BaseModel):
+    comment_id: int
+    story_id: int
+    employee_id: int
+    body: str
+    created_at: Optional[datetime]
+    name: Optional[str] = None
+    picture: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class SelectBodyRequest(BaseModel):
     choice: Literal["original", "ai"]
 
