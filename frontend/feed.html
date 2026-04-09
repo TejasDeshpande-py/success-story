@@ -753,112 +753,40 @@ function fitBanner(img){
   const wrap=img.parentElement;
   const nw=img.naturalWidth;
   const nh=img.naturalHeight;
-
-  // Safety — if naturalWidth is 0, browser hasn't decoded yet
-  if(!nw||!nh){
-    setTimeout(()=>fitBanner(img),100);
-    return;
-  }
-
+  if(!nw||!nh){setTimeout(()=>fitBanner(img),100);return;}
   const vw=window.innerWidth||document.documentElement.clientWidth;
   const ratio=nw/nh;
-
   wrap.style.overflow='hidden';
   wrap.style.background='#111111';
   wrap.style.display='flex';
   wrap.style.alignItems='center';
   wrap.style.justifyContent='center';
   img.style.display='block';
-
+  img.style.maxWidth='100%';
   if(ratio<0.85){
-    // PORTRAIT — 9:16, 3:4
-    wrap.style.height='480px';
-    img.style.width='auto';
-    img.style.height='480px';
-    img.style.maxWidth='100vw';
-    img.style.objectFit='contain';
-  } else if(ratio<=1.2){
-    // SQUARE — 1:1
-    wrap.style.height='440px';
-    img.style.width='auto';
-    img.style.height='440px';
-    img.style.maxWidth='100vw';
-    img.style.objectFit='contain';
-  } else {
-    // LANDSCAPE — 16:9, 3:2, 3:1
-    wrap.style.height='360px';
-    if(nw>=vw*0.7){
-      // Large enough — cover safely
-      img.style.width='100vw';
-      img.style.height='360px';
-      img.style.objectFit='cover';
-      img.style.objectPosition='center top';
-    } else {
-      // Too small — scale-down, no blur
-      img.style.width='auto';
-      img.style.height='auto';
-      img.style.maxWidth='100vw';
-      img.style.maxHeight='360px';
-      img.style.objectFit='scale-down';
-    }
-  }
-
-  // Force slider height to match tallest visible slide
-  const slider=document.getElementById('banner-slider');
-  if(slider) slider.style.height=wrap.style.height;
-}
-  const wrap=img.parentElement;
-  const vw=window.innerWidth;
-  const nw=img.naturalWidth;
-  const nh=img.naturalHeight;
-  const ratio=nw/nh;
-
-  // Detect format by aspect ratio
-  // Portrait: 9:16, 3:4, 2:3 — ratio < 1
-  // Square: 1:1 — ratio ~1
-  // Landscape: 16:9, 3:2, 3:1 — ratio > 1.2
-
-  wrap.style.overflow='hidden';
-  wrap.style.background='#111111';
-  wrap.style.display='flex';
-  wrap.style.alignItems='center';
-  wrap.style.justifyContent='center';
-  img.style.display='block';
-
-  if(ratio<0.85){
-    // PORTRAIT (phone photo, 9:16, 3:4)
-    // Fix height, let width be natural — don't stretch it wide
     const fixedH=Math.min(Math.max(Math.round(vw*0.55),280),480);
     wrap.style.height=fixedH+'px';
-    img.style.height='100%';
     img.style.width='auto';
-    img.style.maxWidth='100%';
+    img.style.height=fixedH+'px';
     img.style.objectFit='contain';
   } else if(ratio<=1.2){
-    // SQUARE (1:1, slight rect)
     const fixedH=Math.min(Math.max(Math.round(vw*0.4),260),440);
     wrap.style.height=fixedH+'px';
-    img.style.height='100%';
     img.style.width='auto';
-    img.style.maxWidth='100%';
+    img.style.height=fixedH+'px';
     img.style.objectFit='contain';
   } else {
-    // LANDSCAPE (16:9, 3:2, 3:1 — most banner-like)
     const fixedH=Math.min(Math.max(Math.round(vw/3),200),420);
     wrap.style.height=fixedH+'px';
-    // Only cover if image is large enough — no upscale blur
-    if(nw>=vw*0.7){
-      img.style.width='100%';
-      img.style.height='100%';
-      img.style.objectFit='cover';
-      img.style.objectPosition='center top';
-    } else {
-      img.style.width='auto';
-      img.style.height='100%';
-      img.style.maxWidth='100%';
-      img.style.objectFit='scale-down';
-    }
+    img.style.width='auto';
+    img.style.height='auto';
+    img.style.maxWidth='100%';
+    img.style.maxHeight=fixedH+'px';
+    img.style.objectFit='scale-down';
   }
+  const slider=document.getElementById('banner-slider');
+  if(slider)slider.style.height=wrap.style.height;
+}
 
 loadBannerSlider();
 
