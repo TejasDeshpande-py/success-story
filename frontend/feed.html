@@ -733,7 +733,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div id="bslide-wrap-${b.id||b.banner_id||Math.random()}" style="min-width:100%;flex-shrink:0;background:#111111;overflow:hidden;"><img src="${b.image_url}" alt="Banner" onload="fitBanner(this)" style="display:block;"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div style="min-width:100vw;flex-shrink:0;background:#111111;overflow:hidden;display:flex;align-items:center;justify-content:center;height:360px;"><img src="${b.image_url}" alt="Banner" style="display:block;" onload="fitBanner(this)"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     _bannerTimer=setInterval(bannerNext,4000);
@@ -750,6 +750,63 @@ function bannerNext(){bannerGo((_bannerIdx+1)%_bannerTotal);}
 function bannerPrev(){bannerGo((_bannerIdx-1+_bannerTotal)%_bannerTotal);}
 
 function fitBanner(img){
+  const wrap=img.parentElement;
+  const nw=img.naturalWidth;
+  const nh=img.naturalHeight;
+
+  // Safety — if naturalWidth is 0, browser hasn't decoded yet
+  if(!nw||!nh){
+    setTimeout(()=>fitBanner(img),100);
+    return;
+  }
+
+  const vw=window.innerWidth||document.documentElement.clientWidth;
+  const ratio=nw/nh;
+
+  wrap.style.overflow='hidden';
+  wrap.style.background='#111111';
+  wrap.style.display='flex';
+  wrap.style.alignItems='center';
+  wrap.style.justifyContent='center';
+  img.style.display='block';
+
+  if(ratio<0.85){
+    // PORTRAIT — 9:16, 3:4
+    wrap.style.height='480px';
+    img.style.width='auto';
+    img.style.height='480px';
+    img.style.maxWidth='100vw';
+    img.style.objectFit='contain';
+  } else if(ratio<=1.2){
+    // SQUARE — 1:1
+    wrap.style.height='440px';
+    img.style.width='auto';
+    img.style.height='440px';
+    img.style.maxWidth='100vw';
+    img.style.objectFit='contain';
+  } else {
+    // LANDSCAPE — 16:9, 3:2, 3:1
+    wrap.style.height='360px';
+    if(nw>=vw*0.7){
+      // Large enough — cover safely
+      img.style.width='100vw';
+      img.style.height='360px';
+      img.style.objectFit='cover';
+      img.style.objectPosition='center top';
+    } else {
+      // Too small — scale-down, no blur
+      img.style.width='auto';
+      img.style.height='auto';
+      img.style.maxWidth='100vw';
+      img.style.maxHeight='360px';
+      img.style.objectFit='scale-down';
+    }
+  }
+
+  // Force slider height to match tallest visible slide
+  const slider=document.getElementById('banner-slider');
+  if(slider) slider.style.height=wrap.style.height;
+}
   const wrap=img.parentElement;
   const vw=window.innerWidth;
   const nw=img.naturalWidth;
@@ -802,7 +859,6 @@ function fitBanner(img){
       img.style.objectFit='scale-down';
     }
   }
-}
 
 loadBannerSlider();
 
