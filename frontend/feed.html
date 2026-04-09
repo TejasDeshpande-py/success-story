@@ -171,7 +171,7 @@
   .comment-input u{text-decoration:underline;}
   .comment-actions{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-top:1px solid var(--border);}
   .emoji-pick-wrap{position:relative;}
-  .emoji-grid{position:absolute;bottom:36px;left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:9999;width:260px;flex-wrap:wrap;gap:4px;}
+  .emoji-grid{position:fixed;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(90,45,15,.15);padding:8px;display:none;z-index:99999;width:260px;flex-wrap:wrap;gap:4px;}
   .emoji-grid.open{display:flex;}
   .emoji-item{font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px;border:none;background:none;line-height:1;transition:background .15s;}
   .emoji-item:hover{background:var(--rosebg);transform:scale(1.2);}
@@ -442,6 +442,14 @@ function buildPag(){
 }
 function go(p){if(p<1||p>tot)return;pg=p;load(p);window.scrollTo({top:0,behavior:'smooth'});}
 async function openM(id){
+  currentStoryId=id;
+  commentsLoaded=false;
+  commentsOpen=false;
+  document.getElementById('comments-tab').classList.remove('open');
+  document.getElementById('comments-body').classList.remove('open');
+  document.getElementById('comments-list').innerHTML='';
+  document.getElementById('comment-editor-area').innerHTML='';
+  document.getElementById('comments-tab-label').textContent='Comments';
   try{
     const r=await fetch(`${API}/stories/${id}`);if(!r.ok)throw 0;
     const s=await r.json();const inits=ini(s.name);
@@ -468,8 +476,9 @@ async function openM(id){
     mBtn.className=`react-btn${s.my_reaction?' reacted':''}`;
     document.querySelectorAll('#rp-modal .react-emoji').forEach(b=>{b.className='react-emoji'+(s.my_reaction===b.textContent?' mine':'');});
     document.getElementById('rp-modal').innerHTML=EMOJIS.map(e=>`<button class="react-emoji" onclick="doReact(event,'modal','${e}','modal')">${e}</button>`).join('');
-    document.getElementById('ov').classList.add('open');document.body.style.overflow='hidden';
-  }catch{}
+    document.getElementById('ov').classList.add('open');
+    document.body.style.overflow='hidden';
+  }catch(e){console.error(e);}
 }
 function closeM(){document.getElementById('ov').classList.remove('open');document.body.style.overflow='';}
 function bgX(e){if(e.target===document.getElementById('ov'))closeM();}
@@ -645,7 +654,11 @@ function syncToolbarState(){
 
 function toggleEmojiGrid(e){
   e.stopPropagation();
-  document.getElementById('comment-emoji-grid').classList.toggle('open');
+  const grid=document.getElementById('comment-emoji-grid');
+  const rect=e.target.getBoundingClientRect();
+  grid.style.left=rect.left+'px';
+  grid.style.top=(rect.top-220)+'px';
+  grid.classList.toggle('open');
 }
 
 function insertEmoji(e,emoji){
