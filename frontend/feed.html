@@ -74,7 +74,7 @@
   .sm-av-fb{width:28px;height:28px;border-radius:50%;background:var(--rosebg);border:1.5px solid var(--rose);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:9px;font-weight:700;color:var(--brown);flex-shrink:0;}
   .cname{font-size:12px;font-weight:600;color:var(--text);}
   .crole{font-size:11px;color:var(--muted);margin-top:1px;}
-  .cpreview{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;margin-bottom:14px;}
+  .cpreview{font-size:13px;color:#f0f0f0;line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;margin-bottom:14px;}
   .cread{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--brown);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:gap .2s;margin-top:auto;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif;}
   .cread:hover{gap:9px;}
 
@@ -86,7 +86,7 @@
 
   .ov{position:fixed;inset:0;z-index:200;background:rgba(44,26,16,.46);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
   .ov.open{display:flex;}
-  .mod{background:var(--bg2);border:1px solid var(--border);border-radius:14px;max-width:960px;width:100%;max-height:92vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
+  .mod{background:#1a1a1a;border:1px solid var(--border);border-radius:14px;max-width:960px;width:100%;max-height:92vh;overflow-y:auto;position:relative;animation:modIn .26s ease;box-shadow:var(--shadow-lg);}
   .mod::-webkit-scrollbar{width:4px;}
   .mod::-webkit-scrollbar-thumb{background:var(--rose);border-radius:4px;}
   .mod-top{height:3px;background:linear-gradient(90deg,var(--brown2),var(--brownlt));border-radius:14px 14px 0 0;}
@@ -187,7 +187,7 @@
   .sort-btn.active{background:var(--brown);border-color:var(--brown);color:white;}
 
   /* STORY BODY LEGIBILITY */
-  .mbody{padding:0 26px 4px;font-size:15px;font-weight:400;color:#1a0e08;line-height:2;white-space:pre-wrap;letter-spacing:.01em;}
+  .mbody{padding:0 26px 4px;font-size:15px;font-weight:400;color:#f0f0f0;line-height:2;white-space:pre-wrap;letter-spacing:.01em;}
 </style>
 </head>
 <body>
@@ -200,7 +200,7 @@
   </div>
 </nav>
 
-<div id="banner-slider" style="display:none;position:relative;width:100%;overflow:hidden;background:#000;">
+<div id="banner-slider" style="display:none;position:relative;width:100%;overflow:hidden;background:#111111;">
   <div id="banner-track" style="display:flex;transition:transform .4s ease;"></div>
   <button onclick="bannerPrev()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">‹</button>
   <button onclick="bannerNext()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;">›</button>
@@ -733,7 +733,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div style="min-width:100%;height:320px;flex-shrink:0;"><img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" alt="Banner"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div style="min-width:100%;height:420px;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;"><img src="${b.image_url}" style="max-width:100%;max-height:420px;width:auto;height:auto;object-fit:contain;display:block;" alt="Banner"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     _bannerTimer=setInterval(bannerNext,4000);
