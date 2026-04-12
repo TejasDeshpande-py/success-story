@@ -374,17 +374,7 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="stat stat-3"><div class="stat-n" id="ov-ps">—</div><div class="stat-l">Pending Stories</div></div>
       <div class="stat stat-4"><div class="stat-n" id="ov-po">—</div><div class="stat-l">Published Stories</div></div>
     </div>
-    <div class="panel" id="banner-panel" style="display:none;margin-bottom:24px;">
-      <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="panel-title">🖼️ Banner Images — HR/Admin Only</span>
-        <button class="btn btn-sm bp" onclick="addBannerSlot()">+ Add Slot</button>
-      </div>
-      <div style="padding:16px 20px;">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Upload images that appear in the homepage banner slider. Max 5 slots.</p>
-        <div id="banner-slots" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
-        <div class="al ae" id="banner-err" style="margin-top:12px;display:none;"></div>
-      </div>
-    </div>
+    <!-- banner managed in Banners section -->
 
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Published Stories</span></div>
@@ -433,6 +423,18 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="panel-head"><span class="panel-title">Rejected</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="rs-tbody"></tbody></table></div>
       <div class="pag" id="rs-pag"></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-banners">
+    <div class="sec-head"><h2>Banners</h2><p>Manage homepage banner slider. Up to 5 slots.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Banner Slots</span></div>
+      <div style="padding:16px 20px;">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Upload images for each slot. They appear in the homepage slider in slot order. <strong style="color:var(--yellow);">Use landscape/16:9 images for best results.</strong></p>
+        <div id="banner-slots" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+        <div class="al ae" id="banner-err" style="margin-top:12px;display:none;"></div>
+      </div>
     </div>
   </div>
 
@@ -756,6 +758,7 @@ function buildNav(){
     {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
     {sec:'rejectedstories',ic:'❌',label:'Rejected Stories'},
     {sec:'teams',ic:'🏢',label:'Teams'},
+    {sec:'banners',ic:'🖼️',label:'Banners'},
     {sec:'write',ic:'✍️',label:'Write Story'},
     {sec:'mystories',ic:'📄',label:'My Stories'},
   ];
@@ -775,10 +778,10 @@ function showSec(id){
   const ni=document.getElementById(`ni-${id}`);
   if(sec)sec.classList.add('active');
   if(ni)ni.classList.add('active');
-  const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',publishedstories:'Published Stories',rejectedstories:'Rejected Stories',teams:'Teams'};
+  const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',publishedstories:'Published Stories',rejectedstories:'Rejected Stories',teams:'Teams',banners:'Banners'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
   if(id==='profile'){loadProfile();}
-  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);loadBanners();}
+  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);}
   if(id==='mystories')loadMyStories(1);
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
@@ -786,6 +789,7 @@ function showSec(id){
   if(id==='publishedstories')loadPublishedStoriesSection(1);
   if(id==='rejectedstories')loadRejectedStories(1);
   if(id==='teams')loadTeams();
+  if(id==='banners')loadBanners();
 }
 
 function hdr(){return{Authorization:`Bearer ${token}`,'Content-Type':'application/json'};}
@@ -1043,66 +1047,48 @@ async function updatePassword(){
 
 // ==================== BANNERS ====================
 async function loadBanners(){
-  if((user?.role_id??0) < 1){
-    document.getElementById('banner-panel').style.display='none';
-    return;
-  }
-  document.getElementById('banner-panel').style.display='block';
+  const container=document.getElementById('banner-slots');
+  if(!container)return;
+  container.innerHTML='<span style="font-size:13px;color:var(--muted)">Loading...</span>';
   try{
-    const r=await fetch(`${API}/banners/`);
+    const r=await fetch(`${API}/banners/`,{headers:{Authorization:`Bearer ${token}`}});
     const data=await r.json();
-    renderBannerSlots(data);
-  }catch{
-    document.getElementById('banner-slots').innerHTML='<span style="font-size:13px;color:var(--muted)">Failed to load banners.</span>';
-  }
-}
-
-function renderBannerSlots(banners){
-  const container=document.getElementById('banner-slots');
-  const filledSlots=banners.map(b=>b.slot);
-  const maxSlot=Math.max(5,...filledSlots);
-  let html='';
-  for(let i=1;i<=Math.min(maxSlot,5);i++){
-    const b=banners.find(x=>x.slot===i);
-    if(b){
-      html+=`<div style="width:160px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:white;">
-        <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;">
-          <img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-          <div style="position:absolute;top:4px;left:6px;font-size:10px;font-weight:600;background:rgba(0,0,0,.45);color:white;border-radius:4px;padding:2px 6px;">Slot ${i}</div>
-        </div>
-        <div style="padding:8px;display:flex;gap:6px;">
-          <label style="flex:1;cursor:pointer;">
-            <span class="btn btn-sm bgo" style="width:100%;display:block;text-align:center;">Replace</span>
-            <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
-          </label>
-          <button class="btn btn-sm bgr" onclick="removeBanner(${i})">Remove</button>
-        </div>
-      </div>`;
-    } else {
-      html+=`<div style="width:160px;border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;background:var(--bg);">
-        <div style="height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted);">
-          <span style="font-size:22px;">+</span>
-          <span style="font-size:11px;">Slot ${i} — empty</span>
-        </div>
-        <div style="padding:8px;">
-          <label style="cursor:pointer;width:100%;display:block;">
-            <span class="btn btn-sm bp" style="width:100%;display:block;text-align:center;">Upload</span>
-            <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
-          </label>
-        </div>
-      </div>`;
+    let html='';
+    for(let i=1;i<=5;i++){
+      const b=data.find(x=>x.slot===i);
+      if(b){
+        html+=`<div style="width:160px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg2);">
+          <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+            <img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+            <div style="position:absolute;top:4px;left:6px;font-size:10px;font-weight:600;background:rgba(0,0,0,.6);color:white;border-radius:4px;padding:2px 6px;">Slot ${i}</div>
+          </div>
+          <div style="padding:8px;display:flex;gap:6px;">
+            <label style="flex:1;cursor:pointer;">
+              <span class="btn btn-sm bgo" style="width:100%;display:block;text-align:center;pointer-events:none;">Replace</span>
+              <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
+            </label>
+            <button class="btn btn-sm bgr" onclick="removeBanner(${i})">✕</button>
+          </div>
+        </div>`;
+      } else {
+        html+=`<div style="width:160px;border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;background:var(--bg);">
+          <div style="height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted);">
+            <span style="font-size:22px;">🖼️</span>
+            <span style="font-size:11px;">Slot ${i} — empty</span>
+          </div>
+          <div style="padding:8px;">
+            <label style="cursor:pointer;width:100%;display:block;">
+              <span class="btn btn-sm bp" style="width:100%;display:block;text-align:center;pointer-events:none;">Upload</span>
+              <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadBanner(event,${i})">
+            </label>
+          </div>
+        </div>`;
+      }
     }
+    container.innerHTML=html;
+  }catch{
+    container.innerHTML='<span style="font-size:13px;color:var(--muted)">Failed to load banners.</span>';
   }
-  container.innerHTML=html;
-}
-
-function addBannerSlot(){
-  const container=document.getElementById('banner-slots');
-  const current=container.querySelectorAll('[data-slot]').length;
-  const filled=document.getElementById('banner-slots').innerHTML.match(/Slot \d/g)||[];
-  const count=filled.length;
-  if(count>=5)return toast('Maximum 5 banner slots allowed.');
-  loadBanners();
 }
 
 async function uploadBanner(event, slot){
@@ -1125,7 +1111,7 @@ async function uploadBanner(event, slot){
 }
 
 async function removeBanner(slot){
-  if(!confirm(`Remove banner slot ${slot}?`))return;
+  if(!confirm(`Remove banner in slot ${slot}?`))return;
   try{
     const r=await fetch(`${API}/banners/`,{method:'DELETE',headers:hdr(),body:JSON.stringify({slot})});
     const d=await r.json();
