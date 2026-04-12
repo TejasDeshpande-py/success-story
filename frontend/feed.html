@@ -731,7 +731,7 @@ async function loadBannerSlider(){
     const slider=document.getElementById('banner-slider');
     const track=document.getElementById('banner-track');
     const dots=document.getElementById('banner-dots');
-    track.innerHTML=data.map(b=>`<div style="min-width:100%;flex-shrink:0;background:#111111;display:flex;align-items:center;justify-content:center;padding:12px 0;"><img src="${b.image_url}" alt="Slot ${b.slot}" style="display:block;max-width:100%;max-height:480px;width:auto;height:auto;"></div>`).join('');
+    track.innerHTML=data.map(b=>`<div style="min-width:100%;flex-shrink:0;position:relative;background:#111111;display:flex;align-items:center;justify-content:center;padding:16px 0;"><div style="position:absolute;inset:0;background-image:url('${b.image_url}');background-size:cover;background-position:center;filter:blur(18px) brightness(.35);transform:scale(1.08);"></div><img src="${b.image_url}" alt="Slot ${b.slot}" style="position:relative;z-index:1;display:block;max-width:100%;max-height:480px;width:auto;height:auto;box-shadow:0 4px 32px rgba(0,0,0,.5);"></div>`).join('');
     dots.innerHTML=data.map((_,i)=>`<div id="bd-${i}" onclick="bannerGo(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,.45)'};cursor:pointer;transition:background .2s;"></div>`).join('');
     slider.style.display='block';
     if(data.length>1){bannerTimer=setInterval(()=>bannerGo(bannerIdx+1),5000);}
