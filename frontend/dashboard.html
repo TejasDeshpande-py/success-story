@@ -374,7 +374,16 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="stat stat-3"><div class="stat-n" id="ov-ps">—</div><div class="stat-l">Pending Stories</div></div>
       <div class="stat stat-4"><div class="stat-n" id="ov-po">—</div><div class="stat-l">Published Stories</div></div>
     </div>
-    <!-- banner managed in Banners section -->
+
+    <div class="panel" style="margin-bottom:24px;">
+      <div class="panel-head">
+        <span class="panel-title">Banner Slots</span>
+        <button class="btn btn-sm bp" onclick="addBannerSlot()">+ Add Slot</button>
+      </div>
+      <div id="banner-slots" style="display:flex;gap:12px;flex-wrap:wrap;padding:16px 20px;"></div>
+      <div style="padding:8px 20px 12px;border-top:1px solid var(--border);background:var(--bg);"><span style="font-size:11px;color:var(--muted);">Max 5 slots — use landscape/16:9 images for best results.</span></div>
+      <div class="al ae" id="banner-err" style="margin:0 20px 12px;"></div>
+    </div>
 
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Published Stories</span></div>
@@ -423,18 +432,6 @@ tr:hover td{background:rgba(247,228,216,.35);}
       <div class="panel-head"><span class="panel-title">Rejected</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="rs-tbody"></tbody></table></div>
       <div class="pag" id="rs-pag"></div>
-    </div>
-  </div>
-
-  <div class="sec" id="sec-banners">
-    <div class="sec-head"><h2>Banners</h2><p>Manage homepage banner slider. Up to 5 slots.</p></div>
-    <div class="panel">
-      <div class="panel-head"><span class="panel-title">Banner Slots</span></div>
-      <div style="padding:16px 20px;">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Upload images for each slot. They appear in the homepage slider in slot order. <strong style="color:var(--yellow);">Use landscape/16:9 images for best results.</strong></p>
-        <div id="banner-slots" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
-        <div class="al ae" id="banner-err" style="margin-top:12px;display:none;"></div>
-      </div>
     </div>
   </div>
 
@@ -758,7 +755,6 @@ function buildNav(){
     {sec:'pendingstories',ic:'📋',label:'Pending Stories'},
     {sec:'rejectedstories',ic:'❌',label:'Rejected Stories'},
     {sec:'teams',ic:'🏢',label:'Teams'},
-    {sec:'banners',ic:'🖼️',label:'Banners'},
     {sec:'write',ic:'✍️',label:'Write Story'},
     {sec:'mystories',ic:'📄',label:'My Stories'},
   ];
@@ -781,7 +777,7 @@ function showSec(id){
   const titles={profile:'My Profile',write:'Write a Story',mystories:'My Stories',overview:'Overview',pendingusers:'Pending Users',activeusers:'Active Users',pendingstories:'Pending Stories',publishedstories:'Published Stories',rejectedstories:'Rejected Stories',teams:'Teams',banners:'Banners'};
   document.getElementById('topbar-title').textContent=titles[id]||'Dashboard';
   if(id==='profile'){loadProfile();}
-  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);}
+  if(id==='overview'){loadOverviewStats();loadPublishedStories(1);loadBanners();}
   if(id==='mystories')loadMyStories(1);
   if(id==='pendingusers')loadPendingUsers(1);
   if(id==='activeusers')loadActiveUsers(1);
@@ -1046,6 +1042,18 @@ async function updatePassword(){
 // ==================== HR ====================
 
 // ==================== BANNERS ====================
+function addBannerSlot(){
+  const filled=document.querySelectorAll('#banner-slots > div[data-slot]');
+  const occupied=Array.from(filled).map(d=>parseInt(d.dataset.slot));
+  let next=null;
+  for(let i=1;i<=5;i++){if(!occupied.includes(i)){next=i;break;}}
+  if(!next)return toast('All 5 banner slots are filled.');
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.jpg,.jpeg,.png,.webp';
+  inp.onchange=(e)=>uploadBanner(e,next);
+  inp.click();
+}
+
 async function loadBanners(){
   const container=document.getElementById('banner-slots');
   if(!container)return;
@@ -1057,7 +1065,7 @@ async function loadBanners(){
     for(let i=1;i<=5;i++){
       const b=data.find(x=>x.slot===i);
       if(b){
-        html+=`<div style="width:160px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg2);">
+        html+=`<div data-slot="${i}" style="width:160px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg2);">
           <div style="height:90px;background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
             <img src="${b.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
             <div style="position:absolute;top:4px;left:6px;font-size:10px;font-weight:600;background:rgba(0,0,0,.6);color:white;border-radius:4px;padding:2px 6px;">Slot ${i}</div>
@@ -1071,7 +1079,7 @@ async function loadBanners(){
           </div>
         </div>`;
       } else {
-        html+=`<div style="width:160px;border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;background:var(--bg);">
+        html+=`<div data-slot="${i}" style="width:160px;border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;background:var(--bg);">
           <div style="height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--muted);">
             <span style="font-size:22px;">🖼️</span>
             <span style="font-size:11px;">Slot ${i} — empty</span>
