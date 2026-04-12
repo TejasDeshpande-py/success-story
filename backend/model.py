@@ -70,6 +70,18 @@ class SuccessStory(Base):
     comments      = relationship("StoryComment", back_populates="story", cascade="all, delete-orphan")
 
 
+class Banner(Base):
+    __tablename__ = "banners"
+
+    banner_id  = Column(Integer, primary_key=True, index=True)
+    image_url  = Column(String(500), nullable=False)
+    title      = Column(String(200), nullable=True)
+    is_active  = Column(Boolean, nullable=False, default=True)
+    order      = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    created_by = Column(Integer, ForeignKey("employees.employee_id"), nullable=True)
+
+
 class StoryComment(Base):
     __tablename__ = "story_comments"
 
