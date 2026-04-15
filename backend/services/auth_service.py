@@ -1,18 +1,20 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from backend.model import Employee
-from backend.schemas import RegisterRequest
-from backend.security import hash_password, create_access_token
-from backend.auth import authenticate_user
+from backend.models.employee import Employee
+from backend.schemas.auth import RegisterRequest
+from backend.auth.security import hash_password, create_access_token
+from backend.auth.dependencies import authenticate_user
 
 
-def register_user(payload: RegisterRequest, db: Session):
+def register_user(payload: RegisterRequest, db: Session) -> dict:
+    """Register new user with validation."""
     if len(payload.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     if not any(c.isupper() for c in payload.password):
         raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter")
     if not any(c.isdigit() for c in payload.password):
         raise HTTPException(status_code=400, detail="Password must contain at least one number")
+    
     existing = db.query(Employee.employee_id).filter(
         Employee.email == payload.email
     ).scalar()
@@ -26,15 +28,15 @@ def register_user(payload: RegisterRequest, db: Session):
         raise HTTPException(status_code=400, detail="tricon_id already taken")
 
     new_user = Employee(
-    name=payload.name,
-    email=payload.email,
-    password_hash=hash_password(payload.password),
-    picture=payload.picture,
-    tricon_id=payload.tricon_id,
-    role_id=None,
-    team_id=None,
-    status="Pending",
-)
+        name=payload.name,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        picture=payload.picture,
+        tricon_id=payload.tricon_id,
+        role_id=None,
+        team_id=None,
+        status="Pending",
+    )
     db.add(new_user)
 
     try:
@@ -52,10 +54,10 @@ def register_user(payload: RegisterRequest, db: Session):
         "email": new_user.email,
         "status": new_user.status,
     }
-       
 
 
-def login_user(username: str, password: str, db: Session):
+def login_user(username: str, password: str, db: Session) -> dict:
+    """Authenticate user and return token."""
     user = authenticate_user(username, password, db)
 
     access_token = create_access_token({
