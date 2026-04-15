@@ -5,10 +5,11 @@ from fastapi.staticfiles import StaticFiles
 from backend.routers import auth, stories, users, teams, banners
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from backend.limiter import limiter
+from backend.middleware.limiter import limiter
 import logging
+import traceback
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -24,7 +25,9 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled error: {exc}", exc_info=True)
+    error_msg = str(exc)
+    logger.error(f"API Error - {request.url.path}: {error_msg}")
+    logger.error(traceback.format_exc())
     return JSONResponse(
         status_code=500,
         content={"detail": "An unexpected error occurred. Please try again."}

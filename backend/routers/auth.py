@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Request
 from sqlalchemy.orm import Session
-from backend.database import get_db
-from backend.schemas import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
-import backend.controllers.auth as auth_controller
+from backend.db.session import get_db
+from backend.schemas.auth import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
+from backend.services import auth_service
 import uuid, os
 import httpx
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import BaseModel, Field
 from typing import Literal
-from backend.auth import get_current_user
-from backend.limiter import limiter
+from backend.auth.dependencies import get_current_user
+from backend.middleware.limiter import limiter
 import re
 
 router = APIRouter(tags=["Auth"])
@@ -184,14 +184,14 @@ async def _call_groq(system_prompt: str, user_content: str) -> str:
 # ---------------------------------------------------------------------------
 @router.post("/register", response_model=RegisterResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
-    return auth_controller.register_user(payload, db)
+    return auth_service.register_user(payload, db)
 
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
     request.state.email_key = payload.email.lower()
-    return auth_controller.login_user(payload.email, payload.password, db)
+    return auth_service.login_user(payload.email, payload.password, db)
 
 
 @router.post("/upload-picture")

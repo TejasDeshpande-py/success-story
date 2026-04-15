@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <title>Login — TriconStories</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#111111;--bg2:#1a1a1a;--bg3:#222222;--border:#2e2e2e;
@@ -17,8 +16,8 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
   nav{display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:64px;border-bottom:1px solid var(--border);background:rgba(17,17,17,.97);}
-  .logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--brown2);text-decoration:none;}
-  .logo span{color:var(--brownlt);font-style:italic;}
+  .logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--brown2);text-decoration:none;letter-spacing:-.01em;}
+  .logo span{color:var(--brownlt);font-style:italic;font-weight:300;}
   main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;}
   .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 8px 36px rgba(90,45,15,.12);animation:up .35s ease;}
   @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
