@@ -7,6 +7,7 @@ from backend.models.employee import Employee
 from backend.models.story import SuccessStory, StoryReaction, StoryComment
 from backend.models.team import Team
 from backend.schemas.stories import StoryCreate, EmployeeStoryUpdate, HRStoryUpdate, SelectBodyRequest, ReactRequest
+from backend.auth.dependencies import ROLE_ADMIN, ROLE_HR
 from backend.utils import story_to_dict, story_to_public_dict, paginate
 
 logger = logging.getLogger(__name__)
@@ -514,8 +515,20 @@ def unpublish_story(story_id: int, db: Session, current_user: Employee) -> dict:
     return {"message": "Story unpublished successfully", "story_id": story_id}
 
 
-def get_comments(story_id: int, db: Session) -> list:
-    """Get all comments for a story."""
+def get_comments(story_id: int, db: Session, current_user: Employee) -> list:
+    """Get all comments for a story. Only accessible on published stories, own stories, or by HR/Admin."""
+    story = db.query(SuccessStory).filter(SuccessStory.story_id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    can_access = (
+        story.status == "Posted"
+        or story.created_by == current_user.employee_id
+        or current_user.role_id in [ROLE_ADMIN, ROLE_HR]
+    )
+    if not can_access:
+        raise HTTPException(status_code=403, detail="Not allowed to view comments on this story")
+
     comments = db.query(StoryComment).options(
         joinedload(StoryComment.employee)
     ).filter(StoryComment.story_id == story_id).order_by(StoryComment.created_at.asc()).all()
