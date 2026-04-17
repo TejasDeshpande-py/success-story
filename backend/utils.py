@@ -1,4 +1,4 @@
-from backend.models.story import SuccessStory
+from backend.models import SuccessStory
 
 
 def paginate(page: int):
@@ -8,7 +8,7 @@ def paginate(page: int):
 
 
 def story_to_public_dict(s: SuccessStory, current_user_id: int = None):
-    
+
     # group reactions by emoji
     reaction_map = {}
     for r in (s.reactions or []):

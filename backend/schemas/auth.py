@@ -45,3 +45,15 @@ class RegisterResponse(BaseModel):
     name: str
     email: str
     status: str
+
+
+class ApproveUserRequest(BaseModel):
+    role_id: int
+    team_id: Optional[int] = None
+
+    @field_validator("role_id")
+    def role_id_must_be_valid(cls, v):
+        if v not in [0, 1]:
+            raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
+        return v
+
