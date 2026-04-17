@@ -1,13 +1,17 @@
+"""
+Auth Service Layer: Business logic for authentication
+"""
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from backend.models.employee import Employee
 from backend.schemas.auth import RegisterRequest
 from backend.auth.security import hash_password, create_access_token
 from backend.auth.dependencies import authenticate_user
+from typing import Dict
 
 
-def register_user(payload: RegisterRequest, db: Session) -> dict:
-    """Register new user with validation."""
+def register_user(payload: RegisterRequest, db: Session) -> Dict:
+    """Register a new user with validation."""
     if len(payload.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     if not any(c.isupper() for c in payload.password):
@@ -41,7 +45,7 @@ def register_user(payload: RegisterRequest, db: Session) -> dict:
 
     try:
         db.commit()
-    except Exception:
+    except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to register user")
 
@@ -56,9 +60,9 @@ def register_user(payload: RegisterRequest, db: Session) -> dict:
     }
 
 
-def login_user(username: str, password: str, db: Session) -> dict:
-    """Authenticate user and return token."""
-    user = authenticate_user(username, password, db)
+def login_user(email: str, password: str, db: Session) -> Dict:
+    """Authenticate user and return access token."""
+    user = authenticate_user(email, password, db)
 
     access_token = create_access_token({
         "sub": user.email,

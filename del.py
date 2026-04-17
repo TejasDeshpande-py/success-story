@@ -1,5 +1,5 @@
-from backend.database import SessionLocal
-from backend.model import Employee, SuccessStory
+from backend.db import SessionLocal
+from backend.models import Employee, SuccessStory
 
 db = SessionLocal()
 

@@ -42,7 +42,6 @@ class ReactionSummary(BaseModel):
     count: int
     names: list[str]
 
-
 class StoryPublicResponse(BaseModel):
     story_id: int
     title: str
@@ -98,7 +97,6 @@ class StoryResponse(BaseModel):
 
 class CommentCreate(BaseModel):
     body: str = Field(..., min_length=1, max_length=2000)
-
 
 class CommentResponse(BaseModel):
     comment_id: int

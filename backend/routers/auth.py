@@ -1,9 +1,14 @@
+"""
+Auth Router: HTTP endpoints for authentication
+Delegates all business logic to backend.services.auth_service
+"""
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Request
 from sqlalchemy.orm import Session
 from backend.db.session import get_db
 from backend.schemas.auth import RegisterRequest, RegisterResponse, TokenResponse, LoginRequest
 from backend.services import auth_service
-import uuid, os
+import uuid
+import os
 import httpx
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -13,11 +18,10 @@ from backend.auth.dependencies import get_current_user
 from backend.middleware.limiter import limiter
 import re
 
+
 router = APIRouter(tags=["Auth"])
 
-# ---------------------------------------------------------------------------
-# S3 client — instantiated once at module load, not per request
-# ---------------------------------------------------------------------------
+# S3 client instantiated once at module load
 def _make_s3_client():
     return boto3.client(
         "s3",
@@ -28,9 +32,7 @@ def _make_s3_client():
 
 s3_client = _make_s3_client()
 
-# ---------------------------------------------------------------------------
-# Shared prompt fragments
-# ---------------------------------------------------------------------------
+# Editorial and prompt configuration
 _EDITORIAL_STANDARDS = """Editorial Standards:
 - Correct all grammar, spelling, and punctuation mistakes
 - Enhance clarity, flow, and readability
@@ -127,9 +129,7 @@ Structure (strictly follow this order based on the 4 inputs):
 Return only the final polished story. No headings, no commentary.""",
 }
 
-# ---------------------------------------------------------------------------
-# Request / response schemas
-# ---------------------------------------------------------------------------
+# Request schemas
 class RephraseRequest(BaseModel):
     background: str = Field(..., min_length=10, max_length=2000)
     challenge: str = Field(..., min_length=10, max_length=2000)
@@ -137,16 +137,15 @@ class RephraseRequest(BaseModel):
     outcome: str = Field(..., min_length=10, max_length=2000)
     story_type: Literal["mine", "someone", "team"] = "mine"
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+# Helper functions
 def _contains_banned_phrase(text: str) -> bool:
+    """Check if text contains any banned phrases."""
     lowered = text.lower()
     return any(phrase in lowered for phrase in _BANNED_PHRASES_CHECK)
 
 
 async def _call_groq(system_prompt: str, user_content: str) -> str:
-    """Call Groq and return the assistant message text, or raise HTTPException."""
+    """Call Groq API and return the assistant message text, or raise HTTPException."""
     groq_key = os.getenv("GROQ_API_KEY")
     async with httpx.AsyncClient() as client:
         r = await client.post(
@@ -179,25 +178,24 @@ async def _call_groq(system_prompt: str, user_content: str) -> str:
 
     return d["choices"][0]["message"]["content"].strip()
 
-# ---------------------------------------------------------------------------
 # Routes
-# ---------------------------------------------------------------------------
 @router.post("/register", response_model=RegisterResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+    """Register a new user."""
     return auth_service.register_user(payload, db)
 
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    """Authenticate user and return access token."""
     request.state.email_key = payload.email.lower()
     return auth_service.login_user(payload.email, payload.password, db)
 
 
 @router.post("/upload-picture")
-def upload_picture(
-    file: UploadFile = File(...),
-):
+def upload_picture(file: UploadFile = File(...)):
+    """Upload profile picture to S3."""
     allowed = {".jpg", ".jpeg", ".png", ".webp"}
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed:
@@ -226,8 +224,9 @@ def upload_picture(
 async def rephrase_story(
     request: Request,
     payload: RephraseRequest,
-    current_user=Depends(get_current_user),
+    current_user = Depends(get_current_user),
 ):
+    """Use AI to rephrase story content."""
     system_prompt = SYSTEM_PROMPTS[payload.story_type]
     user_content = (
         f"Background:\n{payload.background.strip()}\n\n"
@@ -238,7 +237,7 @@ async def rephrase_story(
 
     result = await _call_groq(system_prompt, user_content)
 
-    # If the first attempt contains a banned phrase, retry once with a stricter nudge
+    # If first attempt contains banned phrase, retry once with stricter nudge
     if _contains_banned_phrase(result):
         stricter_prompt = (
             system_prompt
@@ -247,13 +246,13 @@ async def rephrase_story(
         )
         result = await _call_groq(stricter_prompt, user_content)
 
-    # If the retry still fails, surface an error rather than silently returning raw input
+    # If retry still fails, remove banned phrases
     if _contains_banned_phrase(result):
         for phrase in _BANNED_PHRASES_CHECK:
             pattern = re.compile(rf"\b{re.escape(phrase)}\b", re.IGNORECASE)
             result = pattern.sub("", result)
 
-    # clean extra spaces
+    # Clean extra spaces
     result = re.sub(r"\s+([.,])", r"\1", result)
     result = re.sub(r"\s+", " ", result).strip()
 

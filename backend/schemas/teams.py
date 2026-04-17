@@ -7,7 +7,6 @@ class TeamCreate(BaseModel):
     team_name: str
     team_picture: str
 
-
 class TeamResponse(BaseModel):
     team_id: int
     team_name: str

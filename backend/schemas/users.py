@@ -1,17 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, field_validator
-
-
-class ApproveUserRequest(BaseModel):
-    role_id: int
-    team_id: Optional[int] = None
-
-    @field_validator("role_id")
-    def role_id_must_be_valid(cls, v):
-        if v not in [0, 1]:
-            raise ValueError("Invalid role. Use 0 for Employee or 1 for HR")
-        return v
+from pydantic import BaseModel
 
 
 class UserResponse(BaseModel):
@@ -27,3 +16,4 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
